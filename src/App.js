@@ -5,22 +5,46 @@ import {
   Route,
   Navigate,
   Outlet,
+  useLocation,
 } from "react-router-dom";
 
 import GlobalStyle from "./style/GlobalStyle";
 import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./context/AuthGuard";
 import Login from "./pages/Login";
+import SideBar from "./components/ui/SideBar";
 
 /* 아직 안 만든 페이지는 임시 표시 (담당자가 실제 파일 만들면 import만 교체) */
 const Empty = ({ title }) => <div style={{ padding: "32px" }}>{title}</div>;
 
-/* SideBar 완성 전까지 쓰는 최소 레이아웃 (Outlet 자리만 확보) */
+/* 라우트 경로 -> SideBar activeItem 매핑 */
+const PATH_TO_ACTIVE_ITEM = {
+  "/mes/dashboard": "대시보드",
+  "/mes/master/process": "공정",
+  "/mes/master/worker": "작업자",
+  "/mes/master/machine": "설비",
+  "/mes/master/bom": "BOM",
+  "/mes/master/material": "자재",
+  "/mes/master/product": "제품",
+  "/mes/production/workorders": "작업지시",
+  "/mes/production/product-lot": "완제품LOT",
+  "/mes/quality/test-log": "품질관리",
+  "/mes/inventory/material-list": "자재재고",
+  "/mes/inventory/material-tx": "자재입출고이력",
+  "/mes/inventory/material-lot": "원료LOT",
+  "/mes/report/trace": "리포트",
+};
+
 function MesLayout() {
+  const location = useLocation();
+  const activeItem = PATH_TO_ACTIVE_ITEM[location.pathname];
+
   return (
-    <div>
-      {/* TODO: SideBar 컴포넌트 완성되면 여기에 배치 */}
-      <Outlet />
+    <div style={{ display: "flex" }}>
+      <SideBar activeItem={activeItem} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Outlet />
+      </div>
     </div>
   );
 }

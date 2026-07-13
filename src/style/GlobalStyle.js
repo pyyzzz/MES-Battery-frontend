@@ -54,7 +54,7 @@ const GlobalStyle = createGlobalStyle`
     --sidebar-active : #2563eb;
 
     /* 타이포그래피 */
-    --font-family-base : 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-family-base : 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-family-mono : 'JetBrains Mono', monospace;
 
     --font-size-xs : 12px;

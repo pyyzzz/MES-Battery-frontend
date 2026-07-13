@@ -18,6 +18,13 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
+    // TODO: 백엔드 로그인 API 완성되면 이 블록 삭제
+    if (username === "test" && password === "test") {
+      login({ username: "test", role: "ADMIN" });
+      navigate("/mes/dashboard");
+      return;
+    }
+
     try {
       // TODO: 백엔드 로그인 엔드포인트 확정 후 경로/응답 형태 맞춰 수정
       const response = await axiosInstance.post("/api/mes/auth/login", {
@@ -71,7 +78,12 @@ export default function Login() {
             }}
           />
           {error && (
-            <p style={{ color: "var(--color-danger)", fontSize: "var(--font-size-xs)" }}>
+            <p
+              style={{
+                color: "var(--color-danger)",
+                fontSize: "var(--font-size-xs)",
+              }}
+            >
               {error}
             </p>
           )}
