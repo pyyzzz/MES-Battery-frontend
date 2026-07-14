@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
+import { FiSearch } from "react-icons/fi";
 
 const toCssSize = (value, fallback) => {
   if (value === undefined || value === null) return fallback;
@@ -11,7 +12,7 @@ const Container = styled.div`
 
   display: flex;
   align-items: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: ${({ $flexWrap }) => $flexWrap};
 
   gap: ${({ $gap }) => toCssSize($gap, "12px")};
   padding: ${({ $padding }) => toCssSize($padding, "16px")};
@@ -66,6 +67,42 @@ const Input = styled.input`
   }
 `;
 
+const KeywordInputBox = styled.div`
+  position: relative;
+  width: 100%;
+
+  input {
+    padding-right: 38px;
+  }
+
+`;
+
+const KeywordSearchButton = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+
+  width: 28px;
+  height: 28px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #7e8796;
+  cursor: pointer;
+
+  &:hover {
+    background: #eef2f7;
+    color: #2563eb;
+  }
+`;
+
 const Select = styled.select`
   width: 100%;
   height: ${({ $height }) => toCssSize($height, "36px")};
@@ -112,6 +149,7 @@ const ButtonGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 `;
 
 const SearchButton = styled.button`
@@ -128,6 +166,8 @@ const SearchButton = styled.button`
 
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   cursor: pointer;
 
@@ -150,6 +190,8 @@ const ResetButton = styled.button`
 
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   cursor: pointer;
 
@@ -177,6 +219,7 @@ function SearchFilterBar({
   defaultValues = {},
 
   width = "100%",
+  flexWrap = "wrap",
   padding = 16,
   gap = 12,
   background = "#ffffff",
@@ -270,6 +313,7 @@ function SearchFilterBar({
   return (
     <Container
       $width={width}
+      $flexWrap={flexWrap}
       $padding={padding}
       $gap={gap}
       $background={background}
@@ -389,24 +433,33 @@ function SearchFilterBar({
             {keywordLabel}
           </Label>
 
-          <Input
-            id={keywordName}
-            type="text"
-            name={keywordName}
-            value={values[keywordName] || ""}
-            placeholder={keywordPlaceholder}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            $height={inputHeight}
-            $border={inputBorder}
-            $borderRadius={inputBorderRadius}
-            $background={inputBackground}
-            $color={inputColor}
-            $fontSize={inputFontSize}
-            $placeholderColor={placeholderColor}
-            $focusColor={focusColor}
-            $focusShadow={focusShadow}
-          />
+          <KeywordInputBox>
+            <Input
+              id={keywordName}
+              type="text"
+              name={keywordName}
+              value={values[keywordName] || ""}
+              placeholder={keywordPlaceholder}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              $height={inputHeight}
+              $border={inputBorder}
+              $borderRadius={inputBorderRadius}
+              $background={inputBackground}
+              $color={inputColor}
+              $fontSize={inputFontSize}
+              $placeholderColor={placeholderColor}
+              $focusColor={focusColor}
+              $focusShadow={focusShadow}
+            />
+            <KeywordSearchButton
+              type="button"
+              aria-label="키워드 검색"
+              onClick={handleSearch}
+            >
+              <FiSearch size={16} />
+            </KeywordSearchButton>
+          </KeywordInputBox>
         </Field>
       )}
 
