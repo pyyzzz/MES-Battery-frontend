@@ -2,6 +2,8 @@ import { forwardRef, useMemo, useState } from "react";
 import styled from "styled-components";
 import { FiCalendar, FiRefreshCw, FiSearch } from "react-icons/fi";
 import FinishedLotDetailDrawer from "./ProductLotDetail";
+import DataTable from "../../components/ui/Table";
+import Badge from "../../components/ui/Badge";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -68,7 +70,7 @@ const DateInput = forwardRef(function DateInput(
 // 완제품 LOT 목록 목업 데이터
 // 아직 백엔드 API가 없어서 화면 테스트용으로 임시 데이터
 // DB가 연결되면 이 배열 대신 API 응답 데이터를 받아서 사용
-//
+
 // 필드 의미
 // - id: React에서 목록을 반복 렌더링할 때 쓰는 화면용 고유값
 // - lotId, productId, workOrderId, fgInventoryId: DB 테이블의 PK/FK를 흉내 낸 값
@@ -82,27 +84,26 @@ const DateInput = forwardRef(function DateInput(
 // - status: LOT 진행 상태, 배지 색상과 상세 화면 상태 표시에 사용
 const LOTS = [
   {
-    // 첫 번째 행입니다. 아래 LOT들도 같은 구조로 반복됩니다.
-    id: 1,                                    // 화면에서 행을 구분하기 위한 값
-    lotId: 1001,                              // DB lot 테이블의 lot_id 역할
-    lotNo: "LOT-20260714-001",                // 테이블 첫 번째 컬럼에 보이는 LOT 번호
-    productId: 201,                           // DB product 테이블과 연결되는 제품 ID
-    productCode: "BAT-12V-060",               // 제품 구분/필터에 쓰는 제품 코드
-    productName: "차량용 배터리 12V 60Ah",     // 테이블에 표시되는 제품명
-    workOrderId: 301,                         // DB work_order 테이블과 연결되는 작업지시 ID
-    workOrderNo: "WO-20260714-001",           // 테이블 제품명 아래에 표시되는 작업지시 번호
-    lotQty: 5000,                             // 이 LOT에 배정된 전체 생산 수량
-    inspectionQty: 5000,                      // 검사한 수량, 테이블의 검사 수량 컬럼에 표시
-    goodQty: 4958,                            // 합격 수량, 합격/불합격 컬럼의 앞 숫자
-    defectQty: 42,                            // 불합격 수량, 합격/불합격 컬럼의 뒤 숫자
-    fgInventoryId: 401,                       // 완제품 재고 테이블과 연결되는 ID
-    locationCode: "FG-A-01",                  // 완제품 창고 위치 코드
-    createdDate: "2026-07-14",                // 날짜 필터 검색에 쓰는 LOT 생성일
-    createdTime: "오전 09:30",                // 테이블 LOT 생성일 아래에 표시되는 시간
-    status: "생산완료",                        // LOT 상태 배지에 표시되는 값
+    id: 1,
+    lotId: 1001,
+    lotNo: "LOT-20260714-001",
+    productId: 201,
+    productCode: "BAT-12V-060",
+    productName: "차량용 배터리 12V 60Ah",
+    workOrderId: 301,
+    workOrderNo: "WO-20260714-001",
+    lotQty: 5000,
+    inspectionQty: 5000,
+    goodQty: 4958,
+    defectQty: 42,
+    fgInventoryId: 401,
+    locationCode: "FG-A-01",
+    createdDate: "2026-07-14",
+    createdTime: "오전 09:30",
+    status: "생산완료",
   },
   {
-    // 입고까지 완료된 LOT 예시
+    // 생산 진행 중인 LOT 예시
     id: 2,
     lotId: 1002,
     lotNo: "LOT-20260714-002",
@@ -119,10 +120,10 @@ const LOTS = [
     locationCode: "FG-A-02",
     createdDate: "2026-07-14",
     createdTime: "오전 11:10",
-    status: "입고완료",
+    status: "생산중",
   },
   {
-    // 생산은 끝났지만 아직 최종 검사 전인 LOT 예시
+    // 생산을 기다리는 LOT 예시
     id: 3,
     lotId: 1003,
     lotNo: "LOT-20260713-001",
@@ -139,10 +140,10 @@ const LOTS = [
     locationCode: "-",
     createdDate: "2026-07-13",
     createdTime: "오후 03:45",
-    status: "검사대기",
+    status: "생산 대기",
   },
   {
-    // 완제품 재고로 잡혔고 출하를 기다리는 LOT 예시
+    // 생산 완료된 LOT 예시
     id: 4,
     lotId: 1004,
     lotNo: "LOT-20260713-002",
@@ -159,10 +160,10 @@ const LOTS = [
     locationCode: "FG-B-01",
     createdDate: "2026-07-13",
     createdTime: "오후 05:20",
-    status: "출하대기",
+    status: "생산완료",
   },
   {
-    // 다른 제품 규격의 입고 완료 LOT 예시
+    // 다른 제품 규격의 생산 진행 중 LOT 예시
     id: 5,
     lotId: 1005,
     lotNo: "LOT-20260712-001",
@@ -179,7 +180,7 @@ const LOTS = [
     locationCode: "FG-C-01",
     createdDate: "2026-07-12",
     createdTime: "오후 02:15",
-    status: "입고완료",
+    status: "생산중",
   },
   {
     // 검사 결과 불량 수량이 조금 있는 생산 완료 LOT 예시
@@ -204,6 +205,23 @@ const LOTS = [
 ];
 
 const PAGE_SIZE = 4;
+
+const TABLE_COLUMNS = [
+  { key: "lotNoCell", label: "LOT ID" },
+  { key: "productCell", label: "제품명 / 작업지시" },
+  { key: "inspectionQtyCell", label: "검사 수량", align: "right" },
+  { key: "resultCell", label: "합격 / 불합격", align: "right" },
+  { key: "createdCell", label: "LOT 생성일" },
+  { key: "statusCell", label: "LOT 상태" },
+];
+
+// LOT 상태값을 공용 Badge 컴포넌트의 tone 값으로 변환
+// 생산완료는 성공, 생산중은 진행/강조, 그 외 상태는 중립 배지로 표시
+const getStatusTone = (status) => {
+  if (status === "생산완료") return "success";
+  if (status === "생산중") return "neutral";
+  return "neutral";
+};
 
 // 숫자를 한국식 천 단위 콤마로 표시하기 위한 formatter
 // 예: 5000 -> "5,000"
@@ -270,6 +288,49 @@ export default function ProductLotList() {
   // 예: 1페이지면 0~3번, 2페이지면 4~7번 데이터
   const rows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  // rows에 있는 LOT 원본 데이터를 테이블에서 바로 렌더링할 수 있는 화면용 행 데이터로 바꾸는 코드
+  const tableRows = rows.map((lot) => ({
+    ...lot,
+    originalLot: lot,
+    lotNoCell: (
+      <LotLink
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          openLotDetail(lot);
+        }}
+      >
+        {lot.lotNo}
+      </LotLink>
+    ),
+    productCell: (
+      <>
+        <ProductName>{lot.productName}</ProductName>
+        <SubText>{lot.workOrderNo}</SubText>
+      </>
+    ),
+    inspectionQtyCell: formatNumber.format(lot.inspectionQty),
+    resultCell: (
+      <>
+        <Good>{formatNumber.format(lot.goodQty)}</Good>
+        <Divider>/</Divider>
+        <Defect>{formatNumber.format(lot.defectQty)}</Defect>
+      </>
+    ),
+    createdCell: (
+      <>
+        <CreatedDate>{lot.createdDate.replaceAll("-", ". ")}</CreatedDate>
+        <SubText>{lot.createdTime}</SubText>
+      </>
+    ),
+    statusCell: (
+      <Status tone={getStatusTone(lot.status)} $status={lot.status}>
+        <StatusDot />
+        {lot.status}
+      </Status>
+    ),
+  }));
+
   // 검색 조건 draft 값을 바꾸는 공통 함수
   // key에는 "keyword", "productCode", "startDate" 같은 필드명이 들어감
   const updateDraft = (key, value) =>
@@ -291,16 +352,6 @@ export default function ProductLotList() {
 
   // 테이블 행을 클릭했을 때 상세 drawer에 보여줄 LOT을 저장
   const openLotDetail = (lot) => setSelectedLot(lot);
-
-  // 키보드 접근성을 위한 상세 열기 함수
-  // 테이블 행에 focus가 있을 때 Enter 또는 Space를 누르면 상세 drawer를 엶
-  const openLotDetailWithKeyboard = (event, lot) => {
-    // 마우스 클릭뿐 아니라 Enter/Space 키로도 상세 drawer를 열 수 있음
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openLotDetail(lot);
-    }
-  };
 
   return (
     // 전체 완제품 LOT 목록 화면
@@ -417,74 +468,13 @@ export default function ProductLotList() {
 
         {/* 완제품 LOT 조회 결과 테이블 메뉴 */}
         <TablePanel>
-          <TableViewport>
-            <Table>
-              <thead>
-                {/* 테이블 컬럼 제목 메뉴 */}
-                <tr>
-                  <th scope="col">LOT ID</th>
-                  <th scope="col">제품명 / 작업지시</th>
-                  <th scope="col" className="number">
-                    검사 수량
-                  </th>
-                  <th scope="col" className="number">
-                    합격 / 불합격
-                  </th>
-                  <th scope="col">LOT 생성일</th>
-                  <th scope="col">LOT 상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* LOT 데이터 행 메뉴: 행을 클릭하면 상세 drawer가 열림 */}
-                {rows.map((lot) => (
-                  <tr
-                    key={lot.id}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${lot.lotNo} 상세 보기`}
-                    onClick={() => openLotDetail(lot)}
-                    onKeyDown={(event) => openLotDetailWithKeyboard(event, lot)}
-                  >
-                    <td>
-                      <LotLink>{lot.lotNo}</LotLink>
-                    </td>
-                    <td>
-                      <ProductName>{lot.productName}</ProductName>
-                      <SubText>{lot.workOrderNo}</SubText>
-                    </td>
-                    <td className="number">
-                      {formatNumber.format(lot.inspectionQty)}
-                    </td>
-                    <td className="number">
-                      <Good>{formatNumber.format(lot.goodQty)}</Good>
-                      <Divider>/</Divider>
-                      <Defect>{formatNumber.format(lot.defectQty)}</Defect>
-                    </td>
-                    <td>
-                      <CreatedDate>
-                        {lot.createdDate.replaceAll("-", ". ")}
-                      </CreatedDate>
-                      <SubText>{lot.createdTime}</SubText>
-                    </td>
-                    <td>
-                      <Status $status={lot.status}>
-                        <StatusDot />
-                        {lot.status}
-                      </Status>
-                    </td>
-                  </tr>
-                ))}
-                {/* 조회 결과가 없을 때 보여주는 빈 데이터 안내 메뉴 */}
-                {rows.length === 0 && (
-                  <tr>
-                    <EmptyCell colSpan="6">
-                      조회 조건에 맞는 완제품 LOT가 없습니다.
-                    </EmptyCell>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
-          </TableViewport>
+          <TableArea>
+            <DataTable
+              columns={TABLE_COLUMNS}
+              rows={tableRows}
+              onRowClick={(row) => openLotDetail(row.originalLot)}
+            />
+          </TableArea>
 
           {/* 조회 결과 개수와 페이지 이동 메뉴 */}
           <TableFooter>
@@ -758,29 +748,22 @@ const TablePanel = styled.section`
   background: #fff;
   box-shadow: 0 1px 2px rgba(35, 50, 80, 0.04);
 `;
-// 화면이 좁을 때 테이블을 가로 스크롤할 수 있게 감싸는 영역
-const TableViewport = styled.div`
-  overflow-x: auto;
-`;
-// 완제품 LOT 목록의 실제 표헤더, 행, 숫자 정렬 스타일
-const Table = styled.table`
-  width: 100%;
-  min-width: 820px;
-  border-collapse: collapse;
-  font-size: 12px;
-
-  thead {
-    background: #edf3fb;
+// 공용 Table 컴포넌트를 이 화면의 카드 톤에 맞게 감싸는 영역
+const TableArea = styled.div`
+  > div {
+    border: 0;
+    border-radius: 0;
   }
 
-  thead th {
+  table {
+    min-width: 820px;
+  }
+
+  th {
     height: 52px;
     padding: 0 30px;
-
     vertical-align: middle;
-
     background: linear-gradient(180deg, #f2f6fc 0%, #e8eff8 100%);
-
     color: #233b5d;
     font-size: 14px;
     font-weight: 700;
@@ -810,17 +793,6 @@ const Table = styled.table`
     width: 11%;
   }
 
-  // 숫자 제목은 가운데 정렬
-  thead th.number {
-    text-align: center;
-  }
-
-  // 실제 숫자는 오른쪽 정렬
-  tbody td.number {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
   td {
     height: 67px;
     padding: 9px 30px;
@@ -834,16 +806,6 @@ const Table = styled.table`
     background: #fafcff;
   }
 
-  tbody tr[role="button"] {
-    cursor: pointer;
-  }
-
-  tbody tr[role="button"]:focus-visible {
-    outline: 3px solid rgba(16, 79, 160, 0.22);
-    outline-offset: -3px;
-    background: #fafcff;
-  }
-
   @media (max-width: 1000px) {
     th,
     td {
@@ -853,11 +815,12 @@ const Table = styled.table`
   }
 `;
 // LOT ID 텍스트입니다. 클릭 가능한 행처럼 보이도록 파란색/밑줄 hover
-const LotLink = styled.span`
+const LotLink = styled.button`
   color: #0756ae;
   font-family: var(--font-family-mono);
   font-size: 12px;
   font-weight: 700;
+  text-align: left;
   tr:hover & {
     text-decoration: underline;
   }
@@ -879,12 +842,12 @@ const CreatedDate = styled.div`
   font-size: 11px;
   font-weight: 600;
 `;
-// 합격 수량을 강조해서 보여주는 숫자 
+// 합격 수량을 강조해서 보여주는 숫자
 const Good = styled.span`
   color: #00499c;
   font-weight: 700;
 `;
-// 합격 수량과 불합격 수량 사이의 '/' 
+// 합격 수량과 불합격 수량 사이의 '/'
 const Divider = styled.span`
   margin: 0 9px;
   color: #9aa3b2;
@@ -893,25 +856,23 @@ const Divider = styled.span`
 const Defect = styled.span`
   color: #697286;
 `;
-// 생산완료/입고완료/검사대기/출하대기 상태 배지
-const Status = styled.span`
-  display: inline-flex;
-  align-items: center;
+// 공용 Badge를 기반으로 만든 LOT 상태 배지
+// 공용 컴포넌트를 쓰되, 기존 LOT 화면의 색상/크기/점 표시는 유지
+const Status = styled(Badge)`
   gap: 5px;
   padding: 4px 10px;
-  border-radius: 999px;
   font-size: 10px;
   font-weight: 650;
   color: ${({ $status }) =>
-    $status === "생산완료" || $status === "입고완료"
+    $status === "생산완료"
       ? "#168853"
-      : $status === "출하대기"
+      : $status === "생산중"
         ? "#1767bf"
         : "#7a8495"};
   background: ${({ $status }) =>
-    $status === "생산완료" || $status === "입고완료"
+    $status === "생산완료"
       ? "#e5f8ec"
-      : $status === "출하대기"
+      : $status === "생산중"
         ? "#e7f1ff"
         : "#eef1f5"};
 `;
@@ -921,12 +882,6 @@ const StatusDot = styled.span`
   height: 5px;
   border-radius: 50%;
   background: currentColor;
-`;
-// 조회 결과가 없을 때 테이블 가운데 보여주는 빈 상태 셀
-const EmptyCell = styled.td`
-  height: 150px !important;
-  color: #778196 !important;
-  text-align: center;
 `;
 // 테이블 하단의 결과 개수 문구와 페이지 버튼을 담는 영역
 const TableFooter = styled.footer`
