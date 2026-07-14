@@ -13,6 +13,7 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./context/AuthGuard";
 import Login from "./pages/Login";
 import SideBar from "./components/ui/SideBar";
+import ProductLotList from "./pages/production/ProductLotList";
 
 /* 아직 안 만든 페이지는 임시 표시 (담당자가 실제 파일 만들면 import만 교체) */
 const Empty = ({ title }) => <div style={{ padding: "32px" }}>{title}</div>;
@@ -81,7 +82,7 @@ function App() {
               {/* 생산관리 (담당: 유) */}
               <Route path="production">
                 <Route path="workorders" element={<Empty title="작업지시" />} />
-                <Route path="product-lot" element={<Empty title="완제품 LOT" />} />
+                <Route path="product-lot" element={<ProductLotList />} />
               </Route>
 
               {/* 품질관리 (담당: 나) - DefectLog는 TestLog에 통합됨 */}
