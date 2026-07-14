@@ -1,71 +1,10 @@
-import { forwardRef, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { FiCalendar, FiRefreshCw, FiSearch } from "react-icons/fi";
 import FinishedLotDetailDrawer from "./ProductLotDetail";
 import DataTable from "../../components/ui/Table";
 import Badge from "../../components/ui/Badge";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-
-// 날짜 문자열("2026-07-14")을 Date 객체로 바꾸는 함수
-const parseDate = (value) => {
-  if (!value) return null;
-
-  // "YYYY-MM-DD" 문자열을 "-" 기준으로 나눠서 숫자로 변환
-  const [year, month, day] = value.split("-").map(Number);
-
-  // JS Date의 month는 0부터 시작해서 1월이 0이므로 month - 1 처리
-  return new Date(year, month - 1, day);
-};
-
-// Date 객체를 화면/필터에서 쓰기 좋은 "YYYY-MM-DD" 문자열로 바꾸는 함수
-const formatDate = (date) => {
-  // 날짜를 지우거나 선택하지 않은 경우 빈 문자열로 저장
-  if (!date) return "";
-
-  // Date 객체에서 연/월/일을 꺼냄
-  const year = date.getFullYear();
-
-  // 월/일이 한 자리면 앞에 0을 붙여 "07", "04" 형태로 맞춤
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  // 필터 비교가 쉬운 ISO 비슷한 날짜 문자열로 반환
-  return `${year}-${month}-${day}`;
-};
-
-// react-datepicker가 사용할 커스텀 input 컴포넌트
-const DateInput = forwardRef(function DateInput(
-  {
-    value,
-    onClick,
-    onChange,
-    onBlur,
-    onFocus,
-    onKeyDown,
-    placeholder,
-    className,
-  },
-  ref,
-) {
-  // react-datepicker가 사용할 실제 input
-  return (
-    <DateTextInput
-      ref={ref}
-      className={className}
-      type="text"
-      value={value || ""}
-      placeholder={placeholder}
-      inputMode="numeric"
-      autoComplete="off"
-      onClick={onClick}
-      onChange={onChange}
-      onBlur={onBlur}
-      onFocus={onFocus}
-      onKeyDown={onKeyDown}
-    />
-  );
-});
+import FilterPanel, { FilterActions } from "../../components/ui/FilterPanel";
+import FilterDatePicker from "../../components/ui/FilterDatePicker";
 
 // 완제품 LOT 목록 목업 데이터
 // 아직 백엔드 API가 없어서 화면 테스트용으로 임시 데이터
@@ -366,18 +305,13 @@ export default function ProductLotList() {
               모니터링합니다.
             </Description>
           </div>
-          <HeaderActions>
-            <ActionButton type="button" onClick={reset}>
-              <FiRefreshCw /> 초기화
-            </ActionButton>
-            <SearchButton type="button" onClick={search}>
-              <FiSearch /> 조회
-            </SearchButton>
-          </HeaderActions>
         </Header>
 
         {/* LOT 번호, 제품명, 작업지시, 생산 일자를 조회하는 검색 조건 메뉴 */}
         <FilterPanel
+          $columns="minmax(150px, 1fr) minmax(150px, 1fr) minmax(170px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr)"
+          $gap="28px"
+          $padding="28px 30px"
           onSubmit={(event) => {
             event.preventDefault();
             search();
@@ -428,41 +362,22 @@ export default function ProductLotList() {
           </Field>
           <Field>
             <Label>시작일</Label>
-            <DateBox>
-              <FiCalendar aria-hidden="true" />
-              <DatePicker
-                selected={parseDate(draft.startDate)}
-                onChange={(date) => updateDraft("startDate", formatDate(date))}
-                dateFormat="yyyy-MM-dd"
-                placeholderText="YYYY-MM-DD"
-                showYearDropdown
-                showMonthDropdown
-                dropdownMode="select"
-                popperPlacement="bottom-start"
-                popperProps={{ strategy: "fixed" }}
-                customInput={<DateInput />}
-              />
-            </DateBox>
+            <FilterDatePicker
+              value={draft.startDate}
+              onChange={(value) => updateDraft("startDate", value)}
+              aria-label="시작일"
+            />
           </Field>
 
           <Field>
             <Label>종료일</Label>
-            <DateBox>
-              <FiCalendar aria-hidden="true" />
-              <DatePicker
-                selected={parseDate(draft.endDate)}
-                onChange={(date) => updateDraft("endDate", formatDate(date))}
-                dateFormat="yyyy-MM-dd"
-                placeholderText="YYYY-MM-DD"
-                showYearDropdown
-                showMonthDropdown
-                dropdownMode="select"
-                popperPlacement="bottom-start"
-                popperProps={{ strategy: "fixed" }}
-                customInput={<DateInput />}
-              />
-            </DateBox>
+            <FilterDatePicker
+              value={draft.endDate}
+              onChange={(value) => updateDraft("endDate", value)}
+              aria-label="종료일"
+            />
           </Field>
+          <FilterActions onReset={reset} $fullRow />
           <HiddenSubmit type="submit" aria-hidden="true" tabIndex="-1" />
         </FilterPanel>
 
@@ -543,7 +458,7 @@ const Content = styled.div`
   max-width: 1240px;
   margin: 0 auto;
 `;
-// 페이지 제목/설명과 우측 버튼들을 한 줄에 배치하는 상단 영역
+// 페이지 제목/설명을 배치하는 상단 영역
 const Header = styled.header`
   display: flex;
   align-items: flex-end;
@@ -569,71 +484,7 @@ const Description = styled.p`
   font-size: 13px;
   line-height: 1.5;
 `;
-// 초기화, 조회 버튼을 묶는 우측 버튼 영역
-const HeaderActions = styled.div`
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-  @media (max-width: 480px) {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-`;
-// 초기화/내보내기처럼 기본 동작 버튼에 사용
-const ActionButton = styled.button`
-  height: 38px;
-  padding: 0 15px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 1px solid #cfd5e2;
-  border-radius: 7px;
-  background: #fff;
-  color: #283247;
-  font-size: 12px;
-  font-weight: 600;
-  &:hover {
-    background: #f5f7fb;
-  }
-  &:focus-visible {
-    outline: 3px solid rgba(16, 79, 160, 0.18);
-  }
-`;
-// 조회 버튼처럼 가장 중요한 실행 버튼에 사용
-const SearchButton = styled(ActionButton)`
-  background: #084693;
-  border-color: #084693;
-  color: #fff;
-  min-width: 78px;
-  &:hover {
-    background: #073b7c;
-  }
-`;
 // LOT 번호, 제품명, 작업지시, 생산일자 검색 조건을 담는 필터 박스
-const FilterPanel = styled.form`
-  display: grid;
-  grid-template-columns:
-    minmax(150px, 1fr)
-    minmax(150px, 1fr)
-    minmax(170px, 1fr)
-    minmax(150px, 1fr)
-    minmax(150px, 1fr);
-  gap: 28px;
-  padding: 28px 30px;
-  border: 1px solid #cfd5e2;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 1px 2px rgba(35, 50, 80, 0.03);
-  @media (max-width: 1050px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-  }
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-    padding: 22px 18px;
-  }
-`;
 // 필터 안에서 label과 input/select를 한 세트로 묶는 칸
 const Field = styled.div`
   width: 100%;
@@ -677,59 +528,6 @@ const Select = styled.select`
     box-shadow: 0 0 0 3px rgba(44, 103, 173, 0.1);
   }
 `;
-// 실제 날짜 텍스트를 보여주는 입력칸
-const DateTextInput = styled.input`
-  display: block;
-  width: 100%;
-  height: 42px;
-  padding: 0 4px;
-
-  background: transparent;
-  border: 0;
-  outline: none;
-
-  color: #5e687a;
-  font-size: 11px;
-  line-height: 42px;
-  box-sizing: border-box;
-  text-align: center;
-
-  &::placeholder {
-    color: #8c95a7;
-    opacity: 1;
-  }
-`;
-
-// 날짜 검색칸 스타일
-const DateBox = styled.div`
-  height: 42px;
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-
-  border: 1px solid #cbd3e1;
-  border-radius: 6px;
-  background: #f8faff;
-
-  .react-datepicker-wrapper,
-  .react-datepicker__input-container {
-    width: 100%;
-    height: 100%;
-  }
-
-  .react-datepicker__header {
-    padding-top: 8px;
-    padding-bottom: 6px;
-  }
-
-  .react-datepicker__current-month {
-    margin-bottom: 6px;
-    font-size: 14px;
-  }
-`;
-
 // Enter 키로 검색 form이 제출될 수 있게 숨겨둔 submit 버튼
 const HiddenSubmit = styled.button`
   position: absolute;
