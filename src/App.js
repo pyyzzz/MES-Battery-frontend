@@ -13,6 +13,8 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./context/AuthGuard";
 import Login from "./pages/Login";
 import SideBar from "./components/ui/SideBar";
+import ProductLotList from "./pages/production/ProductLotList";
+import WorkOrderList from "./pages/production/WorkOrderList";
 import DashBoard from "./pages/monitoring/Dashboard";
 import MachineList from "./pages/master/MachineList";
 import ProcessList from "./pages/master/ProcessList";
@@ -44,9 +46,9 @@ function MesLayout() {
   const activeItem = PATH_TO_ACTIVE_ITEM[location.pathname];
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
       <SideBar activeItem={activeItem} />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "auto" }}>
         <Outlet />
       </div>
     </div>
@@ -93,11 +95,8 @@ function App() {
 
               {/* 생산관리 (담당: 유) */}
               <Route path="production">
-                <Route path="workorders" element={<Empty title="작업지시" />} />
-                <Route
-                  path="product-lot"
-                  element={<Empty title="완제품 LOT" />}
-                />
+                <Route path="workorders" element={<WorkOrderList />} />
+                <Route path="product-lot" element={<ProductLotList />} />
               </Route>
 
               {/* 품질관리 (담당: 나) - DefectLog는 TestLog에 통합됨 */}
