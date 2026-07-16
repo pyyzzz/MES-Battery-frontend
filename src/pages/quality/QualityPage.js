@@ -325,7 +325,7 @@ const Table = styled.table`
   td {
     padding: 16px 14px;
     border-bottom: 1px solid #e2e6ee;
-    text-align: left;
+    text-align: center;
     vertical-align: middle;
     font-size: 13px;
   }
@@ -340,6 +340,13 @@ const Table = styled.table`
   td {
     color: #22262d;
     line-height: 1.45;
+  }
+
+  th:nth-child(4),
+  td:nth-child(4),
+  th:nth-child(6),
+  td:nth-child(6) {
+    white-space: nowrap;
   }
 
   tbody tr {
@@ -848,8 +855,8 @@ function QualityPage() {
               defectType: "",
               keyword: "",
             }}
-            startDateLabel="검사 시작일"
-            endDateLabel="검사 종료일"
+            startDateLabel="시작일"
+            endDateLabel="종료일"
             dateWidth={130}
             filters={[
               {
@@ -875,7 +882,7 @@ function QualityPage() {
                 ],
               },
             ]}
-            keywordLabel="키워드"
+            keywordLabel="통합 검색"
             keywordPlaceholder="LOT / 작업지시 / 제품 / 공정 / 설비 / 작업자"
             keywordWidth={220}
             flexWrap="nowrap"
@@ -900,6 +907,18 @@ function QualityPage() {
           {currentRows.length > 0 ? (
             <TableScroll>
               <Table>
+                <colgroup>
+                  <col style={{ width: 150 }} />
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 120 }} />
+                  <col style={{ width: 200 }} />
+                  <col style={{ width: 140 }} />
+                  <col style={{ width: 160 }} />
+                  <col style={{ width: 90 }} />
+                  <col style={{ width: 140 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 80 }} />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>검사일시</th>
