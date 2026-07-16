@@ -10,8 +10,6 @@ import {
   FiArchive,
   FiBarChart2,
   FiChevronRight,
-  FiHeadphones,
-  FiUser,
 } from "react-icons/fi";
 
 const MENU_ITEMS = [
@@ -25,7 +23,6 @@ const MENU_ITEMS = [
       { key: "작업자", label: "작업자", path: "/mes/master/worker" },
       { key: "설비", label: "설비", path: "/mes/master/machine" },
       { key: "BOM", label: "BOM", path: "/mes/master/bom" },
-      { key: "자재", label: "자재", path: "/mes/master/material" },
       { key: "제품", label: "제품", path: "/mes/master/product" },
     ],
   },
@@ -44,7 +41,7 @@ const MENU_ITEMS = [
     label: "자재/재고관리",
     icon: FiArchive,
     children: [
-      { key: "자재재고", label: "자재재고", path: "/mes/inventory/material-list" },
+      { key: "자재관리", label: "자재관리", path: "/mes/inventory/material-list" },
       { key: "자재입출고이력", label: "자재입출고이력", path: "/mes/inventory/material-tx" },
       { key: "원료LOT", label: "원료LOT", path: "/mes/inventory/material-lot" },
     ],
@@ -177,31 +174,6 @@ const SubMenuItem = styled(Link)`
     `}
 `;
 
-const BottomSection = styled.div`
-  margin-top: 24px;
-  padding: 16px 16px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const BottomItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--sidebar-text-muted);
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--sidebar-text);
-  }
-`;
-
 export default function SideBar({ activeItem }) {
   const defaultOpenGroup = MENU_ITEMS.find((item) =>
     item.children?.some((child) => child.key === activeItem)
@@ -261,16 +233,6 @@ export default function SideBar({ activeItem }) {
         })}
       </Nav>
 
-      <BottomSection>
-        <BottomItem>
-          <FiHeadphones size={18} />
-          <span>Support</span>
-        </BottomItem>
-        <BottomItem>
-          <FiUser size={18} />
-          <span>Account</span>
-        </BottomItem>
-      </BottomSection>
     </Container>
   );
 }

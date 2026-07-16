@@ -1,4 +1,3 @@
-// 라우터 뼈대 - 각 팀원 페이지는 Empty placeholder로 임시 연결, 완성되면 import만 교체
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,9 +18,13 @@ import DashBoard from "./pages/monitoring/Dashboard";
 import MachineList from "./pages/master/MachineList";
 import ProcessList from "./pages/master/ProcessList";
 import ProductList from "./pages/master/ProductList";
-
-/* 아직 안 만든 페이지는 임시 표시 (담당자가 실제 파일 만들면 import만 교체) */
-const Empty = ({ title }) => <div style={{ padding: "32px" }}>{title}</div>;
+import WorkerList from "./pages/master/WorkerList";
+import BomList from "./pages/master/BomList";
+import MaterialInventory from "./pages/inventory/MaterialInventory";
+import MaterialTransactionHistory from "./pages/inventory/MaterialTransactionHistory";
+import MaterialLotManagement from "./pages/inventory/MaterialLotManagement";
+import QualityPage from "./pages/quality/QualityPage";
+import ProductionReport from "./pages/report/ProductionReport";
 
 /* 라우트 경로 -> SideBar activeItem 매핑 */
 const PATH_TO_ACTIVE_ITEM = {
@@ -30,12 +33,11 @@ const PATH_TO_ACTIVE_ITEM = {
   "/mes/master/worker": "작업자",
   "/mes/master/machine": "설비",
   "/mes/master/bom": "BOM",
-  "/mes/master/material": "자재",
   "/mes/master/product": "제품",
   "/mes/production/workorders": "작업지시",
   "/mes/production/product-lot": "완제품LOT",
   "/mes/quality/test-log": "품질관리",
-  "/mes/inventory/material-list": "자재재고",
+  "/mes/inventory/material-list": "자재관리",
   "/mes/inventory/material-tx": "자재입출고이력",
   "/mes/inventory/material-lot": "원료LOT",
   "/mes/report/trace": "리포트",
@@ -80,15 +82,12 @@ function App() {
               {/* 기준정보 (담당: 현) */}
               <Route path="master">
                 <Route path="process" element={<ProcessList />} />
-                <Route
-                  path="worker"
-                  element={<Empty title="작업자 마스터" />}
-                />
+                <Route path="worker" element={<WorkerList />} />
                 <Route path="machine" element={<MachineList />} />
-                <Route path="bom" element={<Empty title="BOM 마스터" />} />
+                <Route path="bom" element={<BomList />} />
                 <Route
                   path="material"
-                  element={<Empty title="자재 마스터" />}
+                  element={<Navigate to="/mes/inventory/material-list" replace />}
                 />
                 <Route path="product" element={<ProductList />} />
               </Route>
@@ -103,29 +102,20 @@ function App() {
               <Route path="quality">
                 <Route
                   path="test-log"
-                  element={<Empty title="검사이력 (불량 통합)" />}
+                  element={<QualityPage />}
                 />
               </Route>
 
               {/* 자재/재고관리 (담당: 상) */}
               <Route path="inventory">
-                <Route
-                  path="material-list"
-                  element={<Empty title="자재 재고" />}
-                />
-                <Route
-                  path="material-tx"
-                  element={<Empty title="자재 입출고 이력" />}
-                />
-                <Route
-                  path="material-lot"
-                  element={<Empty title="원료 LOT" />}
-                />
+                <Route path="material-list" element={<MaterialInventory />} />
+                <Route path="material-tx" element={<MaterialTransactionHistory />} />
+                <Route path="material-lot" element={<MaterialLotManagement />} />
               </Route>
 
               {/* 리포트 (담당: 나) - ProcessLog는 Traceability 상세에 통합됨 */}
               <Route path="report">
-                <Route path="trace" element={<Empty title="Traceability" />} />
+                <Route path="trace" element={<ProductionReport />} />
               </Route>
             </Route>
           </Route>
