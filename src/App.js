@@ -13,6 +13,12 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./context/AuthGuard";
 import Login from "./pages/Login";
 import SideBar from "./components/ui/SideBar";
+import ProductLotList from "./pages/production/ProductLotList";
+import WorkOrderList from "./pages/production/WorkOrderList";
+import DashBoard from "./pages/monitoring/Dashboard";
+import MachineList from "./pages/master/MachineList";
+import ProcessList from "./pages/master/ProcessList";
+import ProductList from "./pages/master/ProductList";
 
 /* 아직 안 만든 페이지는 임시 표시 (담당자가 실제 파일 만들면 import만 교체) */
 const Empty = ({ title }) => <div style={{ padding: "32px" }}>{title}</div>;
@@ -40,9 +46,9 @@ function MesLayout() {
   const activeItem = PATH_TO_ACTIVE_ITEM[location.pathname];
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
       <SideBar activeItem={activeItem} />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "auto" }}>
         <Outlet />
       </div>
     </div>
@@ -60,40 +66,61 @@ function App() {
 
           {/* ================= 인증 보호 영역 ================= */}
           <Route element={<AuthGuard />}>
-            <Route path="/" element={<Navigate to="/mes/dashboard" replace />} />
+            <Route
+              path="/"
+              element={<Navigate to="/mes/dashboard" replace />}
+            />
 
             <Route path="/mes" element={<MesLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
 
               {/* 대시보드 (담당: 미) */}
-              <Route path="dashboard" element={<Empty title="대시보드" />} />
+              <Route path="dashboard" element={<DashBoard />} />
 
               {/* 기준정보 (담당: 현) */}
               <Route path="master">
-                <Route path="process" element={<Empty title="공정 마스터" />} />
-                <Route path="worker" element={<Empty title="작업자 마스터" />} />
-                <Route path="machine" element={<Empty title="설비 마스터" />} />
+                <Route path="process" element={<ProcessList />} />
+                <Route
+                  path="worker"
+                  element={<Empty title="작업자 마스터" />}
+                />
+                <Route path="machine" element={<MachineList />} />
                 <Route path="bom" element={<Empty title="BOM 마스터" />} />
-                <Route path="material" element={<Empty title="자재 마스터" />} />
-                <Route path="product" element={<Empty title="제품 마스터" />} />
+                <Route
+                  path="material"
+                  element={<Empty title="자재 마스터" />}
+                />
+                <Route path="product" element={<ProductList />} />
               </Route>
 
               {/* 생산관리 (담당: 유) */}
               <Route path="production">
-                <Route path="workorders" element={<Empty title="작업지시" />} />
-                <Route path="product-lot" element={<Empty title="완제품 LOT" />} />
+                <Route path="workorders" element={<WorkOrderList />} />
+                <Route path="product-lot" element={<ProductLotList />} />
               </Route>
 
               {/* 품질관리 (담당: 나) - DefectLog는 TestLog에 통합됨 */}
               <Route path="quality">
-                <Route path="test-log" element={<Empty title="검사이력 (불량 통합)" />} />
+                <Route
+                  path="test-log"
+                  element={<Empty title="검사이력 (불량 통합)" />}
+                />
               </Route>
 
               {/* 자재/재고관리 (담당: 상) */}
               <Route path="inventory">
-                <Route path="material-list" element={<Empty title="자재 재고" />} />
-                <Route path="material-tx" element={<Empty title="자재 입출고 이력" />} />
-                <Route path="material-lot" element={<Empty title="원료 LOT" />} />
+                <Route
+                  path="material-list"
+                  element={<Empty title="자재 재고" />}
+                />
+                <Route
+                  path="material-tx"
+                  element={<Empty title="자재 입출고 이력" />}
+                />
+                <Route
+                  path="material-lot"
+                  element={<Empty title="원료 LOT" />}
+                />
               </Route>
 
               {/* 리포트 (담당: 나) - ProcessLog는 Traceability 상세에 통합됨 */}
