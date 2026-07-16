@@ -15,6 +15,8 @@ import Login from "./pages/Login";
 import SideBar from "./components/ui/SideBar";
 import DashBoard from "./pages/monitoring/Dashboard";
 import MachineList from "./pages/master/MachineList";
+import ProcessList from "./pages/master/ProcessList";
+import ProductList from "./pages/master/ProductList";
 
 /* 아직 안 만든 페이지는 임시 표시 (담당자가 실제 파일 만들면 import만 교체) */
 const Empty = ({ title }) => <div style={{ padding: "32px" }}>{title}</div>;
@@ -75,7 +77,7 @@ function App() {
 
               {/* 기준정보 (담당: 현) */}
               <Route path="master">
-                <Route path="process" element={<Empty title="공정 마스터" />} />
+                <Route path="process" element={<ProcessList />} />
                 <Route
                   path="worker"
                   element={<Empty title="작업자 마스터" />}
@@ -86,7 +88,7 @@ function App() {
                   path="material"
                   element={<Empty title="자재 마스터" />}
                 />
-                <Route path="product" element={<Empty title="제품 마스터" />} />
+                <Route path="product" element={<ProductList />} />
               </Route>
 
               {/* 생산관리 (담당: 유) */}
