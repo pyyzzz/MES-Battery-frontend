@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
 
-import deleteIcon from "../../image/deleteicon.svg";
+import { FiTrash2 } from "react-icons/fi";
 
 /* Styled Components */
 const DrawerOverlay = styled.div`
@@ -507,7 +507,7 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
                         type="button"
                         onClick={() => handleDeleteBomItem(item.id)}
                       >
-                        <img src={deleteIcon} alt="삭제" />
+                        <FiTrash2 size={16} color="var(--color-danger)" />
                       </DeleteActionBtn>
                     </td>
                   </tr>
