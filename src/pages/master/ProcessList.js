@@ -4,6 +4,8 @@ import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Table from "../../components/ui/Table";
 
+import { FiCpu, FiActivity, FiSlash, FiEdit3, FiTrash2 } from "react-icons/fi";
+
 // MachineList와 동일한 공용 필터 컴포넌트 import
 import FilterPanel, {
   FilterField,
@@ -13,12 +15,6 @@ import FilterPanel, {
 // 신규 등록 사이드 패널 컴포넌트 import
 import ProcessNew from "./ProcessNew";
 import ProcessEdit from "./ProcessEdit";
-
-import process from "../../image/process.svg";
-import process2 from "../../image/process2.svg";
-import process3 from "../../image/process3.svg";
-import edit from "../../image/edit.svg";
-import deleteicon from "../../image/deleteicon.svg";
 
 /* Styled Components */
 const Container = styled.div`
@@ -54,9 +50,12 @@ const Header = styled.div`
   }
 `;
 
-const IconImg = styled.img`
+const IconWrapper = styled.div`
   width: 24px;
   height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 // 상단 KPI 카드 레이아웃
@@ -407,14 +406,14 @@ export default function ProcessList() {
           title="수정"
           type="button"
         >
-          <img src={edit} alt="수정" />
+          <FiEdit3 size={18} color="var(--color-text-secondary)" />
         </ActionButton>
         <ActionButton
           onClick={() => handleDelete(row.id)}
           title="삭제"
           type="button"
         >
-          <img src={deleteicon} alt="삭제" />
+          <FiTrash2 size={18} color="var(--color-danger)" />
         </ActionButton>
       </ActionGroup>
     ),
@@ -442,7 +441,9 @@ export default function ProcessList() {
         <Card>
           <KpiCardContent>
             <div className="icon-wrapper">
-              <IconImg src={process} alt="전체 공정" />
+              <IconWrapper>
+                <FiCpu size={24} color="var(--color-primary)" />
+              </IconWrapper>
             </div>
             <div className="text-wrapper">
               <span className="label">전체 공정</span>
@@ -457,7 +458,9 @@ export default function ProcessList() {
         <Card>
           <KpiCardContent>
             <div className="icon-wrapper">
-              <IconImg src={process2} alt="활성 공정" />
+              <IconWrapper>
+                <FiActivity size={24} color="var(--color-success)" />
+              </IconWrapper>
             </div>
             <div className="text-wrapper">
               <span className="label">활성 공정</span>
@@ -472,7 +475,9 @@ export default function ProcessList() {
         <Card>
           <KpiCardContent>
             <div className="icon-wrapper">
-              <IconImg src={process3} alt="비활성 공정" />
+              <IconWrapper>
+                <FiSlash size={24} color="var(--color-neutral)" />
+              </IconWrapper>
             </div>
             <div className="text-wrapper">
               <span className="label">비활성 공정</span>

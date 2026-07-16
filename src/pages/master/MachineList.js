@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { FiPlus } from "react-icons/fi";
+import {
+  FiPlus,
+  FiArchive, // 총 설비 (블루)
+  FiSettings, // 가동 중 (그레이)
+  FiAlertTriangle, // 에러 (레드)
+  FiCheckCircle, // 가동률 (그린)
+} from "react-icons/fi";
 
 // 공통 UI 컴포넌트 import
 import Card from "../../components/ui/Card";
@@ -12,14 +18,8 @@ import FilterPanel, {
 } from "../../components/ui/FilterPanel";
 
 // 신규 추가한 우측 사이드 패널 컴포넌트들 import
-import MachineNew from "./MachineNew"; 
+import MachineNew from "./MachineNew";
 import MachineEdit from "./MachineEdit"; // 💡 설비 수정 사이드 패널 추가
-
-// 이미지 폴더 내에 배치된 SVG 아이콘들 import
-import facilityIcon from "../../image/facility.svg";
-import operatingIcon from "../../image/Operating equipment.svg";
-import errorIcon from "../../image/error.svg";
-import yieldIcon from "../../image/yield.svg";
 
 /* ================= Styled Components ================= */
 const Container = styled.div`
@@ -92,10 +92,12 @@ const KpiInfo = styled.div`
   }
 `;
 
-const KpiIcon = styled.img`
+const KpiIcon = styled.div`
   width: 48px;
   height: 48px;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 /* 필터 입력 필드 스타일 */
@@ -236,7 +238,7 @@ export default function MachineList() {
       process_id: "PC-003",
       machine_code: "MC-003",
       machine_name: "압출 성형기",
-      status: "에러", 
+      status: "에러",
       use_yn: "N",
       message: "급유 장치 압력 저하 (E-042)",
     },
@@ -285,7 +287,10 @@ export default function MachineList() {
 
   // 💡 [등록 기능] 신규 데이터를 배열에 추가
   const handleSaveMachine = (newMachine) => {
-    const nextId = machines.length > 0 ? Math.max(...machines.map(m => m.machine_id)) + 1 : 1;
+    const nextId =
+      machines.length > 0
+        ? Math.max(...machines.map((m) => m.machine_id)) + 1
+        : 1;
     setMachines((prev) => [
       ...prev,
       {
@@ -302,8 +307,8 @@ export default function MachineList() {
       prev.map((m) =>
         m.machine_id === updatedMachine.machine_id
           ? { ...m, ...updatedMachine }
-          : m
-      )
+          : m,
+      ),
     );
   };
 
@@ -331,7 +336,7 @@ export default function MachineList() {
   // Table 행 데이터 바인딩 가공
   const rows = filteredRows.map((mac) => {
     const displayUseYn = mac.use_yn === "Y" ? "사용 중" : "사용 중지";
-    
+
     return {
       ...mac,
       id: mac.machine_id,
@@ -370,7 +375,7 @@ export default function MachineList() {
               <span className="label">총 설비 수</span>
               <span className="value">{machines.length} 대</span>
             </KpiInfo>
-            <KpiIcon src={facilityIcon} alt="총 설비" />
+            <FiArchive size={32} color="var(--color-primary)" />
           </KpiCardContent>
         </Card>
         <Card>
@@ -381,7 +386,7 @@ export default function MachineList() {
                 {machines.filter((m) => m.status === "가동").length} 대
               </span>
             </KpiInfo>
-            <KpiIcon src={operatingIcon} alt="가동 중" />
+            <FiSettings size={32} color="var(--color-text)" />
           </KpiCardContent>
         </Card>
         <Card>
@@ -389,10 +394,15 @@ export default function MachineList() {
             <KpiInfo>
               <span className="label">장애/ERROR 설비</span>
               <span className="value" style={{ color: "var(--color-danger)" }}>
-                {machines.filter((m) => m.status === "에러" || m.status === "ERROR").length} 대
+                {
+                  machines.filter(
+                    (m) => m.status === "에러" || m.status === "ERROR",
+                  ).length
+                }{" "}
+                대
               </span>
             </KpiInfo>
-            <KpiIcon src={errorIcon} alt="에러 현황" />
+            <FiAlertTriangle size={32} color="var(--color-danger)" />
           </KpiCardContent>
         </Card>
         <Card>
@@ -403,7 +413,7 @@ export default function MachineList() {
                 84.5%
               </span>
             </KpiInfo>
-            <KpiIcon src={yieldIcon} alt="가동률" />
+            <FiCheckCircle size={32} color="var(--color-success)" />
           </KpiCardContent>
         </Card>
       </KpiGrid>
@@ -478,7 +488,7 @@ export default function MachineList() {
           columns={columns}
           rows={rows}
           emptyMessage="조회된 설비 내역이 존재하지 않습니다."
-          onRowClick={handleRowClick} 
+          onRowClick={handleRowClick}
         />
       </ContentCard>
 
