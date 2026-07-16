@@ -1,86 +1,91 @@
-// 디자인 토큰(DESIGN.md) 기반 공용 데이터 테이블 컴포넌트
-// columns: [{ key, label, align }]  rows: [{...}]
 import styled from "styled-components";
 
-const TableWrapper = styled.div`
+const TableWrap = styled.div`
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
 `;
 
 const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
-`;
-
-const Thead = styled.thead`
-  position: sticky;
-  top: 0;
-  background: var(--color-bg-canvas);
+  color: var(--color-text);
 `;
 
 const Th = styled.th`
-  height: ${(props) => (props.$dense ? "40px" : "56px")};
-  padding: 0 12px;
-  text-align: ${(props) => (props.$align === "right" ? "right" : "left")};
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
+  padding: 12px 10px;
   border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
+  text-align: ${(props) => props.$align || "left"};
+  white-space: nowrap;
+`;
+
+
+const ClickableTr = styled.tr`
+  cursor: ${(props) => (props.$isClickable ? "pointer" : "default")};
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: ${(props) => (props.$isClickable ? "var(--color-bg-canvas)" : "transparent")} !important;
+  }
 `;
 
 const Td = styled.td`
-  height: ${(props) => (props.$dense ? "40px" : "56px")};
-  padding: 0 12px;
-  text-align: ${(props) => (props.$align === "right" ? "right" : "left")};
-  color: var(--color-text);
-  font-variant-numeric: tabular-nums;
+  padding: 12px 10px;
   border-bottom: 1px solid var(--color-border);
+  text-align: ${(props) => props.$align || "left"};
+  vertical-align: middle;
 `;
 
-const EmptyRow = styled.td`
-  padding: 32px;
+const EmptyCell = styled.td`
+  padding: 24px 10px;
+  color: var(--color-neutral);
   text-align: center;
-  color: var(--color-text-secondary);
 `;
 
-export default function Table({ columns, rows, dense = false, onRowClick }) {
+export default function Table({
+  columns = [],
+  rows = [],
+  emptyMessage = "No data",
+  onRowClick,
+}) {
   return (
-    <TableWrapper>
+    <TableWrap>
       <StyledTable>
-        <Thead>
+        <thead>
           <tr>
-            {columns.map((col) => (
-              <Th key={col.key} $align={col.align} $dense={dense}>
-                {col.label}
+            {columns.map((column) => (
+              <Th key={column.key} $align={column.align}>
+                {column.label}
               </Th>
             ))}
           </tr>
-        </Thead>
+        </thead>
         <tbody>
-          {rows.length === 0 ? (
-            <tr>
-              <EmptyRow colSpan={columns.length}>데이터가 없습니다.</EmptyRow>
-            </tr>
-          ) : (
-            rows.map((row, idx) => (
-              <tr
-                key={row.id ?? idx}
-                onClick={() => onRowClick && onRowClick(row)}
-                style={{ cursor: onRowClick ? "pointer" : "default" }}
+          {rows.length > 0 ? (
+            rows.map((row, rowIndex) => (
+              <ClickableTr 
+                key={row.id ?? rowIndex}
+                $isClickable={!!onRowClick} // 클릭 이벤트 유무에 따라 스타일 차별화
+                onClick={() => onRowClick && onRowClick(row)} // 클릭 시 해당 행의 데이터(row)를 매개변수로 전달
               >
-                {columns.map((col) => (
-                  <Td key={col.key} $align={col.align} $dense={dense}>
-                    {row[col.key]}
+                {columns.map((column) => (
+                  <Td key={column.key} $align={column.align}>
+                    {row[column.key]}
                   </Td>
                 ))}
-              </tr>
+              </ClickableTr>
             ))
+          ) : (
+            <tr>
+              <EmptyCell colSpan={Math.max(columns.length, 1)}>
+                {emptyMessage}
+              </EmptyCell>
+            </tr>
           )}
         </tbody>
       </StyledTable>
-    </TableWrapper>
+    </TableWrap>
   );
 }
