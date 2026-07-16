@@ -3,7 +3,6 @@ import styled from "styled-components";
 import {
   FiActivity,
   FiCheckCircle,
-  FiChevronRight,
   FiLayers,
   FiPackage,
   FiTrendingUp,
@@ -582,16 +581,12 @@ const Table = styled.table`
   border-collapse: collapse;
   table-layout: fixed;
 
-  .statusBad {
-    padding: 15px 14px 15px 9px;
-  }
-
   th,
   td {
     padding: 15px 14px;
     border-bottom: 1px solid #e2e6ed;
 
-    text-align: left;
+    text-align: center;
     vertical-align: middle;
     font-size: 13px;
   }
@@ -611,10 +606,6 @@ const Table = styled.table`
     color: #23272e;
   }
 
-  .status {
-    padding: 15px 14px 15px 25px;
-  }
-
   tbody tr {
     cursor: pointer;
     transition: background 0.15s ease;
@@ -630,8 +621,10 @@ const Table = styled.table`
 `;
 
 const LotNumber = styled.strong`
+  display: inline-block;
   color: #174b9c;
   font-weight: 600;
+  white-space: nowrap;
 `;
 
 const StatusBadge = styled.span`
@@ -1424,6 +1417,17 @@ function ProductionReport() {
           {currentRows.length > 0 ? (
             <TableScroll>
               <Table>
+                <colgroup>
+                  <col style={{ width: 120 }} />
+                  <col style={{ width: 190 }} />
+                  <col style={{ width: 140 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 130 }} />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>생산일</th>
@@ -1434,7 +1438,7 @@ function ProductionReport() {
                     <th>양품</th>
                     <th>불량</th>
                     <th>수율</th>
-                    <th className="status">상태</th>
+                    <th>상태</th>
                   </tr>
                 </thead>
 
@@ -1465,7 +1469,7 @@ function ProductionReport() {
 
                       <td>{row.yieldRate}%</td>
 
-                      <td className="statusBad">
+                      <td>
                         <StatusBadge>생산 완료</StatusBadge>
                       </td>
                     </tr>
