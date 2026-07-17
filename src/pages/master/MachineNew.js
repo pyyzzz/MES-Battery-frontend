@@ -1,144 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
-import Button from "../../components/ui/Button";
 
-/* ================= Styled Components ================= */
-// 모달 전체 뒷배경 (어두운 레이어)
-const Backdrop = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
-  display: flex;
-  justify-content: flex-end; /* 우측 정렬 */
-`;
-
-// 우측 사이드 패널 본체
-const Panel = styled.div`
-  width: 480px;
-  height: 100%;
-  background: var(--color-bg);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  animation: slideIn 0.3s ease-out;
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  @media (max-width: 500px) {
-    width: 100%;
-  }
-`;
-
-// 헤더 영역 (타이틀 + 닫기 버튼)
-const Header = styled.div`
-  padding: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--color-border);
-
-  h3 {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text);
-  }
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-
-  &:hover {
-    background: var(--color-bg-canvas);
-    color: var(--color-text);
-  }
-`;
-
-// 입력 폼 영역
-const Form = styled.form`
-  flex: 1;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  label {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-  }
-`;
-
-const Input = styled.input`
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #cfd5e2;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  outline: none;
-  transition: border-color 0.15s;
-
-  &:focus {
-    border-color: var(--color-primary);
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #cfd5e2;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  outline: none;
-  background: #fff;
-  cursor: pointer;
-  transition: border-color 0.15s;
-
-  &:focus {
-    border-color: var(--color-primary);
-  }
-`;
-
-// 하단 푸터 영역 (취소, 저장 버튼)
-const Footer = styled.div`
-  padding: 20px 24px;
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  background: var(--color-bg-canvas);
-`;
-
-/* ================= Component Logic ================= */
 export default function MachineNew({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
     process_id: "",
@@ -185,21 +48,21 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
   };
 
   return (
-    <Backdrop onClick={onClose}>
-      {/* 버블링 방지를 위해 내부 Panel 클릭 시 이벤트 전파 차단 */}
-      <Panel onClick={(e) => e.stopPropagation()}>
+    <>
+      <Backdrop onClick={onClose} />
+      <Drawer role="dialog" aria-modal="true" aria-labelledby="machine-new-title">
         <Header>
-          <h3>설비 등록</h3>
-          <CloseButton onClick={onClose}>
+          <Title id="machine-new-title">설비 등록</Title>
+          <Close type="button" onClick={onClose} aria-label="닫기">
             <FiX />
-          </CloseButton>
+          </Close>
         </Header>
 
         {/* 💡 onSubmit 핸들러가 연결되어 있어 form 내부에서 Enter를 눌러도 제출 가능합니다 */}
         <Form id="machine-new-form" onSubmit={handleSubmit}>
           {/* 1. 공정코드 */}
           <FormGroup>
-            <label>공정코드</label>
+            <Label>공정코드</Label>
             <Input
               type="text"
               name="process_id"
@@ -212,7 +75,7 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
 
           {/* 2. 설비코드 */}
           <FormGroup>
-            <label>설비코드</label>
+            <Label>설비코드</Label>
             <Input
               type="text"
               name="machine_code"
@@ -225,7 +88,7 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
 
           {/* 3. 설비명 */}
           <FormGroup>
-            <label>설비명</label>
+            <Label>설비명</Label>
             <Input
               type="text"
               name="machine_name"
@@ -238,7 +101,7 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
 
           {/* 4. 설비상태 */}
           <FormGroup>
-            <label>설비상태</label>
+            <Label>설비상태</Label>
             <Select
               name="status"
               value={formData.status}
@@ -252,7 +115,7 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
 
           {/* 5. 사용여부 */}
           <FormGroup>
-            <label>사용 여부</label>
+            <Label>사용 여부</Label>
             <Select
               name="use_yn"
               value={formData.use_yn}
@@ -265,15 +128,174 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
         </Form>
 
         <Footer>
-          <Button variant="outline" type="button" onClick={onClose}>
+          <Secondary type="button" onClick={onClose}>
             취소
-          </Button>
+          </Secondary>
           {/* 💡 type을 "submit"으로 바꾸어 Form의 onSubmit이 온전히 트리거되도록 수정 */}
-          <Button variant="primary" type="submit" form="machine-new-form">
+          <Primary type="submit" form="machine-new-form">
             등록
-          </Button>
+          </Primary>
         </Footer>
-      </Panel>
-    </Backdrop>
+      </Drawer>
+    </>
   );
 }
+
+/* ================= Styled Components ================= */
+const Backdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.38);
+`;
+
+const Drawer = styled.aside`
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  width: min(480px, 100%);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: -12px 0 36px rgba(15, 23, 42, 0.18);
+  animation: open 0.24s ease-out;
+
+  @keyframes open {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+`;
+
+const Header = styled.header`
+  min-height: 86px;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d9deea;
+`;
+
+const Title = styled.h2`
+  margin: 0;
+  color: #202738;
+  font-size: 20px;
+  font-weight: 700;
+`;
+
+const Close = styled.button`
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: #6f788b;
+  font-size: 23px;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: #f1f3f8;
+  }
+`;
+
+const Form = styled.form`
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 7px;
+  color: #616b7e;
+  font-size: 12px;
+  font-weight: 600;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #262d3c;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: #084693;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #262d3c;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: #084693;
+  }
+`;
+
+const Footer = styled.footer`
+  min-height: 92px;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  border-top: 1px solid #d9deea;
+`;
+
+const FooterButton = styled.button`
+  width: 140px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+`;
+
+const Secondary = styled(FooterButton)`
+  background: #eaebf3;
+  color: #61697a;
+
+  &:hover {
+    background: #dfe1eb;
+  }
+`;
+
+const Primary = styled(FooterButton)`
+  background: #084693;
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(8, 70, 147, 0.2);
+
+  &:hover {
+    background: #063b7d;
+  }
+`;

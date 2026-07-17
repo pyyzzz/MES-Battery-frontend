@@ -2,12 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
-import Table from "../../components/ui/Table";
 
-import FilterPanel, {
-  FilterField,
-  FilterActions,
-} from "../../components/ui/FilterPanel";
+// 공용 SearchFilterBar 컴포넌트 import (ProcessList와 동일하게 이식)
+import SearchFilterBar from "../../components/ui/SearchFilterBar";
 
 import ProductNew from "./ProductNew";
 import ProductEdit from "./ProductEdit";
@@ -15,13 +12,13 @@ import ProductDetail from "./ProductDetail";
 
 /* Styled Components */
 const Container = styled.div`
+  min-height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: var(--spacing-gutter);
-  max-width: var(--container-max);
-  margin: 0 auto;
-  width: 100%;
+  gap: 20px;
 `;
 
 // 페이지 헤더
@@ -32,77 +29,140 @@ const Header = styled.div`
 
   .title-group {
     h2 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
-      margin-bottom: 8px;
+      margin: 0 0 6px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.8px;
+      color: #17191d;
     }
     p {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
+      margin: 0;
+      font-size: 14px;
+      color: #888f9c;
     }
   }
 `;
 
-// 테이블 배치 영역 카드
-const TableCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+// Filter 영역을 감싸는 패널 스타일
+const StyledFilterPanel = styled.section`
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #dce1ea;
+  border-radius: 12px;
 `;
 
-// 통합 검색 필터용 Input
-const SearchInput = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
+const PanelTitle = styled.h2`
+  margin: 0 0 18px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #292d35;
+`;
+
+// SearchFilterBar 가로 정렬 및 내부 그룹 스타일 정리를 위한 래퍼
+const FilterBarWrapper = styled.div`
   width: 100%;
 
-  input {
+  & > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     width: 100%;
-    height: 42px;
-    padding: 0 12px;
-    border: 1px solid #cfd5e2;
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-sm);
-    outline: none;
-    &:focus {
-      border-color: var(--color-primary);
-    }
+  }
+
+  & div[class*="ButtonGroup"], 
+  & div[class*="button-group"],
+  & div:has(> button) {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 8px;
   }
 `;
 
-// 날짜 입력 필드 스타일
-const DateInput = styled.input`
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #cfd5e2;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  outline: none;
-  background: #fff;
-  &:focus {
-    border-color: var(--color-primary);
-  }
+// 테이블 패널
+const TablePanel = styled.section`
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #dce1ea;
+  border-radius: 12px;
 `;
 
-// 날짜 범위 컨테이너
-const DateRangeContainer = styled.div`
+const TableTop = styled.div`
+  min-height: 62px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+`;
 
-  span {
-    color: var(--color-text-secondary);
+const TableTitle = styled.h2`
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #292d35;
+`;
+
+const TableSummary = styled.span`
+  font-size: 13px;
+  color: #767e8b;
+
+  strong {
+    color: #0755d9;
   }
 `;
 
-// 제품 코드 스타일 텍스트
-const ProductCodeText = styled.span`
-  font-weight: var(--font-weight-bold);
-  color: #1e40af;
+const TableScroll = styled.div`
+  width: 100%;
+  overflow-x: auto;
+`;
+
+const StyledTable = styled.table`
+  width: 100%;
+  min-width: 1080px;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    padding: 15px 14px;
+    border-bottom: 1px solid #e2e6ed;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 13px;
+  }
+
+  th {
+    height: 48px;
+    box-sizing: border-box;
+    background: #f1f3f6;
+    color: #555d6b;
+    font-weight: 500;
+  }
+
+  td {
+    color: #23272e;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  tbody tr:hover {
+    background: #f6f9ff;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+`;
+
+// 제품 코드 스타일 블루 계열 볼드 텍스트 적용
+const ProductCodeText = styled.strong`
+  display: inline-block;
+  color: #174b9c;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 
   &:hover {
@@ -127,14 +187,23 @@ const EditTextBtn = styled.button`
   }
 `;
 
+const EmptyMessage = styled.div`
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #9198a4;
+`;
+
 // 하단 페이지네이션 컨테이너
 const PaginationContainer = styled.div`
+  border-top: 1px solid #e2e6ed;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
+  padding: 16px 20px;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  background: #f5f6f8;
 
   .page-buttons {
     display: flex;
@@ -228,22 +297,25 @@ export default function ProductList() {
     },
   ]);
 
-  // 검색 필터용 State
+  // 검색 필터 State
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [keyword, setKeyword] = useState("");
 
-  // 모달 제어용 State
+  // 모달 제어 State
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // 이벤트 핸들러
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
+  // SearchFilterBar 연동 조회 핸들러
+  const handleSearch = (filterValues) => {
+    setStartDate(filterValues.startDate || "");
+    setEndDate(filterValues.endDate || "");
+    setKeyword(filterValues.keyword || "");
   };
 
+  // SearchFilterBar 연동 초기화 핸들러
   const handleReset = () => {
     setStartDate("");
     setEndDate("");
@@ -261,7 +333,7 @@ export default function ProductList() {
     console.log("제품 수정 호출:", product.product_code);
   };
 
-  // 필터링 로직
+  // 필터링 로직 (조회 버튼을 클릭하여 State가 세팅되었을 때 렌더링되게 설계됨)
   const filteredRows = products.filter((item) => {
     const matchKeyword =
       item.product_code.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -285,15 +357,15 @@ export default function ProductList() {
 
   // Table 컴포넌트에 넘겨줄 컬럼 구조
   const columns = [
-    { key: "id", label: "ID", align: "center" },
-    { key: "product_code", label: "제품 코드", align: "left" },
-    { key: "product_name", label: "제품명", align: "left" },
-    { key: "voltage_styled", label: "전압", align: "center" },
-    { key: "capacity_styled", label: "용량", align: "center" },
-    { key: "unit", label: "단위", align: "center" },
-    { key: "created_at", label: "등록일", align: "left" },
-    { key: "updated_at", label: "수정일", align: "left" },
-    { key: "management", label: "관리", align: "center" },
+    { key: "id", label: "ID", align: "center", width: 80 },
+    { key: "product_code", label: "제품 코드", align: "left", width: 180 },
+    { key: "product_name", label: "제품명", align: "left", width: 220 },
+    { key: "voltage_styled", label: "전압", align: "center", width: 100 },
+    { key: "capacity_styled", label: "용량", align: "center", width: 100 },
+    { key: "unit", label: "단위", align: "center", width: 90 },
+    { key: "created_at", label: "등록일", align: "left", width: 150 },
+    { key: "updated_at", label: "수정일", align: "left", width: 150 },
+    { key: "management", label: "관리", align: "center", width: 100 },
   ];
 
   // 데이터 가공 및 컴포넌트 데이터셀 인젝션
@@ -314,6 +386,7 @@ export default function ProductList() {
       </EditTextBtn>
     ),
   }));
+
   return (
     <Container>
       {/* 상단 타이틀 헤더 영역 */}
@@ -334,74 +407,90 @@ export default function ProductList() {
         </Button>
       </Header>
 
-      <TableCard>
-        <FilterPanel
-          onSubmit={handleSearchSubmit}
-          $columns="minmax(280px, 1.2fr) minmax(320px, 1.5fr) auto"
-        >
-          {/* 등록일 필터 */}
-          <FilterField>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "var(--font-weight-medium)",
-                fontSize: "var(--font-size-sm)",
-              }}
-            >
-              등록일
-            </label>
-            <DateRangeContainer>
-              <DateInput
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <span>~</span>
-              <DateInput
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </DateRangeContainer>
-          </FilterField>
+      {/* 공용 SearchFilterBar 적용 영역 */}
+      <StyledFilterPanel>
+        <PanelTitle>제품 검색</PanelTitle>
+        <FilterBarWrapper>
+          <SearchFilterBar
+            filters={[]} // 추가적인 select 필터가 필요 없으므로 빈 배열로 전달
+            showKeyword={true}
+            keywordName="keyword"
+            keywordLabel="통합 검색"
+            keywordPlaceholder="제품코드 / 제품명 검색"
+            keywordWidth={280}
+            showDateRange={true} // 등록일 필터용 Date Range 사용 선언
+            dateLabel="등록일"
+            onSearch={handleSearch}
+            onReset={handleReset}
+            inputHeight={38}
+            border="none"
+            padding={0}
+            gap={16}
+            width="100%"
+          />
+        </FilterBarWrapper>
+      </StyledFilterPanel>
 
-          {/* 통합 검색 필터 */}
-          <FilterField>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "var(--font-weight-medium)",
-                fontSize: "var(--font-size-sm)",
-              }}
-            >
-              통합 검색
-            </label>
-            <SearchInput>
-              <input
-                type="text"
-                placeholder="제품코드 / 제품명 검색"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-            </SearchInput>
-          </FilterField>
+      {/* 테이블 패널 영역 */}
+      <TablePanel>
+        <TableTop>
+          <TableTitle>제품 목록</TableTitle>
+          <TableSummary>
+            조회 제품 <strong>{filteredRows.length}</strong>건
+          </TableSummary>
+        </TableTop>
 
-          {/* 공용 초기화, 조회 버튼 영역 */}
-          <FilterActions onReset={handleReset} submitLabel="조회" />
-        </FilterPanel>
+        {tableRows.length > 0 ? (
+          <TableScroll>
+            <StyledTable>
+              <colgroup>
+                {columns.map((col) => (
+                  <col key={col.key} style={{ width: col.width }} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr>
+                  {columns.map((col) => (
+                    <th key={col.key} style={{ textAlign: col.align }}>
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    onClick={() => {
+                      setSelectedProduct(row);
+                      setIsDetailOpen(true);
+                    }}
+                  >
+                    <td style={{ textAlign: "center" }}>{row.id}</td>
+                    <td style={{ textAlign: "left" }}>{row.product_code}</td>
+                    <td style={{ textAlign: "left" }}>{row.product_name}</td>
+                    <td style={{ textAlign: "center" }}>
+                      {row.voltage_styled}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      {row.capacity_styled}
+                    </td>
+                    <td style={{ textAlign: "center" }}>{row.unit}</td>
+                    <td style={{ textAlign: "left" }}>{row.created_at}</td>
+                    <td style={{ textAlign: "left" }}>{row.updated_at}</td>
+                    <td style={{ textAlign: "center" }}>{row.management}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </StyledTable>
+          </TableScroll>
+        ) : (
+          <EmptyMessage>
+            조건에 부합하는 제품 마스터 내역이 존재하지 않습니다.
+          </EmptyMessage>
+        )}
 
-        {/* 기획 디자인 전용 테이블 목록 본문 */}
-        <Table
-          columns={columns}
-          rows={tableRows}
-          onRowClick={(row) => {
-            setSelectedProduct(row);
-            setIsDetailOpen(true);
-          }}
-          emptyMessage="조건에 부합하는 제품 마스터 내역이 존재하지 않습니다."
-        />
+        {/* 페이지네이션 Area */}
         <PaginationContainer>
           <div>
             전체 {filteredRows.length}개 항목 중 1에서 {filteredRows.length}까지
@@ -413,7 +502,8 @@ export default function ProductList() {
             <PageBtn>&gt;</PageBtn>
           </div>
         </PaginationContainer>
-      </TableCard>
+      </TablePanel>
+
       <ProductNew
         isOpen={isNewOpen}
         onClose={() => setIsNewOpen(false)}
@@ -433,9 +523,9 @@ export default function ProductList() {
       />
       <ProductEdit
         isOpen={isEditOpen}
-        product={selectedProduct} // 선택된 제품 데이터 전달
+        product={selectedProduct}
         onClose={() => setIsEditOpen(false)}
-        onSave={handleUpdateProduct} // 위에서 만든 업데이트 함수 전달
+        onSave={handleUpdateProduct}
       />
     </Container>
   );

@@ -212,10 +212,10 @@ function DashBoard() {
 
   // 불량 유형 분석
   const [defectTypeData] = useState([
-    { label: "고온", value: 45, color: "#2563eb" },
-    { label: "라벨 오류", value: 25, color: "#d97706" },
-    { label: "저전압", value: 15, color: "#059669" },
-    { label: "기타", value: 15, color: "#cbd5e1" },
+    { name: "고온", value: 45, color: "#2563eb" },
+    { name: "라벨", value: 25, color: "#d97706" },
+    { name: "저전압", value: 15, color: "#059669" },
+    { name: "기타", value: 15, color: "#cbd5e1" },
   ]);
 
   // 설비 가동 현황

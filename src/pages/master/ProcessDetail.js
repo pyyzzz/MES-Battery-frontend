@@ -1,14 +1,14 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 
-export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
+// product 프로퍼티로 공정 데이터를 받아오고, onEdit과 onClose를 처리합니다.
+export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
   useEffect(() => {
     if (!isOpen || !product) return undefined;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     const handleKeyDown = (event) => event.key === "Escape" && onClose();
     window.addEventListener("keydown", handleKeyDown);
 
@@ -23,81 +23,53 @@ export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
   return (
     <>
       <Backdrop onClick={onClose} />
-
-      <Drawer
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="product-detail-title"
-      >
+      <Drawer role="dialog" aria-modal="true" aria-labelledby="process-detail-title">
         <Header>
-          <Title id="product-detail-title">제품 상세 조회</Title>
-
+          <Title id="process-detail-title">공정 상세 조회</Title>
           <Close type="button" onClick={onClose} aria-label="닫기">
             <FiX />
           </Close>
         </Header>
 
         <Body>
-          <SectionTitle>제품 정보</SectionTitle>
-
+          <SectionTitle>공정 정보</SectionTitle>
           <Field>
-            <Label>제품명</Label>
-            <Value>{product.product_name}</Value>
+            <Label>공정명</Label>
+            <Value>{product.step_name}</Value>
           </Field>
-
           <Field>
-            <Label>제품 코드</Label>
-            <Value $code>{product.product_code}</Value>
+            <Label>공정 코드</Label>
+            <Value $code>{product.step_code}</Value>
           </Field>
-
+          
           <Grid>
             <Field>
-              <Label>전압(V)</Label>
-              <Value>{product.voltage}V</Value>
+              <Label>담당 설비</Label>
+              <Value>{product.machine || "지정되지 않음"}</Value>
             </Field>
-
             <Field>
-              <Label>용량(Ah)</Label>
-              <Value>{product.capacity_ah}Ah</Value>
+              <Label>담당 작업자</Label>
+              <Value>{product.worker || "미지정"}</Value>
             </Field>
           </Grid>
-
+          
           <Field>
-            <Label>단위</Label>
-            <Value>{product.unit}</Value>
+            <Label>사용 여부</Label>
+            <Value>{product.is_active ? "사용" : "미사용"}</Value>
           </Field>
 
-          <History>
-            <SectionTitle>BOM 구성 정보</SectionTitle>
-
-            <TableWrap>
-              <table>
-                <thead>
-                  <tr>
-                    <th>자재 코드</th>
-                    <th>자재명</th>
-                    <th>소요량</th>
-                    <th>단위</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td colSpan="4" style={{ color: "#9ca3af" }}>
-                      등록된 BOM 정보가 없습니다.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </TableWrap>
-          </History>
+          <Field>
+            <Label>공정 설명</Label>
+            <Value style={{ minHeight: "80px", alignItems: "flex-start", paddingTop: "12px" }}>
+              {product.description || "등록된 설명이 없습니다."}
+            </Value>
+          </Field>
         </Body>
 
         <Footer>
           <Secondary type="button" onClick={onClose}>
             닫기
           </Secondary>
-
           <Primary type="button" onClick={onEdit}>
             수정
           </Primary>
@@ -107,6 +79,7 @@ export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
   );
 }
 
+/* Styled Components */
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
@@ -119,7 +92,7 @@ const Drawer = styled.aside`
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%); /* 가로 폭을 기존 600px에서 480px로 축소 */
+  width: min(480px, 100%); /* 가로 폭을 기존 600px에서 480px로 변경 */
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -203,8 +176,7 @@ const Value = styled.div`
   border-radius: 8px;
   background: #f7f8fd;
   color: ${({ $code }) => ($code ? "#084693" : "#262d3c")};
-  font-family: ${({ $code }) =>
-    $code ? "var(--font-family-mono)" : "inherit"};
+  font-family: ${({ $code }) => ($code ? "var(--font-family-mono)" : "inherit")};
   font-size: 13px;
   font-weight: ${({ $code }) => ($code ? 700 : 500)};
 `;
@@ -214,47 +186,9 @@ const Grid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 
-  @media (max-width: 520px) {
+  @media (max-width: 440px) { /* 반응형 트리거 시점을 다른 모달 컴포넌트와 동일하게 440px로 수정 */
     grid-template-columns: 1fr;
     gap: 0;
-  }
-`;
-
-const History = styled.section`
-  margin-top: 38px;
-`;
-
-const TableWrap = styled.div`
-  overflow-x: auto;
-  border: 1px solid #c7cddd;
-  border-radius: 8px;
-
-  table {
-    width: 100%;
-    min-width: 500px;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  th,
-  td {
-    height: 44px;
-    padding: 0 16px;
-    border-bottom: 1px solid #c7cddd;
-    color: #303748;
-    font-size: 12px;
-    text-align: center;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-
-  th {
-    background: #eef0f8;
-    font-weight: 700;
-  }
-
-  tr:last-child td {
-    border-bottom: 0;
   }
 `;
 
@@ -268,7 +202,7 @@ const Footer = styled.footer`
 `;
 
 const FooterButton = styled.button`
-  width: 140px; /* 버튼 가로 폭을 기존 160px에서 140px로 축소 */
+  width: 140px; /* 버튼 가로 폭을 기존 160px에서 다른 모달들과 동일하게 140px로 축소 */
   height: 44px;
   border-radius: 8px;
   font-size: 14px;
