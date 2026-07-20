@@ -12,6 +12,7 @@ import {
   FiChevronRight,
   FiChevronsLeft,
   FiChevronsRight,
+  FiUser,
 } from "react-icons/fi";
 
 const MENU_ITEMS = [
@@ -339,10 +340,42 @@ const CollapsedMenuLink = styled(Link)`
 
 const ToggleSection = styled.div`
   display: flex;
+  flex-direction: ${({ $collapsed }) => ($collapsed ? "column" : "row")};
+  align-items: center;
   justify-content: ${({ $collapsed }) =>
-    $collapsed ? "center" : "flex-end"};
+    $collapsed ? "center" : "space-between"};
+  gap: ${({ $collapsed }) => ($collapsed ? "4px" : "12px")};
   padding: 14px ${({ $collapsed }) => ($collapsed ? "10px" : "18px")} 0;
   transform: translateY(6px);
+`;
+
+const UserSummary = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--sidebar-text);
+`;
+
+const UserIcon = styled.span`
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sidebar-text-muted);
+`;
+
+const UserName = styled.span`
+  display: ${({ $collapsed }) => ($collapsed ? "none" : "block")};
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `;
 
 const CollapseButton = styled.button`
@@ -498,6 +531,13 @@ export default function SideBar({ activeItem }) {
       </Nav>
 
       <ToggleSection $collapsed={collapsed}>
+        <UserSummary title="관리자 님">
+          <UserIcon>
+            <FiUser size={17} />
+          </UserIcon>
+          <UserName $collapsed={collapsed}>관리자 님</UserName>
+        </UserSummary>
+
         <CollapseButton
           type="button"
           aria-label={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
