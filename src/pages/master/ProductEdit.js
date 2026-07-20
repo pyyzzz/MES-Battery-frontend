@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
+import { FiX } from "react-icons/fi"; // FiX 아이콘 추가
 
-/* Styled Components */
+/* ProductDetail 기반 통일된 디자인 시스템 적용 */
 const DrawerOverlay = styled.div`
   position: fixed;
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  inset: 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.38);
   display: ${(props) => (props.$isOpen ? "block" : "none")};
 `;
 
@@ -18,45 +16,55 @@ const DrawerContainer = styled.div`
   position: fixed;
   top: 0;
   right: 0;
-  width: 560px;
-  height: 100%;
-  background-color: #fff;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
-  z-index: 1001;
+  z-index: 1000;
+  width: min(480px, 100%);
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: #fff;
+  box-shadow: -12px 0 36px rgba(15, 23, 42, 0.18);
   transform: ${(props) =>
     props.$isOpen ? "translateX(0)" : "translateX(100%)"};
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.24s ease-out;
 `;
 
-const Header = styled.div`
+const Header = styled.header`
+  min-height: 86px;
+  padding: 0 30px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  justify-content: space-between;
+  border-bottom: 1px solid #d9deea;
+
   h3 {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
+    margin: 0;
+    color: #202738;
+    font-size: 20px;
+    font-weight: 700;
   }
 `;
 
 const CloseButton = styled.button`
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: #6f788b;
+  font-size: 23px;
   background: none;
   border: none;
-  font-size: 24px;
   cursor: pointer;
-  color: #9ca3af;
+
   &:hover {
-    color: #4b5563;
+    background: #f1f3f8;
   }
 `;
 
 const FormBody = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 32px 30px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -65,35 +73,43 @@ const FormBody = styled.div`
 const Section = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
 `;
 
-const SectionTitle = styled.div`
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
+const SectionTitle = styled.h3`
+  margin: 0 0 24px;
+  color: #202738;
+  font-size: 18px;
+  font-weight: 700;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  margin-bottom: 18px;
+
   label {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: #4b5563;
+    display: block;
+    margin-bottom: 7px;
+    color: #616b7e;
+    font-size: 12px;
   }
+
   input,
   select {
     width: 100%;
     height: 42px;
-    padding: 0 12px;
-    border: 1px solid #cfd5e2;
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-sm);
+    padding: 0 16px;
+    border: 1px solid #c7cddd;
+    border-radius: 8px;
+    font-size: 13px;
     outline: none;
+    background-color: #fff;
+    color: #262d3c;
+    font-weight: 500;
+    box-sizing: border-box;
+
     &:focus {
-      border-color: var(--color-primary);
+      border-color: #084693;
     }
   }
 `;
@@ -108,24 +124,30 @@ const InputWithSuffix = styled.div`
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+
   input {
     padding-right: 40px;
   }
+
   span.suffix {
     position: absolute;
-    right: 14px;
-    font-size: var(--font-size-sm);
-    color: #9ca3af;
+    right: 16px;
+    font-size: 13px;
+    color: #616b7e;
+    font-weight: 500;
   }
 `;
 
 const Footer = styled.div`
+  min-height: 92px;
+  padding: 20px 30px;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid #e5e7eb;
+  justify-content: center;
+  gap: 16px;
+  border-top: 1px solid #d9deea;
   background-color: #fff;
+  box-sizing: border-box;
 `;
 
 export default function ProductEdit({ isOpen, product, onClose, onSave }) {
@@ -164,7 +186,9 @@ export default function ProductEdit({ isOpen, product, onClose, onSave }) {
       <DrawerContainer $isOpen={isOpen}>
         <Header>
           <h3>제품 수정</h3>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
+          <CloseButton onClick={onClose} aria-label="닫기">
+            <FiX />
+          </CloseButton>
         </Header>
 
         <FormBody>
@@ -221,13 +245,36 @@ export default function ProductEdit({ isOpen, product, onClose, onSave }) {
         </FormBody>
 
         <Footer>
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            style={{
+              width: "140px",
+              height: "44px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "700",
+              border: "none",
+              background: "#eaebf3",
+              color: "#61697a",
+            }}
+          >
             취소
           </Button>
           <Button
             variant="primary"
             onClick={handleUpdate}
-            style={{ backgroundColor: "#0b3a9e" }}
+            style={{
+              width: "140px",
+              height: "44px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "700",
+              border: "none",
+              background: "#084693",
+              color: "#fff",
+              boxShadow: "0 5px 12px rgba(8, 70, 147, 0.2)",
+            }}
           >
             수정
           </Button>

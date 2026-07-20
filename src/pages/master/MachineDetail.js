@@ -2,13 +2,18 @@ import { useEffect } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 
-export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
+// ProcessDetail과 동일한 구조로 onEdit을 직접 바인딩합니다.
+export default function MachineDetail({
+  isOpen,
+  onClose,
+  selectedMachine,
+  onEdit,
+}) {
   useEffect(() => {
-    if (!isOpen || !product) return undefined;
+    if (!isOpen || !selectedMachine) return undefined;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     const handleKeyDown = (event) => event.key === "Escape" && onClose();
     window.addEventListener("keydown", handleKeyDown);
 
@@ -16,88 +21,65 @@ export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, product, onClose]);
+  }, [isOpen, selectedMachine, onClose]);
 
-  if (!isOpen || !product) return null;
+  if (!isOpen || !selectedMachine) return null;
 
   return (
     <>
       <Backdrop onClick={onClose} />
-
-      <Drawer
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="product-detail-title"
-      >
+      <Drawer role="dialog" aria-modal="true" aria-labelledby="machine-detail-title">
         <Header>
-          <Title id="product-detail-title">제품 상세 조회</Title>
-
+          <Title id="machine-detail-title">설비 상세 정보</Title>
           <Close type="button" onClick={onClose} aria-label="닫기">
             <FiX />
           </Close>
         </Header>
 
         <Body>
-          <SectionTitle>제품 정보</SectionTitle>
-
           <Field>
-            <Label>제품명</Label>
-            <Value>{product.product_name}</Value>
+            <Label>설비 ID</Label>
+            <Value $code>{selectedMachine.machine_id}</Value>
           </Field>
 
           <Field>
-            <Label>제품 코드</Label>
-            <Value $code>{product.product_code}</Value>
+            <Label>공정코드</Label>
+            <Value>{selectedMachine.process_id}</Value>
           </Field>
-
-          <Grid>
-            <Field>
-              <Label>전압(V)</Label>
-              <Value>{product.voltage}V</Value>
-            </Field>
-
-            <Field>
-              <Label>용량(Ah)</Label>
-              <Value>{product.capacity_ah}Ah</Value>
-            </Field>
-          </Grid>
 
           <Field>
-            <Label>단위</Label>
-            <Value>{product.unit}</Value>
+            <Label>설비코드</Label>
+            <Value>{selectedMachine.machine_code}</Value>
           </Field>
 
-          <History>
-            <SectionTitle>BOM 구성 정보</SectionTitle>
+          <Field>
+            <Label>설비명</Label>
+            <Value>{selectedMachine.machine_name}</Value>
+          </Field>
 
-            <TableWrap>
-              <table>
-                <thead>
-                  <tr>
-                    <th>자재 코드</th>
-                    <th>자재명</th>
-                    <th>소요량</th>
-                    <th>단위</th>
-                  </tr>
-                </thead>
+          <Field>
+            <Label>설비상태</Label>
+            <Value>{selectedMachine.status}</Value>
+          </Field>
 
-                <tbody>
-                  <tr>
-                    <td colSpan="4" style={{ color: "#9ca3af" }}>
-                      등록된 BOM 정보가 없습니다.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </TableWrap>
-          </History>
+          <Field>
+            <Label>사용 여부</Label>
+            <Value>
+              {selectedMachine.use_yn === "Y" ? "사용 중" : "사용 중지"}
+            </Value>
+          </Field>
+
+          <Field>
+            <Label>메시지</Label>
+            <Value>{selectedMachine.message || "-"}</Value>
+          </Field>
         </Body>
 
         <Footer>
           <Secondary type="button" onClick={onClose}>
             닫기
           </Secondary>
-
+          {/* 💡 ProcessDetail과 완벽히 매칭: 인자 없이 onEdit 콜백 실행 */}
           <Primary type="button" onClick={onEdit}>
             수정
           </Primary>
@@ -107,6 +89,7 @@ export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
   );
 }
 
+/* ================= Styled Components ================= */
 const Backdrop = styled.div`
   position: fixed;
   inset: 0;
@@ -119,7 +102,7 @@ const Drawer = styled.aside`
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%); /* 가로 폭을 기존 600px에서 480px로 축소 */
+  width: min(480px, 100%); /* 가로 폭을 기존 600px에서 480px로 변경 */
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -176,13 +159,6 @@ const Body = styled.div`
   padding: 32px 30px;
 `;
 
-const SectionTitle = styled.h3`
-  margin: 0 0 24px;
-  color: #202738;
-  font-size: 18px;
-  font-weight: 700;
-`;
-
 const Field = styled.div`
   margin-bottom: 18px;
 `;
@@ -203,59 +179,9 @@ const Value = styled.div`
   border-radius: 8px;
   background: #f7f8fd;
   color: ${({ $code }) => ($code ? "#084693" : "#262d3c")};
-  font-family: ${({ $code }) =>
-    $code ? "var(--font-family-mono)" : "inherit"};
+  font-family: ${({ $code }) => ($code ? "var(--font-family-mono)" : "inherit")};
   font-size: 13px;
   font-weight: ${({ $code }) => ($code ? 700 : 500)};
-`;
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-
-  @media (max-width: 520px) {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-`;
-
-const History = styled.section`
-  margin-top: 38px;
-`;
-
-const TableWrap = styled.div`
-  overflow-x: auto;
-  border: 1px solid #c7cddd;
-  border-radius: 8px;
-
-  table {
-    width: 100%;
-    min-width: 500px;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  th,
-  td {
-    height: 44px;
-    padding: 0 16px;
-    border-bottom: 1px solid #c7cddd;
-    color: #303748;
-    font-size: 12px;
-    text-align: center;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-
-  th {
-    background: #eef0f8;
-    font-weight: 700;
-  }
-
-  tr:last-child td {
-    border-bottom: 0;
-  }
 `;
 
 const Footer = styled.footer`

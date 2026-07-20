@@ -6,147 +6,151 @@ import Button from "../../components/ui/Button";
 /* Styled Components */
 const Backdrop = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
-  display: flex;
-  justify-content: flex-end;
+  inset: 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.38);
 `;
 
-// 우측 사이드 패널
+// 우측 사이드 패널 (너비를 600px에서 480px로 축소)
 const Panel = styled.div`
-  width: 560px;
-  height: 100%;
-  background: var(--color-bg);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  width: min(480px, 100%);
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.3s ease-out;
+  background: #fff;
+  box-shadow: -12px 0 36px rgba(15, 23, 42, 0.18);
+  animation: slideIn 0.24s ease-out;
 
   @keyframes slideIn {
     from {
       transform: translateX(100%);
     }
     to {
-      transform: translateX(0);
+      transform: none;
     }
-  }
-
-  @media (max-width: 600px) {
-    width: 100%;
   }
 `;
 
 // 헤더 영역
 const Header = styled.div`
-  padding: 40px 40px 20px 40px;
-  background: var(--color-bg);
+  min-height: 86px;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d9deea;
   position: relative;
 
   h3 {
-    font-size: 22px;
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text);
-    margin-bottom: 8px;
+    margin: 0;
+    color: #202738;
+    font-size: 20px;
+    font-weight: 700;
   }
   p {
-    font-size: var(--font-size-xs);
-    color: var(--color-neutral);
+    display: none; /* ProcessDetail의 깔끔한 헤더 형태에 맞춰 p태그는 영역에서 숨김 처리 */
   }
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 40px;
-  right: 40px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: #6f788b;
+  font-size: 23px;
   background: none;
   border: none;
-  font-size: 24px;
-  color: #64748b;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
   &:hover {
-    color: var(--color-text);
+    background: #f1f3f8;
   }
 `;
 
 const Form = styled.form`
   flex: 1;
-  padding: 10px 40px 32px 40px;
   overflow-y: auto;
+  padding: 32px 30px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
 `;
 
 // 그리드 레이아웃 (공정코드 / 순서 / 상태)
 const FormGroupRow = styled.div`
   display: grid;
-  grid-template-columns: 1.2fr 1.2fr 1.6fr;
-  gap: 16px;
+  grid-template-columns: 1.1fr 1fr 1.3fr; /* 줄어든 너비에 맞춰 내부 열 비율 균형 조정 */
+  gap: 12px;
+
+  @media (max-width: 440px) {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 
   label {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-neutral);
-    text-transform: uppercase;
+    display: block;
+    color: #616b7e;
+    font-size: 12px;
+    font-weight: 500;
   }
 `;
 
 /* 입력 필드 공통 스타일 */
 const Input = styled.input`
   width: 100%;
-  height: 48px;
+  min-height: 42px;
   padding: 0 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #262d3c;
   background: #ffffff;
   outline: none;
   transition: border-color 0.15s;
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: #084693;
   }
 
   /* 읽기 전용 스타일 */
   ${(props) =>
     props.readOnly &&
     `
-      background: #f1f5f9;
-      border-color: #e2e8f0;
-      color: #334155;
+      background: #f7f8fd;
+      border-color: #c7cddd;
+      color: #084693;
+      font-weight: 700;
       cursor: not-allowed;
     `}
 `;
 
 const Select = styled.select`
   width: 100%;
-  height: 48px;
+  min-height: 42px;
   padding: 0 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #262d3c;
   background: #ffffff;
   outline: none;
   cursor: pointer;
   transition: border-color 0.15s;
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: #084693;
   }
 `;
 
@@ -154,10 +158,10 @@ const TextArea = styled.textarea`
   width: 100%;
   height: 120px;
   padding: 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #262d3c;
   background: #ffffff;
   outline: none;
   resize: none;
@@ -165,23 +169,25 @@ const TextArea = styled.textarea`
   transition: border-color 0.15s;
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: #084693;
   }
 `;
 
 // 하단 푸터 영역
 const Footer = styled.div`
-  padding: 24px 40px 32px 40px;
-  border-top: 1px solid var(--color-border);
+  min-height: 92px;
+  padding: 20px 30px;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  justify-content: center;
+  gap: 16px;
+  border-top: 1px solid #d9deea;
   background: #ffffff;
 
   button {
-    min-width: 96px;
+    width: 140px; /* 전체 너비가 줄었으므로 버튼 크기도 160px에서 140px로 조금 줄임 */
     height: 44px;
-    font-size: var(--font-size-sm);
+    font-size: 14px;
+    font-weight: 700;
   }
 `;
 
@@ -215,7 +221,6 @@ export default function ProcessNew({ isOpen, onClose, onRegister }) {
       return;
     }
 
-    // 부모 컴포넌트에 누락되었던 나머지 항목들(machine, description, worker)까지 전달
     onRegister({
       step_code: formData.step_code,
       seq: Number(formData.seq),
@@ -226,14 +231,12 @@ export default function ProcessNew({ isOpen, onClose, onRegister }) {
       worker: formData.worker,
     });
 
-    // 등록 완료 후 폼을 초기 상태로 리셋
     setFormData(initialFormState);
     onClose();
   };
 
   return (
     <Backdrop onClick={onClose}>
-      {/* 내부 패널 클릭 시 바깥 닫기 이벤트 전파 방지 */}
       <Panel onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <Header>

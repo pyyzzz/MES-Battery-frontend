@@ -2,32 +2,29 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
-import Table from "../../components/ui/Table";
+import SummaryCard from "../../components/ui/SummaryCard";
 
 import { FiCpu, FiActivity, FiSlash, FiEdit3, FiTrash2 } from "react-icons/fi";
 
-// MachineList와 동일한 공용 필터 컴포넌트 import
-import FilterPanel, {
-  FilterField,
-  FilterActions,
-} from "../../components/ui/FilterPanel";
+// 공용 SearchFilterBar 컴포넌트 import
+import SearchFilterBar from "../../components/ui/SearchFilterBar";
 
-// 신규 등록 사이드 패널 컴포넌트 import
+// 신규 등록, 수정 및 상세 정보 조회 사이드 패널 컴포넌트 import
 import ProcessNew from "./ProcessNew";
 import ProcessEdit from "./ProcessEdit";
+import ProcessDetail from "./ProcessDetail"; 
 
 /* Styled Components */
 const Container = styled.div`
+  min-height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: var(--spacing-gutter);
-  max-width: var(--container-max);
-  margin: 0 auto;
-  width: 100%;
+  gap: 20px;
 `;
 
-// 페이지 헤더
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
@@ -35,116 +32,144 @@ const Header = styled.div`
 
   .title-group {
     h2 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+      margin: 0 0 6px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.8px;
+      color: #17191d;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
     }
     p {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
+      margin: 0;
+      font-size: 14px;
+      color: #888f9c;
     }
   }
 `;
 
-const IconWrapper = styled.div`
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-// 상단 KPI 카드 레이아웃
 const KpiGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 16px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const KpiCardContent = styled.div`
+const StyledFilterPanel = styled.section`
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #dce1ea;
+  border-radius: 12px;
+`;
+
+const PanelTitle = styled.h2`
+  margin: 0 0 18px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #292d35;
+`;
+
+const FilterBarWrapper = styled.div`
+  width: 100%;
+
+  & > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+  }
+
+  & div[class*="ButtonGroup"], 
+  & div[class*="button-group"],
+  & div:has(> button) {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 8px;
+  }
+`;
+
+const TablePanel = styled.section`
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #dce1ea;
+  border-radius: 12px;
+`;
+
+const TableTop = styled.div`
+  min-height: 62px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+`;
 
-  .icon-wrapper {
-    width: 48px;
+const TableTitle = styled.h2`
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #292d35;
+`;
+
+const TableSummary = styled.span`
+  font-size: 13px;
+  color: #767e8b;
+
+  strong {
+    color: #0755d9;
+  }
+`;
+
+const TableScroll = styled.div`
+  width: 100%;
+  overflow-x: auto;
+`;
+
+const StyledTable = styled.table`
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    padding: 15px 14px;
+    border-bottom: 1px solid #e2e6ed;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 13px;
+  }
+
+  th {
     height: 48px;
-    border-radius: var(--radius-md);
-    background: var(--color-bg-canvas);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    box-sizing: border-box;
+    background: #f1f3f6;
+    color: #555d6b;
+    font-weight: 500;
   }
 
-  .text-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  td {
+    color: #23272e;
+  }
 
-    .label {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
-    }
-    .value {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text);
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
 
-      span {
-        font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-normal);
-        color: var(--color-neutral);
-        margin-left: 4px;
-      }
-    }
+  tbody tr:hover {
+    background: #f6f9ff;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
   }
 `;
 
-/* 필터 입력 필드 스타일 - MachineList 스타일 기준 통일 */
-const Input = styled.input`
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #cfd5e2;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  outline: none;
-  &:focus {
-    border-color: var(--color-primary);
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #cfd5e2;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  outline: none;
-  background: #fff;
-  cursor: pointer;
-  &:focus {
-    border-color: var(--color-primary);
-  }
-`;
-
-// 테이블 배치 영역 카드
-const TableCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-// 상태 배지 (사용 / 미사용)
 const StatusBadge = styled.span`
   display: inline-block;
   padding: 4px 8px;
@@ -166,7 +191,6 @@ const StatusBadge = styled.span`
       `}
 `;
 
-// 액션 버튼 그룹 (수정/삭제)
 const ActionGroup = styled.div`
   display: flex;
   align-items: center;
@@ -186,23 +210,26 @@ const ActionButton = styled.button`
   transition: background-color 0.15s;
 
   &:hover {
-    background-color: var(--color-bg-canvas);
-  }
-
-  img {
-    width: 18px;
-    height: 18px;
+    background-color: #e2e6ed;
   }
 `;
 
-// 기획서 하단 페이지네이션 컨테이너
+const EmptyMessage = styled.div`
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #9198a4;
+`;
+
 const PaginationContainer = styled.div`
+  border-top: 1px solid #e2e6ed;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
+  padding: 16px 20px;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  background: #f5f6f8;
 
   .page-buttons {
     display: flex;
@@ -227,6 +254,7 @@ const PageBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 
   &:hover {
     background: ${(props) =>
@@ -240,7 +268,6 @@ const PageBtn = styled.button`
 `;
 
 export default function ProcessList() {
-  // Mock 데이터 선언
   const [processes, setProcesses] = useState([
     {
       id: 1,
@@ -294,45 +321,60 @@ export default function ProcessList() {
     },
   ]);
 
-  // 검색 및 필터 State
   const [searchCode, setSearchCode] = useState("");
-  const [searchName, setSearchName] = useState("전체");
-  const [searchStatus, setSearchStatus] = useState("전체");
+  const [searchName, setSearchName] = useState("");
+  const [searchStatus, setSearchStatus] = useState("");
 
-  // 우측 사이드 패널(드로어) 열고 닫기 제어 State
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
 
-  // 통계 계산
   const totalCount = processes.length;
   const activeCount = processes.filter((p) => p.is_active).length;
   const inactiveCount = totalCount - activeCount;
 
-  // 이벤트 핸들러
-  const handleEdit = (process) => {
+  const handleEdit = (e, process) => {
+    e.stopPropagation();
     setSelectedProcess(process);
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (e, id) => {
+    e.stopPropagation();
     if (window.confirm("선택한 공정을 삭제하시겠습니까?")) {
       setProcesses((prev) => prev.filter((p) => p.id !== id));
     }
+  };
+
+  const handleRowClick = (row) => {
+    const originProcess = processes.find((p) => p.id === row.id);
+    if (originProcess) {
+      setSelectedProcess(originProcess);
+      setIsDetailOpen(true);
+    }
+  };
+
+  // 💡 상세 패널 내에서 수정 버튼을 눌렀을 때 작동할 핸들러 추가
+  const handleDetailEdit = () => {
+    setIsDetailOpen(false);      // 상세 보기 닫기
+    setIsEditModalOpen(true);    // 수정 모달 열기 (기존에 선택된 selectedProcess가 주입됨)
   };
 
   const handleRegister = () => {
     setIsNewModalOpen(true);
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
+  const handleSearch = (filterValues) => {
+    setSearchCode(filterValues.step_code || "");
+    setSearchName(filterValues.step_name || "");
+    setSearchStatus(filterValues.is_active || "");
   };
 
   const handleReset = () => {
     setSearchCode("");
-    setSearchName("전체");
-    setSearchStatus("전체");
+    setSearchName("");
+    setSearchStatus("");
   };
 
   const handleRegisterProcess = (newProcess) => {
@@ -353,30 +395,27 @@ export default function ProcessList() {
     );
   };
 
-  // 필터링된 데이터 계산
   const filteredRows = processes.filter((item) => {
     const matchCode = item.step_code
       .toLowerCase()
       .includes(searchCode.toLowerCase());
-    const matchName = searchName === "전체" || item.step_name === searchName;
+    const matchName = !searchName || item.step_name === searchName;
     const matchStatus =
-      searchStatus === "전체" ||
+      !searchStatus ||
       (searchStatus === "사용" && item.is_active) ||
       (searchStatus === "미사용" && !item.is_active);
 
     return matchCode && matchName && matchStatus;
   });
 
-  // Table에 주입할 Column 정보 정의
   const columns = [
-    { key: "seq", label: "순서", align: "center" },
-    { key: "step_code_badge", label: "공정코드", align: "left" },
-    { key: "step_name", label: "공정명", align: "left" },
-    { key: "status_badge", label: "상태", align: "center" },
-    { key: "actions", label: "작업", align: "center" },
+    { key: "seq", label: "순서", align: "center", width: 80 },
+    { key: "step_code_badge", label: "공정코드", align: "center", width: 180 },
+    { key: "step_name", label: "공정명", align: "left", width: 320 },
+    { key: "status_badge", label: "상태", align: "center", width: 140 },
+    { key: "actions", label: "작업", align: "center", width: 120 },
   ];
 
-  // Table 전용 row 형식에 맞게 데이터 가공 및 컴포넌트 주입
   const tableRows = filteredRows.map((row) => ({
     ...row,
     step_code_badge: (
@@ -402,14 +441,14 @@ export default function ProcessList() {
     actions: (
       <ActionGroup onClick={(e) => e.stopPropagation()}>
         <ActionButton
-          onClick={() => handleEdit(row)}
+          onClick={(e) => handleEdit(e, row)}
           title="수정"
           type="button"
         >
           <FiEdit3 size={18} color="var(--color-text-secondary)" />
         </ActionButton>
         <ActionButton
-          onClick={() => handleDelete(row.id)}
+          onClick={(e) => handleDelete(e, row.id)}
           title="삭제"
           type="button"
         >
@@ -419,9 +458,35 @@ export default function ProcessList() {
     ),
   }));
 
+  const stepNameOptions = Array.from(
+    new Set(processes.map((p) => p.step_name)),
+  ).map((name) => ({
+    value: name,
+    label: name,
+  }));
+
+  const filterSchema = [
+    {
+      name: "step_name",
+      label: "공정명",
+      placeholder: "전체 공정명",
+      width: 220,
+      options: stepNameOptions,
+    },
+    {
+      name: "is_active",
+      label: "상태",
+      placeholder: "전체",
+      width: 150,
+      options: [
+        { value: "사용", label: "사용" },
+        { value: "미사용", label: "미사용" },
+      ],
+    },
+  ];
+
   return (
     <Container>
-      {/* 타이틀 및 등록 버튼 */}
       <Header>
         <div className="title-group">
           <h2>공정 관리</h2>
@@ -430,146 +495,133 @@ export default function ProcessList() {
         <Button
           variant="primary"
           onClick={handleRegister}
-          style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          style={{
+            padding: "10px 20px",
+            fontWeight: "var(--font-weight-medium)",
+          }}
         >
-          <span>+ 공정 등록</span>
+          + 공정 등록
         </Button>
       </Header>
 
-      {/* KPI 통계 카드 영역 */}
       <KpiGrid>
-        <Card>
-          <KpiCardContent>
-            <div className="icon-wrapper">
-              <IconWrapper>
-                <FiCpu size={24} color="var(--color-primary)" />
-              </IconWrapper>
-            </div>
-            <div className="text-wrapper">
-              <span className="label">전체 공정</span>
-              <span className="value">
-                {totalCount}
-                <span>건</span>
-              </span>
-            </div>
-          </KpiCardContent>
-        </Card>
-
-        <Card>
-          <KpiCardContent>
-            <div className="icon-wrapper">
-              <IconWrapper>
-                <FiActivity size={24} color="var(--color-success)" />
-              </IconWrapper>
-            </div>
-            <div className="text-wrapper">
-              <span className="label">활성 공정</span>
-              <span className="value" style={{ color: "var(--color-success)" }}>
-                {activeCount}
-                <span>건</span>
-              </span>
-            </div>
-          </KpiCardContent>
-        </Card>
-
-        <Card>
-          <KpiCardContent>
-            <div className="icon-wrapper">
-              <IconWrapper>
-                <FiSlash size={24} color="var(--color-neutral)" />
-              </IconWrapper>
-            </div>
-            <div className="text-wrapper">
-              <span className="label">비활성 공정</span>
-              <span className="value" style={{ color: "var(--color-neutral)" }}>
-                {inactiveCount}
-                <span>건</span>
-              </span>
-            </div>
-          </KpiCardContent>
-        </Card>
-      </KpiGrid>
-
-      {/* 하단 메인 데이터 영역 카드 내부에 공용 필터 패널 배치 */}
-      <TableCard>
-        <FilterPanel
-          onSubmit={handleSearchSubmit}
-          $columns="repeat(3, minmax(0, 1fr)) auto"
-        >
-          <FilterField>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "var(--font-weight-medium)",
-              }}
-            >
-              공정코드
-            </label>
-            <Input
-              type="text"
-              placeholder="PROC-..."
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
-            />
-          </FilterField>
-
-          <FilterField>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "var(--font-weight-medium)",
-              }}
-            >
-              공정명
-            </label>
-            <Select
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-            >
-              <option value="전체">전체 공정명</option>
-              {Array.from(new Set(processes.map((p) => p.step_name))).map(
-                (name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ),
-              )}
-            </Select>
-          </FilterField>
-
-          <FilterField>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "var(--font-weight-medium)",
-              }}
-            >
-              상태
-            </label>
-            <Select
-              value={searchStatus}
-              onChange={(e) => setSearchStatus(e.target.value)}
-            >
-              <option value="전체">전체</option>
-              <option value="사용">사용</option>
-              <option value="미사용">미사용</option>
-            </Select>
-          </FilterField>
-
-          <FilterActions onReset={handleReset} submitLabel="조회" />
-        </FilterPanel>
-
-        {/* 테이블 본문 */}
-        <Table
-          columns={columns}
-          rows={tableRows}
-          emptyMessage="조건에 맞는 공정이 존재하지 않습니다."
+        <SummaryCard
+          icon={<FiCpu />}
+          title="전체 공정"
+          value={`${totalCount}건`}
+          iconBackground="var(--color-primary-light)"
+          iconColor="var(--color-primary)"
+          iconSize={20}
+          iconBoxSize={40}
+          padding={16}
+          gap={12}
+          titleFontSize="var(--font-size-xs)"
+          titleColor="var(--color-text-secondary)"
+          valueFontSize="var(--font-size-md)"
+          valueColor="var(--color-text)"
         />
 
-        {/* 페이지네이션 UI */}
+        <SummaryCard
+          icon={<FiActivity />}
+          title="활성 공정"
+          value={`${activeCount}건`}
+          iconBackground="var(--color-success-bg)"
+          iconColor="var(--color-success)"
+          iconSize={20}
+          iconBoxSize={40}
+          padding={16}
+          gap={12}
+          titleFontSize="var(--font-size-xs)"
+          titleColor="var(--color-text-secondary)"
+          valueFontSize="var(--font-size-md)"
+          valueColor="var(--color-success)"
+        />
+
+        <SummaryCard
+          icon={<FiSlash />}
+          title="비활성 공정"
+          value={`${inactiveCount}건`}
+          iconBackground="var(--color-bg-canvas)"
+          iconColor="var(--color-neutral)"
+          iconSize={20}
+          iconBoxSize={40}
+          padding={16}
+          gap={12}
+          titleFontSize="var(--font-size-xs)"
+          titleColor="var(--color-text-secondary)"
+          valueFontSize="var(--font-size-md)"
+          valueColor="var(--color-neutral)"
+        />
+      </KpiGrid>
+
+      <StyledFilterPanel>
+        <PanelTitle>공정 검색</PanelTitle>
+        <FilterBarWrapper>
+          <SearchFilterBar
+            filters={filterSchema}
+            showKeyword={true}
+            keywordName="step_code"
+            keywordLabel="공정코드"
+            keywordPlaceholder="PROC-..."
+            keywordWidth={220}
+            showDateRange={false}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            inputHeight={38}
+            border="none"
+            padding={0}
+            gap={16}
+            width="100%"
+          />
+        </FilterBarWrapper>
+      </StyledFilterPanel>
+
+      <TablePanel>
+        <TableTop>
+          <TableTitle>공정 목록</TableTitle>
+          <TableSummary>
+            조회 공정 <strong>{filteredRows.length}</strong>건
+          </TableSummary>
+        </TableTop>
+
+        {tableRows.length > 0 ? (
+          <TableScroll>
+            <StyledTable>
+              <colgroup>
+                {columns.map((col) => (
+                  <col key={col.key} style={{ width: col.width }} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr>
+                  {columns.map((col) => (
+                    <th key={col.key} style={{ textAlign: col.align }}>
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row) => (
+                  <tr key={row.id} onClick={() => handleRowClick(row)}>
+                    <td style={{ textAlign: "center" }}>{row.seq}</td>
+                    <td style={{ textAlign: "center" }}>
+                      {row.step_code_badge}
+                    </td>
+                    <td style={{ textAlign: "left" }}>{row.step_name}</td>
+                    <td style={{ textAlign: "center" }}>{row.status_badge}</td>
+                    <td style={{ textAlign: "center" }}>{row.actions}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </StyledTable>
+          </TableScroll>
+        ) : (
+          <EmptyMessage>
+            조건에 맞는 공정이 존재하지 않습니다.
+          </EmptyMessage>
+        )}
+
         <PaginationContainer>
           <div>
             전체 {filteredRows.length}개 항목 중 1에서 {filteredRows.length}까지
@@ -583,19 +635,31 @@ export default function ProcessList() {
             <PageBtn>&gt;</PageBtn>
           </div>
         </PaginationContainer>
-      </TableCard>
+      </TablePanel>
 
-      {/* 공정 신규 등록 사이드 드로어 연동 */}
       <ProcessNew
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onRegister={handleRegisterProcess}
       />
 
-      {/* 공정 수정용 사이드 드로어 연동 추가 */}
+      {/* 💡 변동 항목: 프로프 이름 수정 및 onEdit 핸들러 할당 */}
+      <ProcessDetail
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedProcess(null);
+        }}
+        product={selectedProcess}
+        onEdit={handleDetailEdit}
+      />
+
       <ProcessEdit
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedProcess(null);
+        }}
         processData={selectedProcess}
         onUpdate={handleUpdateProcess}
       />

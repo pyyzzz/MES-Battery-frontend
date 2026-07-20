@@ -1,18 +1,14 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
+import { FiX, FiTrash2 } from "react-icons/fi"; // FiX 아이콘 추가
 
-import { FiTrash2 } from "react-icons/fi";
-
-/* Styled Components */
+/* ProductDetail 기반 통일된 디자인 시스템 적용 */
 const DrawerOverlay = styled.div`
   position: fixed;
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  inset: 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.38);
   display: ${(props) => (props.$isOpen ? "block" : "none")};
 `;
 
@@ -20,48 +16,55 @@ const DrawerContainer = styled.div`
   position: fixed;
   top: 0;
   right: 0;
-  width: 560px;
-  height: 100%;
-  background-color: #fff;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
-  z-index: 1001;
+  z-index: 1000;
+  width: min(480px, 100%);
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: #fff;
+  box-shadow: -12px 0 36px rgba(15, 23, 42, 0.18);
   transform: ${(props) =>
     props.$isOpen ? "translateX(0)" : "translateX(100%)"};
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.24s ease-out;
 `;
 
-// 헤더 영역
-const Header = styled.div`
+const Header = styled.header`
+  min-height: 86px;
+  padding: 0 30px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  justify-content: space-between;
+  border-bottom: 1px solid #d9deea;
 
   h3 {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text);
+    margin: 0;
+    color: #202738;
+    font-size: 20px;
+    font-weight: 700;
   }
 `;
 
 const CloseButton = styled.button`
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: #6f788b;
+  font-size: 23px;
   background: none;
   border: none;
-  font-size: 24px;
   cursor: pointer;
-  color: #9ca3af;
+
   &:hover {
-    color: #4b5563;
+    background: #f1f3f8;
   }
 `;
 
 const FormBody = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 32px 30px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -70,13 +73,13 @@ const FormBody = styled.div`
 const Section = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
 `;
 
-const SectionTitle = styled.div`
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
+const SectionTitle = styled.h3`
+  margin: 0 0 24px;
+  color: #202738;
+  font-size: 18px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -85,26 +88,31 @@ const SectionTitle = styled.div`
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  margin-bottom: 18px;
 
   label {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: #4b5563;
+    display: block;
+    margin-bottom: 7px;
+    color: #616b7e;
+    font-size: 12px;
   }
 
   input,
   select {
     width: 100%;
     height: 42px;
-    padding: 0 12px;
-    border: 1px solid #cfd5e2;
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-sm);
+    padding: 0 16px;
+    border: 1px solid #c7cddd;
+    border-radius: 8px;
+    font-size: 13px;
     outline: none;
     background-color: #fff;
+    color: #262d3c;
+    font-weight: 500;
+    box-sizing: border-box;
+
     &:focus {
-      border-color: var(--color-primary);
+      border-color: #084693;
     }
   }
 `;
@@ -119,6 +127,7 @@ const InputWithSuffix = styled.div`
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 
   input {
     padding-right: 40px;
@@ -126,20 +135,22 @@ const InputWithSuffix = styled.div`
 
   span.suffix {
     position: absolute;
-    right: 14px;
-    font-size: var(--font-size-sm);
-    color: #9ca3af;
+    right: 16px;
+    font-size: 13px;
+    color: #616b7e;
+    font-weight: 500;
   }
 `;
 
 const BomAddContainer = styled.div`
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius-lg);
+  background-color: #f7f8fd;
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-bottom: 24px;
 `;
 
 const BomAddActionRow = styled.div`
@@ -149,33 +160,55 @@ const BomAddActionRow = styled.div`
 
   & > div {
     flex: 1;
+    margin-bottom: 0;
+  }
+`;
+
+/* 좁은 폭에서도 텍스트가 잘리지 않도록 가로 스크롤 컨테이너 추가 */
+const TableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #c7cddd;
+  border-radius: 8px;
+
+  /* 스크롤바 디자인 (선택 사항) */
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c7cddd;
+    border-radius: 4px;
   }
 `;
 
 const BomTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-sm);
-  text-align: left;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  /* 가로폭 확보를 위해 auto 혹은 테이블 최소 크기 지정 가능 */
+  table-layout: auto; 
+  min-width: 500px; 
+  display: table;
 
   th,
   td {
-    padding: 12px;
-    border-bottom: 1px solid #e2e8f0;
+    height: 44px;
+    padding: 0 10px;
+    border-bottom: 1px solid #c7cddd;
+    color: #303748;
+    font-size: 12px;
+    vertical-align: middle;
+    /* 말줄임표 처리 제거하여 텍스트 온전히 노출 */
+    white-space: nowrap; 
   }
 
   th {
-    background-color: #eef2f6;
-    font-weight: var(--font-weight-semibold);
-    color: #334155;
+    background: #eef0f8;
+    font-weight: 700;
+    color: #202738;
   }
 
   td {
-    color: #475569;
-    vertical-align: middle;
+    color: #262d3c;
   }
 
   tr:last-child td {
@@ -184,12 +217,12 @@ const BomTable = styled.table`
 `;
 
 const Badge = styled.span`
-  background-color: #dbeafe;
-  color: #1e40af;
-  padding: 2px 8px;
+  background-color: #eef0f8;
+  color: #084693;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 11px;
-  font-weight: var(--font-weight-medium);
+  font-weight: 700;
 `;
 
 const DeleteActionBtn = styled.button`
@@ -199,27 +232,24 @@ const DeleteActionBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-radius: var(--radius-sm);
+  padding: 6px;
+  border-radius: 6px;
   margin: 0 auto;
 
   &:hover {
-    background-color: #fee2e2;
-  }
-
-  img {
-    width: 16px;
-    height: 16px;
+    background-color: #f1f3f8;
   }
 `;
 
 const Footer = styled.div`
+  min-height: 92px;
+  padding: 20px 30px;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid #e5e7eb;
+  justify-content: center;
+  gap: 16px;
+  border-top: 1px solid #d9deea;
   background-color: #fff;
+  box-sizing: border-box;
 `;
 
 export default function ProductNew({ isOpen, onClose, onRegister }) {
@@ -346,7 +376,9 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
       <DrawerContainer $isOpen={isOpen}>
         <Header>
           <h3>제품 등록</h3>
-          <CloseButton onClick={handleDrawerClose}>&times;</CloseButton>
+          <CloseButton onClick={handleDrawerClose} aria-label="닫기">
+            <FiX />
+          </CloseButton>
         </Header>
 
         <FormBody>
@@ -459,9 +491,12 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
                   type="button"
                   onClick={handleAddBomItem}
                   style={{
+                    width: "140px",
                     height: "42px",
-                    backgroundColor: "#0b3a9e",
-                    fontWeight: "var(--font-weight-medium)",
+                    backgroundColor: "#084693",
+                    fontWeight: "700",
+                    borderRadius: "8px",
+                    border: "none",
                   }}
                 >
                   + 자재 추가
@@ -472,48 +507,51 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
 
           <Section>
             <SectionTitle>BOM 리스트</SectionTitle>
-            <BomTable>
-              <thead>
-                <tr>
-                  <th style={{ width: "22%" }}>자재 코드</th>
-                  <th style={{ width: "28%" }}>자재명</th>
-                  <th style={{ width: "12%", textAlign: "right" }}>소요량</th>
-                  <th style={{ width: "12%", textAlign: "center" }}>단위</th>
-                  <th style={{ width: "16%", textAlign: "center" }}>
-                    투입 공정
-                  </th>
-                  <th style={{ width: "10%", textAlign: "center" }}>관리</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bomList.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.materialCode}</td>
-                    <td>{item.materialName}</td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        fontWeight: "var(--font-weight-medium)",
-                      }}
-                    >
-                      {item.qty}
-                    </td>
-                    <td style={{ textAlign: "center" }}>{item.unit}</td>
-                    <td style={{ textAlign: "center" }}>
-                      <Badge>{item.process}</Badge>
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <DeleteActionBtn
-                        type="button"
-                        onClick={() => handleDeleteBomItem(item.id)}
-                      >
-                        <FiTrash2 size={16} color="var(--color-danger)" />
-                      </DeleteActionBtn>
-                    </td>
+            {/* 가로 스크롤 래퍼로 감싸 리스트 가독성 확보 */}
+            <TableWrapper>
+              <BomTable>
+                <thead>
+                  <tr>
+                    <th style={{ width: "22%" }}>자재 코드</th>
+                    <th style={{ width: "28%" }}>자재명</th>
+                    <th style={{ width: "12%", textAlign: "right" }}>소요량</th>
+                    <th style={{ width: "12%", textAlign: "center" }}>단위</th>
+                    <th style={{ width: "16%", textAlign: "center" }}>
+                      투입 공정
+                    </th>
+                    <th style={{ width: "10%", textAlign: "center" }}>관리</th>
                   </tr>
-                ))}
-              </tbody>
-            </BomTable>
+                </thead>
+                <tbody>
+                  {bomList.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.materialCode}</td>
+                      <td>{item.materialName}</td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {item.qty}
+                      </td>
+                      <td style={{ textAlign: "center" }}>{item.unit}</td>
+                      <td style={{ textAlign: "center" }}>
+                        <Badge>{item.process}</Badge>
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <DeleteActionBtn
+                          type="button"
+                          onClick={() => handleDeleteBomItem(item.id)}
+                        >
+                          <FiTrash2 size={16} color="#ef4444" />
+                        </DeleteActionBtn>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </BomTable>
+            </TableWrapper>
           </Section>
         </FormBody>
 
@@ -522,9 +560,14 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
             variant="outline"
             onClick={handleDrawerClose}
             style={{
-              padding: "10px 24px",
-              color: "#475569",
-              borderColor: "#cbd5e1",
+              width: "140px",
+              height: "44px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "700",
+              border: "none",
+              background: "#eaebf3",
+              color: "#61697a",
             }}
           >
             취소
@@ -532,7 +575,17 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
           <Button
             variant="primary"
             onClick={handleSubmit}
-            style={{ padding: "10px 24px", backgroundColor: "#0b3a9e" }}
+            style={{
+              width: "140px",
+              height: "44px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "700",
+              border: "none",
+              background: "#084693",
+              color: "#fff",
+              boxShadow: "0 5px 12px rgba(8, 70, 147, 0.2)",
+            }}
           >
             등록
           </Button>
