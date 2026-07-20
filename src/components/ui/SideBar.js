@@ -10,8 +10,6 @@ import {
   FiArchive,
   FiBarChart2,
   FiChevronRight,
-  FiHeadphones,
-  FiUser,
 } from "react-icons/fi";
 
 const MENU_ITEMS = [
@@ -209,31 +207,6 @@ const SubMenuItem = styled(Link)`
     `}
 `;
 
-const BottomSection = styled.div`
-  margin-top: 24px;
-  padding: 16px 16px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const BottomItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--sidebar-text-muted);
-  cursor: pointer;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--sidebar-text);
-  }
-`;
-
 export default function SideBar({ activeItem }) {
   const defaultOpenGroup = MENU_ITEMS.find((item) =>
     item.children?.some((child) => child.key === activeItem)
@@ -298,16 +271,6 @@ export default function SideBar({ activeItem }) {
         })}
       </Nav>
 
-      <BottomSection>
-        <BottomItem>
-          <FiHeadphones size={18} />
-          <span>Support</span>
-        </BottomItem>
-        <BottomItem>
-          <FiUser size={18} />
-          <span>Account</span>
-        </BottomItem>
-      </BottomSection>
     </Container>
   );
 }
