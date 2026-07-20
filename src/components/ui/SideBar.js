@@ -212,10 +212,16 @@ export default function SideBar({ activeItem }) {
     item.children?.some((child) => child.key === activeItem)
   )?.key;
 
-  const [openGroup, setOpenGroup] = useState(defaultOpenGroup ?? null);
+  const [openGroups, setOpenGroups] = useState(
+    defaultOpenGroup ? [defaultOpenGroup] : []
+  );
 
   const toggleGroup = (key) => {
-    setOpenGroup((prev) => (prev === key ? null : key));
+    setOpenGroups((prev) =>
+      prev.includes(key)
+        ? prev.filter((groupKey) => groupKey !== key)
+        : [...prev, key]
+    );
   };
 
   return (
@@ -243,7 +249,7 @@ export default function SideBar({ activeItem }) {
             );
           }
 
-          const isOpen = openGroup === item.key;
+          const isOpen = openGroups.includes(item.key);
 
           return (
             <div key={item.key}>
