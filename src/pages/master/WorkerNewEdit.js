@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 
 // 등록 폼의 기본값, 수정 모드에서는 선택한 작업자 값으로 덮어씀
-const emptyForm = { workerCode: "", workerName: "", createdAt: "", role: "" };
+const emptyForm = { workerCode: "", workerName: "", hiredAt: "", role: "" };
 
 export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
   const [form, setForm] = useState(emptyForm);
@@ -20,7 +20,7 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
         ? {
             workerCode: worker.workerCode,
             workerName: worker.workerName,
-            createdAt: worker.createdAt,
+            hiredAt: worker.hiredAt,
             role: worker.role,
           }
         : emptyForm,
@@ -50,7 +50,7 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
     if (
       !form.workerCode.trim() ||
       !form.workerName.trim() ||
-      !form.createdAt ||
+      !form.hiredAt ||
       !form.role
     ) {
       return;
@@ -100,12 +100,12 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
               />
             </Field>
             <Field>
-              <Label htmlFor="createdAt">입사일</Label>
+              <Label htmlFor="hiredAt">입사일</Label>
               <Input
-                id="createdAt"
+                id="hiredAt"
                 type="date"
-                name="createdAt"
-                value={form.createdAt}
+                name="hiredAt"
+                value={form.hiredAt}
                 onChange={change}
               />
             </Field>
@@ -126,7 +126,7 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
             <Secondary type="button" onClick={onClose}>
               취소
             </Secondary>
-            <Primary type="submit">{editing ? "수정" : "등록"}</Primary>
+            <Primary type="submit">{editing ? "수정하기" : "등록하기"}</Primary>
           </Footer>
         </Form>
       </Drawer>
@@ -148,7 +148,7 @@ const Drawer = styled.aside`
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%);
+  width: min(600px, 100%);
   height: 100dvh;
   background: #fff;
   display: flex;
@@ -295,25 +295,28 @@ const Select = styled.select`
 
 // 하단 취소/저장 버튼 영역
 const Footer = styled.footer`
-  padding: 24px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
   border-top: 1px solid #d9deea;
 `;
 
 // 하단 버튼의 공통 높이와 글자 크기
 const FooterButton = styled.button`
-  height: 50px;
+  min-width: 84px;
+  height: 38px;
+  padding: 0 16px;
   border-radius: 7px;
-  font-size: 15px;
+  font-size: 14px;
+  cursor: pointer;
 `;
 
 // 취소 버튼 스타일
 const Secondary = styled(FooterButton)`
-  border: 1px solid #7f899e;
+  border: 1px solid #d1d7e3;
   background: #fff;
-  color: #4d5667;
+  color: #111827;
 
   &:hover {
     background: #f7f8fa;
@@ -322,11 +325,12 @@ const Secondary = styled(FooterButton)`
 
 // 등록/수정 제출 버튼 스타일
 const Primary = styled(FooterButton)`
-  background: #0b43a2;
+  border: 1px solid #0b57d0;
+  background: #0b57d0;
   color: #fff;
   font-weight: 600;
 
   &:hover {
-    background: #083986;
+    background: #0848ad;
   }
 `;

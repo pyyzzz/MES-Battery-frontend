@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import FilterDatePicker from "../../components/ui/FilterDatePicker";
 import WorkOrderNewEdit from "./WorkOrderNewEdit";
 import WorkOrderDetail from "./WorkOrderDetail";
 
@@ -17,14 +16,8 @@ import {
 import Table from "../../components/ui/Table";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
-import Card from "../../components/ui/Card";
-import FilterPanel, {
-  FilterActions,
-  FilterField,
-  FilterInput,
-  FilterLabel,
-  FilterSelect,
-} from "../../components/ui/FilterPanel";
+import SummaryCard from "../../components/ui/SummaryCard";
+import SearchFilterBar from "../../components/ui/SearchFilterBar";
 
 // 제품 마스터 임시 데이터
 // 백엔드 연결 후 product 조회 API 응답으로 교체
@@ -61,7 +54,7 @@ const MOCK_PRODUCTS = [
 
 // 작업지시 목록에 표시할 임시 데이터
 // DB work_order 기준 필드:
-// workOrderId, workOrderNo, productId, plannedQty, startedAt, dueAt, status, createdAt
+// workOrderId, workOrderNo, productId, plannedQty, startedAt, completedAt, dueAt, status, createdAt
 // productName은 product 테이블을 조인한 조회용 값으로 가정
 const INITIAL_ORDERS = [
   {
@@ -74,6 +67,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-26",
     status: "진행중",
     startedAt: "2023-10-25 08:30",
+    completedAt: null,
     createdAt: "2023-10-24 16:20",
   },
   {
@@ -86,6 +80,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-26",
     status: "대기중",
     startedAt: null,
+    completedAt: null,
     createdAt: "2023-10-24 16:25",
   },
   {
@@ -98,6 +93,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-25",
     status: "완료",
     startedAt: "2023-10-24 07:00",
+    completedAt: "2023-10-25 10:30",
     createdAt: "2023-10-23 15:10",
   },
   {
@@ -110,6 +106,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-25",
     status: "완료",
     startedAt: "2023-10-24 06:15",
+    completedAt: "2023-10-25 09:45",
     createdAt: "2023-10-23 15:00",
   },
   {
@@ -122,6 +119,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-25",
     status: "완료",
     startedAt: "2023-10-24 06:15",
+    completedAt: "2023-10-25 11:00",
     createdAt: "2023-10-23 14:50",
   },
   {
@@ -134,6 +132,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-25",
     status: "완료",
     startedAt: "2023-10-24 06:15",
+    completedAt: "2023-10-25 13:20",
     createdAt: "2023-10-23 14:40",
   },
   {
@@ -146,6 +145,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-25",
     status: "완료",
     startedAt: "2023-10-24 06:15",
+    completedAt: "2023-10-25 14:10",
     createdAt: "2023-10-23 14:30",
   },
   {
@@ -158,6 +158,7 @@ const INITIAL_ORDERS = [
     dueAt: "2023-10-25",
     status: "완료",
     startedAt: "2023-10-24 06:15",
+    completedAt: "2023-10-25 15:00",
     createdAt: "2023-10-23 14:20",
   },
 ];
@@ -175,20 +176,21 @@ const EMPTY_ORDER_FORM = {
   status: "대기중",
 };
 
+const INITIAL_FILTERS = {
+  keyword: "",
+  productId: "",
+  dateType: "dueAt",
+  dueStartAt: "",
+  dueEndAt: "",
+  status: "",
+};
+
 export default function WorkOrderList() {
   // 전체 작업지시 목록
   const [orders, setOrders] = useState(INITIAL_ORDERS);
 
-  // 검색창에 입력 중인 값
-  const [draft, setDraft] = useState({
-    keyword: "",
-    productId: "전체 품목",
-    dueAt: "",
-    status: "전체",
-  });
-
   // 실제 목록에 적용된 검색 조건
-  const [filters, setFilters] = useState(draft);
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
 
   // 현재 페이지
   const [page, setPage] = useState(1);
@@ -222,13 +224,20 @@ export default function WorkOrderList() {
     () =>
       orders.filter((order) => {
         const keyword = filters.keyword.trim().toLowerCase();
+        const dateField = filters.dateType || "dueAt";
+        const targetDate = order[dateField]?.slice(0, 10) || "";
+        const matchesDateRange =
+          (!filters.dueStartAt && !filters.dueEndAt) ||
+          (targetDate &&
+            (!filters.dueStartAt || targetDate >= filters.dueStartAt) &&
+            (!filters.dueEndAt || targetDate <= filters.dueEndAt));
 
         return (
           (!keyword || order.workOrderNo.toLowerCase().includes(keyword)) &&
-          (filters.productId === "전체 품목" ||
+          (!filters.productId ||
             String(order.productId) === String(filters.productId)) &&
-          (!filters.dueAt || order.dueAt === filters.dueAt) &&
-          (filters.status === "전체" || order.status === filters.status)
+          matchesDateRange &&
+          (!filters.status || order.status === filters.status)
         );
       }),
     [orders, filters],
@@ -236,14 +245,22 @@ export default function WorkOrderList() {
 
   // 전체 페이지 수
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const dateFilterLabel =
+    filters.dateType === "startedAt"
+      ? "실제 시작일"
+      : filters.dateType === "completedAt"
+        ? "완료일"
+        : "납기일";
 
   // 현재 페이지에 표시할 표 데이터
   const rows = filtered
     .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-    .map((order) => ({
+    .map((order, index) => ({
       ...order,
 
       originalOrder: order,
+
+      no: (page - 1) * PAGE_SIZE + index + 1,
 
       orderCell: <OrderNo>{order.workOrderNo}</OrderNo>,
 
@@ -262,6 +279,15 @@ export default function WorkOrderList() {
         <>
           <div>{order.startedAt.split(" ")[0]}</div>
           <Small>{order.startedAt.split(" ")[1]}</Small>
+        </>
+      ) : (
+        "-"
+      ),
+
+      completedCell: order.completedAt ? (
+        <>
+          <div>{order.completedAt.split(" ")[0]}</div>
+          <Small>{order.completedAt.split(" ")[1]}</Small>
         </>
       ) : (
         "-"
@@ -299,13 +325,15 @@ export default function WorkOrderList() {
 
   // 표 컬럼 설정
   const columns = [
+    { key: "no", label: "NO" },
     { key: "orderCell", label: "작업지시 번호" },
     { key: "productName", label: "제품명" },
     { key: "quantityCell", label: "지시 수량", align: "right" },
     { key: "worker", label: "담당자" },
     { key: "dueAt", label: "납기일" },
     { key: "statusCell", label: "상태" },
-    { key: "startCell", label: "시작 시간" },
+    { key: "startCell", label: "실제 시작일시" },
+    { key: "completedCell", label: "완료일시" },
     { key: "actionCell", label: "관리", align: "center" },
   ];
 
@@ -395,6 +423,13 @@ export default function WorkOrderList() {
                       new Date()
                         .toLocaleString("sv-SE", { hour12: false })
                         .slice(0, 16),
+                completedAt:
+                  orderForm.status === "완료"
+                    ? order.completedAt ||
+                      new Date()
+                        .toLocaleString("sv-SE", { hour12: false })
+                        .slice(0, 16)
+                    : null,
               }
             : order,
         ),
@@ -441,6 +476,11 @@ export default function WorkOrderList() {
                 .toLocaleString("sv-SE", { hour12: false })
                 .slice(0, 16),
 
+        completedAt:
+          orderForm.status === "완료"
+            ? new Date().toLocaleString("sv-SE", { hour12: false }).slice(0, 16)
+            : null,
+
         createdAt: new Date()
           .toLocaleString("sv-SE", { hour12: false })
           .slice(0, 16),
@@ -485,162 +525,111 @@ export default function WorkOrderList() {
             </Description>
           </div>
 
-          <Button type="button" onClick={openCreateDrawer}>
-            <ButtonInner>
-              <FiPlus />
-              작업지시 등록
-            </ButtonInner>
-          </Button>
+          <HeaderActionButton type="button" onClick={openCreateDrawer}>
+            <FiPlus size={16} />
+            작업지시 등록
+          </HeaderActionButton>
         </PageHeader>
 
         {/* 상태별 요약 카드 */}
         <SummaryGrid>
-          <SummaryCard>
-            <SummaryIcon $tone="waiting">
-              <FiClock />
-            </SummaryIcon>
+          <StatusSummaryCard
+            icon={<FiCheckCircle />}
+            title="완료"
+            value={counts.완료}
+            iconBackground="#e5f8ec"
+            iconColor="#168853"
+          />
 
-            <div>
-              <SummaryLabel>대기중</SummaryLabel>
-              <SummaryValue>
-                {counts.대기중}
-                <Unit>건</Unit>
-              </SummaryValue>
-            </div>
-          </SummaryCard>
+          <StatusSummaryCard
+            icon={<FiPlayCircle />}
+            title="진행중"
+            value={counts.진행중}
+            iconBackground="#e7f0ff"
+            iconColor="#0b57d0"
+          />
 
-          <SummaryCard>
-            <SummaryIcon $tone="progress">
-              <FiPlayCircle />
-            </SummaryIcon>
-
-            <div>
-              <SummaryLabel>진행중</SummaryLabel>
-              <SummaryValue>
-                {counts.진행중}
-                <Unit>건</Unit>
-              </SummaryValue>
-            </div>
-          </SummaryCard>
-
-          <SummaryCard>
-            <SummaryIcon $tone="done">
-              <FiCheckCircle />
-            </SummaryIcon>
-
-            <div>
-              <SummaryLabel>완료</SummaryLabel>
-              <SummaryValue>
-                {counts.완료}
-                <Unit>건</Unit>
-              </SummaryValue>
-            </div>
-          </SummaryCard>
+          <StatusSummaryCard
+            icon={<FiClock />}
+            title="대기중"
+            value={counts.대기중}
+            iconBackground="#fff4d8"
+            iconColor="#d98a00"
+          />
         </SummaryGrid>
 
         {/* 검색 및 필터 영역 */}
-        <WorkOrderFilter
-          $columns="1.15fr 1fr 1fr .9fr auto"
-          $gap="16px"
-          $padding="20px"
-          onSubmit={(event) => {
-            event.preventDefault();
-            setFilters(draft);
-            setPage(1);
-          }}
-        >
-          <FilterField>
-            <FilterLabel htmlFor="order-search">작업지시 번호</FilterLabel>
+        <FilterBlock>
+          <FilterTitle>작업지시 검색</FilterTitle>
 
-            <FilterInput
-              id="order-search"
-              placeholder="WO-..."
-              value={draft.keyword}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  keyword: event.target.value,
-                })
-              }
-            />
-          </FilterField>
-
-          <FilterField>
-            <FilterLabel htmlFor="product-filter">품목</FilterLabel>
-
-            <FilterSelect
-              id="product-filter"
-              value={draft.productId}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  productId: event.target.value,
-                })
-              }
-            >
-              <option value="전체 품목">전체 품목</option>
-
-              {MOCK_PRODUCTS.map((product) => (
-                <option key={product.productId} value={product.productId}>
-                  {product.productName}
-                </option>
-              ))}
-            </FilterSelect>
-          </FilterField>
-
-          <FilterField>
-            <FilterLabel htmlFor="due-filter">납기일</FilterLabel>
-
-            <FilterDatePicker
-              id="due-filter"
-              value={draft.dueAt}
-              onChange={(value) =>
-                setDraft({
-                  ...draft,
-                  dueAt: value,
-                })
-              }
-            />
-          </FilterField>
-
-          <FilterField>
-            <FilterLabel htmlFor="status-filter">상태</FilterLabel>
-
-            <FilterSelect
-              id="status-filter"
-              value={draft.status}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  status: event.target.value,
-                })
-              }
-            >
-              <option>전체</option>
-              <option>대기중</option>
-              <option>진행중</option>
-              <option>완료</option>
-            </FilterSelect>
-          </FilterField>
-
-          <FilterActions
-            onReset={() => {
-              const initialFilters = {
-                keyword: "",
-                productId: "전체 품목",
-                dueAt: "",
-                status: "전체",
-              };
-
-              setDraft(initialFilters);
-              setFilters(initialFilters);
+          <SearchFilterBar
+            filters={[
+              {
+                name: "productId",
+                label: "품목",
+                placeholder: "전체 품목",
+                width: 120,
+                options: MOCK_PRODUCTS.map((product) => ({
+                  value: product.productId,
+                  label: product.productName,
+                })),
+              },
+              {
+                name: "dateType",
+                label: "날짜 기준",
+                placeholder: "날짜 기준",
+                width: 105,
+                options: [
+                  { value: "dueAt", label: "납기일" },
+                  { value: "startedAt", label: "실제 시작일" },
+                  { value: "completedAt", label: "완료일" },
+                ],
+              },
+              {
+                name: "status",
+                label: "상태",
+                placeholder: "전체 상태",
+                width: 110,
+                options: [
+                  { value: "대기중", label: "대기중" },
+                  { value: "진행중", label: "진행중" },
+                  { value: "완료", label: "완료" },
+                ],
+              },
+            ]}
+            defaultValues={INITIAL_FILTERS}
+            keywordLabel="작업지시 번호"
+            keywordPlaceholder="WO-..."
+            keywordWidth={190}
+            dateWidth={120}
+            gap={10}
+            startDateName="dueStartAt"
+            endDateName="dueEndAt"
+            startDateLabel={`${dateFilterLabel} 시작`}
+            endDateLabel={`${dateFilterLabel} 종료`}
+            showSearchButton={false}
+            padding={0}
+            border="0"
+            background="transparent"
+            onChange={(values) => {
+              setFilters(values);
+              setPage(1);
+            }}
+            onReset={(values) => {
+              setFilters(values);
               setPage(1);
             }}
           />
-        </WorkOrderFilter>
+        </FilterBlock>
 
         {/* 작업지시 표 */}
         <TableCard>
+          <TableTop>
+            <TableTitle>작업지시 현황</TableTitle>
+            <TopResultText>
+              조회 결과 <strong>{filtered.length}</strong>건
+            </TopResultText>
+          </TableTop>
           <TableWrap>
             <Table
               columns={columns}
@@ -651,20 +640,22 @@ export default function WorkOrderList() {
 
           {/* 표 하단 건수와 페이지 이동 */}
           <TableFooter>
-            <span>
-              전체 {filtered.length}건 중{" "}
-              {filtered.length ? (page - 1) * PAGE_SIZE + 1 : 0}
-              에서 {Math.min(page * PAGE_SIZE, filtered.length)}
-              까지 표시
-            </span>
-
             <Pagination>
               <MoveButton
                 type="button"
+                aria-label="첫 페이지"
+                disabled={page === 1}
+                onClick={() => setPage(1)}
+              >
+                «
+              </MoveButton>
+              <MoveButton
+                type="button"
+                aria-label="이전 페이지"
                 disabled={page === 1}
                 onClick={() => setPage((current) => current - 1)}
               >
-                이전
+                ‹
               </MoveButton>
 
               {Array.from({ length: pageCount }, (_, index) => index + 1).map(
@@ -682,10 +673,19 @@ export default function WorkOrderList() {
 
               <MoveButton
                 type="button"
+                aria-label="다음 페이지"
                 disabled={page === pageCount}
                 onClick={() => setPage((current) => current + 1)}
               >
-                다음
+                ›
+              </MoveButton>
+              <MoveButton
+                type="button"
+                aria-label="마지막 페이지"
+                disabled={page === pageCount}
+                onClick={() => setPage(pageCount)}
+              >
+                »
               </MoveButton>
             </Pagination>
           </TableFooter>
@@ -760,105 +760,106 @@ const Description = styled.p`
   font-size: 13px;
 `;
 
-// 등록 버튼 내부 정렬
-const ButtonInner = styled.span`
+// 목록 상단 주요 액션 버튼 공통 규격
+const HeaderActionButton = styled(Button)`
+  width: 128px;
+  height: 40px;
+  padding: 0 14px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
 `;
 
 // 상태 요약 카드 배치
 const SummaryGrid = styled.section`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   margin-bottom: 22px;
 
   @media (max-width: 650px) {
     grid-template-columns: 1fr;
-    gap: 10px;
   }
 `;
 
-// 상태 요약 카드
-const SummaryCard = styled(Card)`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 105px;
-  border-radius: 0;
-  box-shadow: none;
-
-  &:first-child {
-    border-radius: 10px 0 0 10px;
+const StatusSummaryCard = styled(SummaryCard).attrs({
+  padding: 18,
+  gap: 18,
+  iconBoxSize: 50,
+  iconSize: 24,
+  iconBorderRadius: 16,
+  titleFontSize: 12,
+  titleFontWeight: 500,
+  titleColor: "#172033",
+  valueFontSize: 26,
+  valueFontWeight: 700,
+  valueColor: "#020817",
+  borderRadius: 16,
+  boxShadow: "0 2px 6px rgba(15, 23, 42, 0.04)",
+})`
+  && {
+    min-height: 116px;
+    flex-direction: row;
+    align-items: center;
   }
 
-  &:last-child {
-    border-radius: 0 10px 10px 0;
+  > div:last-child {
+    justify-content: center;
   }
 
-  & + & {
-    border-left: 0;
-  }
-
-  @media (max-width: 650px) {
-    border: 1px solid var(--color-border) !important;
-    border-radius: 10px !important;
+  > div:last-child > span {
+    margin-bottom: 6px;
   }
 `;
 
-// 상태별 아이콘 색상
-const SummaryIcon = styled.span`
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  font-size: 24px;
-
-  color: ${(props) =>
-    props.$tone === "progress"
-      ? "#2764d8"
-      : props.$tone === "done"
-        ? "#11a861"
-        : "#667085"};
-
-  background: ${(props) =>
-    props.$tone === "progress"
-      ? "#eaf1ff"
-      : props.$tone === "done"
-        ? "#e7f8ef"
-        : "#f0f2f6"};
+const FilterBlock = styled.div`
+  padding: 18px 20px;
+  border: 1px solid #d7dde8;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 28px;
 `;
 
-const SummaryLabel = styled.div`
-  color: #707b8e;
-  font-size: 12px;
-  margin-bottom: 5px;
-`;
-
-const SummaryValue = styled.strong`
-  font-size: 24px;
+const FilterTitle = styled.h2`
+  margin: 0 0 12px;
+  color: #172033;
+  font-size: 15px;
   font-weight: 700;
-`;
-
-const Unit = styled.span`
-  margin-left: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #7b8493;
-`;
-
-// 검색 영역
-const WorkOrderFilter = styled(FilterPanel)`
-  margin-bottom: 22px;
 `;
 
 // 표 전체 카드
 const TableCard = styled.section`
   overflow: hidden;
-  border: 1px solid #d7dde8;
-  border-radius: 10px;
+  border: 1px solid #dce1ea;
+  border-radius: 12px;
   background: #fff;
+`;
+
+const TableTop = styled.div`
+  min-height: 62px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+`;
+
+const TableTitle = styled.h2`
+  margin: 0;
+  color: #292d35;
+  font-size: 16px;
+  font-weight: 600;
+`;
+
+const TopResultText = styled.span`
+  color: #737b88;
+  font-size: 13px;
+
+  strong {
+    color: #0755d9;
+  }
 `;
 
 // 표 헤더와 셀 스타일
@@ -870,79 +871,88 @@ const TableWrap = styled.div`
 
   table {
     width: 100%;
-    min-width: 950px;
+    min-width: 1150px;
     table-layout: fixed;
   }
 
   th {
-    height: 52px;
-    padding: 0 18px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e7ed;
     vertical-align: middle;
-    background: linear-gradient(180deg, #f2f6fc 0%, #e8eff8 100%);
-    color: #233b5d;
+    background: #f1f3f6;
+    color: #535b68;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
-    text-align: center;
+    text-align: center !important;
     white-space: nowrap;
   }
 
   /* 헤더 사이 구분선 */
   th + th {
-    border-left: 1px solid rgba(184, 198, 218, 0.65);
+    border-left: 0;
   }
 
   th:first-child {
-    width: 20%;
-    padding-left: 28px;
-    text-align: left;
+    width: 5%;
+    padding-left: 14px;
+    text-align: center !important;
   }
 
   th:nth-child(2) {
-    width: 19%;
-    text-align: left;
+    width: 17%;
+    text-align: center !important;
   }
 
   th:nth-child(3) {
-    width: 10%;
+    width: 15%;
   }
 
   th:nth-child(4) {
-    width: 9%;
+    width: 8%;
   }
 
   th:nth-child(5) {
-    width: 12%;
-  }
-
-  th:nth-child(6) {
-    width: 10%;
-  }
-
-  th:nth-child(7) {
-    width: 13%;
-  }
-
-  th:nth-child(8) {
     width: 7%;
   }
 
+  th:nth-child(6) {
+    width: 9%;
+  }
+
+  th:nth-child(7) {
+    width: 8%;
+  }
+
+  th:nth-child(8) {
+    width: 11%;
+  }
+
+  th:nth-child(9) {
+    width: 11%;
+  }
+
+  th:nth-child(10) {
+    width: 9%;
+  }
+
   td {
-    height: 67px;
-    padding: 9px 18px;
-    border-bottom: 1px solid #d7dce7;
-    color: #202a3c;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e7ed;
+    color: #252a32;
+    font-size: 13px;
+    text-align: center !important;
     vertical-align: middle;
     white-space: nowrap;
   }
 
   td:first-child {
-    padding-left: 28px;
+    padding-left: 14px;
   }
 
   /* 작업지시 번호와 제품명 줄바꿈 */
-  td:nth-child(1),
-  td:nth-child(2) {
+  td:nth-child(2),
+  td:nth-child(3) {
     white-space: normal;
     line-height: 1.45;
     overflow-wrap: anywhere;
@@ -954,7 +964,11 @@ const TableWrap = styled.div`
   }
 
   tbody tr:hover {
-    background: #fafcff;
+    background: #f6f9ff;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
   }
 
   @media (max-width: 1000px) {
@@ -966,7 +980,7 @@ const TableWrap = styled.div`
 
     th:first-child,
     td:first-child {
-      padding-left: 18px;
+      padding-left: 14px;
     }
   }
 `;
@@ -975,17 +989,12 @@ const TableWrap = styled.div`
 const OrderNo = styled.span`
   display: -webkit-box;
   overflow: hidden;
-  color: #0b56ad;
-  font-weight: 700;
+  color: #174b9c;
+  font-weight: 600;
   line-height: 1.45;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-
-  tr:hover & {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
 `;
 
 // 시작 시간의 시간 부분
@@ -1060,66 +1069,60 @@ const DeleteButton = styled.button`
 
 // 표 하단 영역
 const TableFooter = styled.footer`
-  min-height: 52px;
+  min-height: 66px;
   padding: 9px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   color: #788396;
   font-size: 11px;
-  background: #f8f9fc;
+  background: #f5f6f8;
 `;
 
 // 페이지 이동 버튼 정렬
 const Pagination = styled.nav`
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 `;
 
 // 이전/다음 버튼
 const MoveButton = styled.button`
-  min-width: 40px;
-  height: 32px;
-  padding: 0 10px;
-
-  border: 1px solid #cbd2df;
-  border-radius: 4px;
-
-  background: #fff;
-  color: #3d475a;
-  font-size: 11px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #344054;
+  font-size: 13px;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: #084693;
-    color: #084693;
+    background: #e8edf4;
   }
 
   &:disabled {
-    opacity: 0.45;
+    color: #aeb7c4;
+    opacity: 1;
     cursor: not-allowed;
   }
 `;
 
 // 이전/다음/페이지 번호 버튼
 const PageButton = styled.button`
-  min-width: 34px;
-  height: 32px;
-  padding: 0 10px;
-
-  border: 1px solid ${({ $active }) => ($active ? "#084693" : "#cbd2df")};
-  border-radius: 4px;
-
-  background: ${({ $active }) => ($active ? "#084693" : "#fff")};
-  color: ${({ $active }) => ($active ? "#fff" : "#3d475a")};
-
-  font-size: 11px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: ${({ $active }) => ($active ? "#0b5ed7" : "transparent")};
+  color: ${({ $active }) => ($active ? "#fff" : "#344054")};
+  font-size: 13px;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: #084693;
-    color: ${({ $active }) => ($active ? "#fff" : "#084693")};
+    background: ${({ $active }) => ($active ? "#0b5ed7" : "#e8edf4")};
   }
 
   &:disabled {

@@ -112,7 +112,6 @@ function BomEdit({ isOpen, product, bomRows, onClose, onSave }) {
       materialName: material.materialName,
       requiredQty: Number(addQuantity),
       unit: material.unit,
-      scrapRate: 0,
       process: selectedProcess,
     };
 
@@ -343,7 +342,7 @@ function BomEdit({ isOpen, product, bomRows, onClose, onSave }) {
           </CancelButton>
 
           <SaveButton type="button" onClick={handleSave}>
-            수정
+            수정하기
           </SaveButton>
         </DrawerFooter>
       </DrawerContainer>
@@ -367,7 +366,7 @@ const DrawerBackdrop = styled.div`
 // 오른쪽에서 열리는 BOM 수정 패널의 본체
 const DrawerContainer = styled.aside`
   display: flex;
-  width: min(480px, 100%);
+  width: min(600px, 100%);
   height: 100%;
   flex-direction: column;
   background: #f7f9fc;
@@ -389,10 +388,25 @@ const DrawerContainer = styled.aside`
 const BomEditTableArea = styled.div`
   width: 100%;
 
+  > div {
+    border: 1px solid #dce1ea;
+    border-radius: 8px;
+  }
+
+  table {
+    min-width: 648px;
+    table-layout: fixed;
+  }
+
   /* dense 테이블 헤더 높이가 40px이므로 중앙 정렬 */
   th {
     height: 40px;
-    padding: 0 8px;
+    padding: 9px 10px;
+    border-bottom: 1px solid #e3e7ed;
+    background: #f1f3f6;
+    color: #535b68;
+    font-size: 12px;
+    font-weight: 600;
     text-align: center !important;
     vertical-align: middle !important;
     font-family: "Pretendard", sans-serif;
@@ -401,7 +415,10 @@ const BomEditTableArea = styled.div`
 
   td {
     height: 40px;
-    padding: 0 8px;
+    padding: 9px 10px;
+    border-bottom: 1px solid #e3e7ed;
+    color: #252a32;
+    font-size: 12px;
     text-align: center !important;
     vertical-align: middle !important;
     font-family: "Pretendard", sans-serif;
@@ -411,6 +428,10 @@ const BomEditTableArea = styled.div`
   select,
   button {
     font-family: "Pretendard", sans-serif;
+  }
+
+  tbody tr:hover {
+    background: #f6f9ff;
   }
 `;
 
@@ -662,24 +683,26 @@ const DeleteButton = styled.button`
   }
 `;
 
-// 취소와 저장 버튼을 두 열로 배치하는 드로어 하단 고정 영역
+// 취소와 저장 버튼을 오른쪽에 배치하는 드로어 하단 고정 영역
 const DrawerFooter = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
   flex-shrink: 0;
-  padding: 22px 24px;
+  padding: 16px 18px;
   border-top: 1px solid #cbd3e0;
   background: #fff;
 `;
 
 // 변경 내용을 저장하지 않고 드로어를 닫는 보조 버튼
 const CancelButton = styled.button`
-  height: 47px;
-  border: 1px solid #bcc6d8;
-  border-radius: 8px;
+  min-width: 84px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid #d1d7e3;
+  border-radius: 7px;
   background: #fff;
-  color: #374052;
+  color: #111827;
   font-size: 14px;
   cursor: pointer;
 
@@ -690,15 +713,18 @@ const CancelButton = styled.button`
 
 // 검증을 통과한 BOM 변경 내용을 저장하는 주요 버튼
 const SaveButton = styled.button`
-  height: 47px;
-  border: none;
-  border-radius: 8px;
-  background: #0744a0;
+  min-width: 84px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid #0b57d0;
+  border-radius: 7px;
+  background: #0b57d0;
   color: #fff;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    background: #063b8b;
+    background: #0848ad;
   }
 `;

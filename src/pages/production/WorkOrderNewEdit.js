@@ -198,7 +198,7 @@ const SideDrawer = styled.aside`
   right: 0;
   z-index: 1000;
 
-  width: min(480px, 100%);
+  width: min(600px, 100%);
   height: 100dvh;
 
   display: flex;

@@ -2,14 +2,7 @@
 // ProductLotList에서 LOT 행을 클릭했을 때 오른쪽에서 열리는 상세 패널
 import { useEffect, useId, useState } from "react";
 import styled from "styled-components";
-import {
-  FiCheck,
-  FiClock,
-  FiFileText,
-  FiInfo,
-  FiSettings,
-  FiX,
-} from "react-icons/fi";
+import { FiCheck, FiClock, FiFileText, FiSettings, FiX } from "react-icons/fi";
 
 const TABS = [
   // 상세 drawer 안에서 보여줄 탭 목록
@@ -29,7 +22,7 @@ const PROCESS_STEPS = [
 ];
 
 const MATERIALS = [
-  // 이 LOT 생산에 투입된 원자재 LOT 예시 데이터
+  // 이 LOT 생산에 투입된 자재 LOT 예시 데이터
   {
     name: "양극재",
     lot: "MAT-20231025-001",
@@ -126,10 +119,6 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
                 <DrawerTitle id={titleId}>완제품 LOT 상세</DrawerTitle>
                 <CompleteBadge $status={lot.status}>{lot.status}</CompleteBadge>
               </TitleRow>
-              <LotNumber>{lot.lotNo}</LotNumber>
-              <ProductText>
-                {lot.productName || "회로 기판 Rev B"} · 라인 4 · 조립
-              </ProductText>
             </div>
             <CloseButton
               type="button"
@@ -159,6 +148,37 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
             <FinishedAt>검사 완료&nbsp; 16:45</FinishedAt>
           </SummaryCard>
         </SummaryWrap>
+
+        <LotInfoWrap>
+          <SectionTitle>LOT 기본 정보</SectionTitle>
+
+          <LotInfoCard>
+            <LotInfoItem>
+              <SmallLabel>제품명</SmallLabel>
+              <Value>{lot.productName || "-"}</Value>
+            </LotInfoItem>
+
+            <LotInfoItem>
+              <SmallLabel>LOT 번호</SmallLabel>
+              <Value>{lot.lotNo || "-"}</Value>
+            </LotInfoItem>
+
+            <LotInfoItem>
+              <SmallLabel>LOT 상태</SmallLabel>
+              <CompleteBadge $status={lot.status}>
+                {lot.status || "-"}
+              </CompleteBadge>
+            </LotInfoItem>
+
+            <LotInfoItem>
+              <SmallLabel>LOT 생성일</SmallLabel>
+              <Value>
+                {lot.createdDate || "-"}
+                {lot.createdTime ? ` ${lot.createdTime}` : ""}
+              </Value>
+            </LotInfoItem>
+          </LotInfoCard>
+        </LotInfoWrap>
 
         <Tabs role="tablist" aria-label="완제품 LOT 상세 메뉴">
           {TABS.map((tab) => (
@@ -190,6 +210,9 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
         </Body>
 
         <Footer>
+          <CloseFooterButton type="button" onClick={onClose}>
+            닫기
+          </CloseFooterButton>
           <ReportButton type="button" onClick={() => window.print()}>
             <FiFileText /> 성적서 발행
           </ReportButton>
@@ -199,12 +222,11 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
   );
 }
 
-function SectionTitle({ children, info = false }) {
+function SectionTitle({ children }) {
   // 각 탭 안에서 반복해서 쓰는 작은 섹션 제목 컴포넌트
   return (
     <SectionHeading>
       <span>{children}</span>
-      {info && <FiInfo aria-label="정보" />}
     </SectionHeading>
   );
 }
@@ -213,7 +235,7 @@ function WorkTab({ lot, inspectionQty, goodQty, defectQty }) {
   // 작업 시작/종료, 작업지시, 검사 수량 요약을 보여주는 탭
   return (
     <>
-      <SectionTitle info>생산 이력 정보</SectionTitle>
+      <SectionTitle>생산 이력 정보</SectionTitle>
       <InfoGrid>
         <InfoCard>
           <SmallLabel>작업 시작</SmallLabel>
@@ -286,10 +308,10 @@ function LotTab() {
 }
 
 function MaterialTab() {
-  // 자재 탭, 생산에 사용된 원자재 LOT와 투입량을 보여줌
+  // 자재 탭, 생산에 사용된 자재 LOT와 투입량을 보여줌
   return (
     <>
-      <SectionTitle info>투입 자재</SectionTitle>
+      <SectionTitle>투입 자재</SectionTitle>
       <MaterialSummary>
         <span>
           <SmallLabel>자재 종류</SmallLabel>
@@ -298,7 +320,7 @@ function MaterialTab() {
           </BigValue>
         </span>
         <span>
-          <SmallLabel>원자재 LOT</SmallLabel>
+          <SmallLabel>자재 LOT</SmallLabel>
           <BigValue>
             2<em>개</em>
           </BigValue>
@@ -314,7 +336,7 @@ function MaterialTab() {
               </Amount>
             </CardTop>
             <MaterialLot>
-              <span>원자재 LOT</span> {item.lot}
+              <span>자재 LOT</span> {item.lot}
             </MaterialLot>
             <TimeLine>
               <FiClock /> {item.time}
@@ -330,7 +352,7 @@ function EquipmentTab() {
   // 설비 탭, LOT 생산에 사용된 설비 목록을 보여줌
   return (
     <>
-      <SectionTitle info>
+      <SectionTitle>
         사용 설비 <HeadingCount>5대</HeadingCount>
       </SectionTitle>
       <Stack>
@@ -376,11 +398,11 @@ const Drawer = styled.aside`
   position: absolute;
   top: 0;
   right: 0;
-  width: min(440px, 100vw);
+  width: min(600px, 100vw);
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #f7f9fc;
   color: #1d2738;
   box-shadow: -12px 0 30px rgba(15, 23, 42, 0.14);
   animation: slideIn 0.22s ease-out;
@@ -397,12 +419,18 @@ const Drawer = styled.aside`
 `;
 // drawer 상단 제목 영역
 const DrawerHeader = styled.header`
-  padding: 26px 26px 18px;
+  min-height: 72px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid #dce2ec;
+  background: #fff;
 `;
 // 제목/LOT 정보와 닫기 버튼을 양쪽으로 배치
 const HeaderTop = styled.div`
+  width: 100%;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
 `;
@@ -414,14 +442,17 @@ const TitleRow = styled.div`
 `;
 // drawer의 큰 제목 텍스트
 const DrawerTitle = styled.h2`
-  font-size: 20px;
-  font-weight: 650;
+  font-size: 18px;
+  font-weight: 600;
   letter-spacing: -0.025em;
 `;
 // LOT 상태를 보여주는 배지 상태값에 따라 색상이 바뀜
 const CompleteBadge = styled.span`
-  padding: 4px 8px;
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 12px;
+  border-radius: 999px;
   background: ${({ $status }) =>
     $status === "생산완료" || $status === "입고완료"
       ? "#ddf8e8"
@@ -434,22 +465,8 @@ const CompleteBadge = styled.span`
       : $status === "출하대기"
         ? "#1767bf"
         : "#697286"};
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
-`;
-// LOT 번호를 파란색 고정폭 글꼴
-const LotNumber = styled.div`
-  margin-top: 8px;
-  color: #0755aa;
-  font-family: var(--font-family-mono);
-  font-size: 11px;
-  font-weight: 700;
-`;
-// 제품명, 라인, 공정 같은 보조 설명 텍스트
-const ProductText = styled.div`
-  margin-top: 7px;
-  color: #556075;
-  font-size: 11px;
 `;
 // drawer 우측 상단 닫기 버튼
 const CloseButton = styled.button`
@@ -466,23 +483,24 @@ const CloseButton = styled.button`
 `;
 // 검사 합격률 요약 카드를 감싸는 여백 영역
 const SummaryWrap = styled.div`
-  padding: 18px 20px 10px;
+  padding: 20px 28px 0;
 `;
 // 최종 검사 합격률, 수량, 진행바를 담는 요약 카드
 const SummaryCard = styled.section`
-  padding: 18px;
-  border: 1px solid #cad4e5;
-  border-radius: 10px;
-  background: #f4f6ff;
+  padding: 14px 16px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
 `;
 // 요약 카드의 작은 라벨 텍스트
 const SummaryLabel = styled.div`
-  color: #667187;
-  font-size: 11px;
+  color: #8a94a6;
+  font-size: 12px;
+  font-weight: 600;
 `;
 // 합격률 숫자와 합격/불합격 수량을 한 줄에 배치
 const SummaryLine = styled.div`
-  margin-top: 6px;
+  margin-top: 4px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -490,21 +508,21 @@ const SummaryLine = styled.div`
 `;
 // 합격률 퍼센트 값을 크게 보여줌
 const Rate = styled.strong`
-  color: #06499d;
-  font-size: 26px;
+  color: #2a3140;
+  font-size: 18px;
   line-height: 1;
-  font-weight: 750;
+  font-weight: 700;
 `;
 // 합격/불합격 수량 요약 텍스트
 const Counts = styled.strong`
-  color: #06499d;
+  color: #5d6676;
   font-size: 12px;
   white-space: nowrap;
 `;
 // 합격률 진행바의 바탕
 const Progress = styled.div`
-  height: 9px;
-  margin-top: 20px;
+  height: 8px;
+  margin-top: 14px;
   overflow: hidden;
   border-radius: 999px;
   background: #dce4f3;
@@ -513,57 +531,82 @@ const Progress = styled.div`
 const ProgressValue = styled.div`
   height: 100%;
   border-radius: inherit;
-  background: #063d93;
+  background: #0b57d0;
 `;
 // 검사 완료 시간을 표시하는 작은 텍스트
 const FinishedAt = styled.div`
-  margin-top: 9px;
-  font-family: var(--font-family-mono);
+  margin-top: 8px;
+  font-family: var(--font-family-base);
   color: #39455a;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
 `;
+
+const LotInfoWrap = styled.section`
+  padding: 18px 28px 0;
+`;
+
+const LotInfoCard = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 28px;
+  padding: 18px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const LotInfoItem = styled.div`
+  min-width: 0;
+`;
+
 // 작업 정보/LOT/자재/설비 탭 버튼들을 담는 탭 영역
 const Tabs = styled.div`
   height: 48px;
-  padding: 0 20px;
+  margin: 16px 28px 0;
+  padding: 0;
   display: flex;
   align-items: stretch;
-  border-bottom: 1px solid #dce2ec;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
+  overflow: hidden;
 `;
 // 각 탭 버튼, 선택된 탭은 파란색 글자와 아래 선으로 표시
 const Tab = styled.button`
   position: relative;
-  padding: 0 14px;
+  flex: 1;
+  padding: 0 10px;
   color: ${({ $active }) => ($active ? "#074c9d" : "#586478")};
-  font-size: 11px;
+  font-size: 12px;
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
   &::after {
-    content: "";
-    position: absolute;
-    right: 12px;
-    bottom: -1px;
-    left: 12px;
-    height: 2px;
-    background: ${({ $active }) => ($active ? "#0754ad" : "transparent")};
+    display: none;
   }
+  background: ${({ $active }) => ($active ? "#eef4ff" : "#fff")};
 `;
 // 탭을 눌렀을 때 바뀌는 상세 내용 영역 내용이 길면 세로 스크롤이 생김
 const Body = styled.div`
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 20px 28px;
+  padding: 20px 28px 28px;
 `;
 // 각 탭 내부의 섹션 제목
 const SectionHeading = styled.h3`
-  margin-bottom: 13px;
+  margin: 0 0 12px;
+  padding-left: 10px;
+  border-left: 4px solid #0b57d0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: #273143;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   svg {
     color: #657187;
   }
@@ -575,38 +618,38 @@ const SectionHeading = styled.h3`
 const HeadingCount = styled.span`
   margin-left: 8px;
   color: #748094;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 `;
 // 작업 정보 탭에서 시작/종료/담당자/작업지시 카드를 2열로 배치
 const InfoGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 `;
 // 작업 정보 한 칸짜리 카드
 const InfoCard = styled.div`
   min-height: 68px;
-  padding: 13px;
-  border: 1px solid #cbd5e3;
-  border-radius: 7px;
-  background: #f8faff;
+  padding: 16px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
 `;
 // 카드 안의 작은 항목명 라벨
 const SmallLabel = styled.span`
   display: block;
   margin-bottom: 7px;
-  color: #7a8496;
-  font-size: 9px;
-  font-weight: 500;
+  color: #8a94a6;
+  font-size: 12px;
+  font-weight: 600;
 `;
 // 카드 안의 실제 값 텍스트
 const Value = styled.strong`
   display: block;
   color: #202a3c;
-  font-family: var(--font-family-mono);
-  font-size: 11px;
-  font-weight: 650;
+  font-family: var(--font-family-base);
+  font-size: 13px;
+  font-weight: 700;
 `;
 
 const PersonValue = styled(Value)`
@@ -618,15 +661,16 @@ const InspectionGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   overflow: hidden;
-  border: 1px solid #cbd5e3;
-  border-radius: 7px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
 `;
 // 검사 실적 요약의 각 칸
 const InspectionItem = styled.div`
   padding: 14px 8px;
   text-align: center;
   &:not(:last-child) {
-    border-right: 1px solid #cbd5e3;
+    border-right: 1px solid #d6dce8;
   }
   ${SmallLabel} {
     margin-bottom: 8px;
@@ -673,14 +717,14 @@ const TimelineMarker = styled.div`
   border-radius: 50%;
   background: #0752a8;
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
 `;
 // 타임라인 오른쪽에 붙는 공정 정보 카드
 const ProcessCard = styled.div`
-  padding: 13px 14px;
-  border: 1px solid #ccd6e4;
-  border-radius: 7px;
-  background: #fafbfe;
+  padding: 14px 16px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
 `;
 // 카드 상단에서 이름과 상태/수량을 양쪽으로 배치
 const CardTop = styled.div`
@@ -689,14 +733,14 @@ const CardTop = styled.div`
   justify-content: space-between;
   gap: 16px;
   strong {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 650;
   }
 `;
 // 공정 완료 PASS 텍스트
 const PassText = styled.span`
   color: #168953;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 750;
 `;
 // 공정 카드 안의 설비/시간 메타 정보를 2열로 보여줌
@@ -705,22 +749,22 @@ const ProcessMeta = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   color: #273143;
-  font-family: var(--font-family-mono);
-  font-size: 9px;
+  font-family: var(--font-family-base);
+  font-size: 12px;
   ${SmallLabel} {
     margin-bottom: 4px;
     font-family: var(--font-family-base);
   }
 `;
-// 자재 탭 상단의 자재 종류/원자재 LOT 개수 요약 박스
+// 자재 탭 상단의 자재 종류/자재 LOT 개수 요약 박스
 const MaterialSummary = styled.div`
   margin-bottom: 14px;
   padding: 16px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid #cbd5e3;
-  border-radius: 7px;
-  background: #f4f6ff;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
 `;
 // 자재 요약 박스 안의 큰 숫자 값
 const BigValue = styled.strong`
@@ -730,7 +774,7 @@ const BigValue = styled.strong`
     margin-left: 5px;
     font-style: normal;
     color: #687387;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
   }
 `;
@@ -742,26 +786,26 @@ const Stack = styled.div`
 // 자재 탭에서 원자재 하나를 표시하는 카드
 const MaterialCard = styled.div`
   padding: 15px;
-  border: 1px solid #cbd5e3;
-  border-radius: 7px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
   background: #fff;
 `;
 // 투입 자재 수량과 단위 표시
 const Amount = styled.span`
-  font-family: var(--font-family-mono);
+  font-family: var(--font-family-base);
   font-size: 12px;
   font-weight: 650;
   small {
     color: #647084;
-    font-size: 9px;
+    font-size: 12px;
   }
 `;
-// 원자재 LOT 번호를 표시하는 텍스트
+// 자재 LOT 번호를 표시하는 텍스트
 const MaterialLot = styled.div`
   margin-top: 8px;
   color: #0753a8;
-  font-family: var(--font-family-mono);
-  font-size: 9px;
+  font-family: var(--font-family-base);
+  font-size: 12px;
   font-weight: 650;
   span {
     margin-right: 8px;
@@ -778,14 +822,15 @@ const TimeLine = styled.div`
   gap: 5px;
   border-top: 1px solid #dce2ea;
   color: #4e5a6d;
-  font-family: var(--font-family-mono);
-  font-size: 9px;
+  font-family: var(--font-family-base);
+  font-size: 12px;
 `;
 // 설비 탭에서 설비 하나를 표시하는 카드
 const EquipmentCard = styled.div`
   padding: 12px 14px;
-  border: 1px solid #cbd5e3;
-  border-radius: 7px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
 `;
 // 설비 카드 상단의 아이콘/설비명/상태 배지를 가로 배치
 const EquipmentTop = styled.div`
@@ -817,7 +862,7 @@ const MachineName = styled.div`
     display: block;
     margin-top: 3px;
     color: #647084;
-    font-size: 9px;
+    font-size: 12px;
   }
 `;
 // 설비 공정 완료 상태를 보여주는 작은 배지
@@ -826,30 +871,46 @@ const DoneBadge = styled.span`
   border-radius: 3px;
   background: #dcf8e8;
   color: #168957;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 650;
 `;
 // drawer 하단의 버튼 영역
 const Footer = styled.footer`
-  padding: 14px 20px 18px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
   border-top: 1px solid #dce2ec;
-  background: #f8f9fc;
+  background: #fff;
+`;
+
+const FooterButton = styled.button`
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+`;
+
+const CloseFooterButton = styled(FooterButton)`
+  border: 1px solid #d1d7e3;
+  background: #fff;
+  color: #111827;
+
+  &:hover {
+    background: #f5f7fa;
+  }
 `;
 // 성적서 발행 버튼
-const ReportButton = styled.button`
-  width: 100%;
-  height: 42px;
+const ReportButton = styled(FooterButton)`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border: 1px solid #8994a8;
-  border-radius: 7px;
-  background: #f8f8ff;
-  color: #273143;
-  font-size: 12px;
-  font-weight: 600;
+  border: 1px solid #0b57d0;
+  background: #0b57d0;
+  color: #fff;
   &:hover {
-    background: #f0f3fa;
+    background: #084693;
   }
 `;
