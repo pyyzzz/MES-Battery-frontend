@@ -10,6 +10,8 @@ import {
   FiArchive,
   FiBarChart2,
   FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
 } from "react-icons/fi";
 
 const MENU_ITEMS = [
@@ -47,23 +49,25 @@ const MENU_ITEMS = [
       { key: "원료LOT", label: "원료LOT", path: "/mes/inventory/material-lot" },
     ],
   },
-  { key: "리포트", label: "리포트 (Traceability)", icon: FiBarChart2, path: "/mes/report/trace" },
+  { key: "리포트", label: "리포트", icon: FiBarChart2, path: "/mes/report/trace" },
 ];
 
 const Container = styled.aside`
-  width: 260px;
+  width: ${({ $collapsed }) => ($collapsed ? "76px" : "260px")};
+  flex-shrink: 0;
   min-height: 100vh;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   padding: 25px 0 24px;
+  transition: width 0.16s ease-out;
 `;
 
 const LogoSection = styled.div`
   display: flex;
   flex-direction: column;
   /* justify-content: center; */
-  padding: 0 24px 0px;
+  padding: 0 ${({ $collapsed }) => ($collapsed ? "12px" : "24px")};
   margin-bottom: 30px;
   align-items: center;
   filter: drop-shadow(0 0 4px rgba(255,255,255,.2));
@@ -72,18 +76,27 @@ const LogoSection = styled.div`
     color: rgba(255,255,255,.92);
   }
   p {
-    margin-top: 12px;
+    max-height: ${({ $collapsed }) => ($collapsed ? "0" : "24px")};
+    margin-top: ${({ $collapsed }) => ($collapsed ? "0" : "12px")};
+    overflow: hidden;
+    opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
+    visibility: ${({ $collapsed }) => ($collapsed ? "hidden" : "visible")};
+    transform: translateY(${({ $collapsed }) => ($collapsed ? "-3px" : "0")});
     color: rgba(255,255,255,.92);
     font-weight: 600;
     letter-spacing: 2px;
     text-align: center;
     filter: drop-shadow(0 0 4px rgba(255,255,255,.2));
+    transition: opacity 0.2s ease, transform 0.24s ease-out;
+    transition-delay: ${({ $collapsed }) =>
+      $collapsed ? "0s" : "0.1s"};
     /* margin-left: 3px; */
   }
 `;
 
 const SidebarDivider = styled.div`
-  width: calc(100% - 48px);
+  width: ${({ $collapsed }) =>
+    $collapsed ? "44px" : "calc(100% - 48px)"};
   height: 1px;
   margin: 0 auto 27px;
   background: linear-gradient(
@@ -96,7 +109,7 @@ const SidebarDivider = styled.div`
 
 const SidebarLogo = styled.img`
   display: block;
-  width: 110px;
+  width: ${({ $collapsed }) => ($collapsed ? "44px" : "110px")};
   height: auto;
   object-fit: contain;
   /* filter:
@@ -105,6 +118,7 @@ const SidebarLogo = styled.img`
         drop-shadow(0 0.3px 0 #fff)
         drop-shadow(0 -0.3px 0 #fff); */
   filter: brightness(1.18);
+  transition: width 0.16s ease-out;
 `;
 
 const Nav = styled.nav`
@@ -112,8 +126,8 @@ const Nav = styled.nav`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 16px;
-  overflow-y: auto;
+  padding: 0 ${({ $collapsed }) => ($collapsed ? "10px" : "16px")};
+  overflow: visible;
 `;
 
 const activeAccent = css`
@@ -123,11 +137,14 @@ const activeAccent = css`
 `;
 
 const rowBase = css`
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: ${({ $collapsed }) => ($collapsed ? "0" : "12px")};
   width: 100%;
-  padding: 12px;
+  padding: 12px ${({ $collapsed }) => ($collapsed ? "0" : "12px")};
+  justify-content: ${({ $collapsed }) =>
+    $collapsed ? "center" : "flex-start"};
   border-radius: var(--radius-md);
   border-left: 2px solid transparent;
   font-size: var(--font-size-sm);
@@ -141,6 +158,40 @@ const rowBase = css`
     background: rgba(255, 255, 255, 0.06);
   }
 
+  ${({ $collapsed }) =>
+    $collapsed &&
+    css`
+      &::after {
+        content: attr(data-label);
+        position: absolute;
+        top: 50%;
+        left: calc(100% + 12px);
+        z-index: 1000;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 6px;
+        background: var(--sidebar-bg);
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.3);
+        color: var(--sidebar-text);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-50%) translateX(-4px);
+        transition: opacity 0.15s ease, transform 0.15s ease,
+          visibility 0.15s ease;
+      }
+
+      &:hover::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(0);
+      }
+    `}
+
   ${(props) => props.$active && activeAccent}
 `;
 
@@ -153,13 +204,29 @@ const GroupLink = styled(Link)`
 `;
 
 const GroupLabel = styled.span`
-  flex: 1;
+  flex: ${({ $collapsed }) => ($collapsed ? "0 0 0" : "1 1 auto")};
+  max-width: ${({ $collapsed }) => ($collapsed ? "0" : "180px")};
+  overflow: hidden;
+  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
+  visibility: ${({ $collapsed }) => ($collapsed ? "hidden" : "visible")};
+  transform: translateX(${({ $collapsed }) => ($collapsed ? "-6px" : "0")});
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.24s ease-out;
+  transition-delay: ${({ $collapsed }) =>
+    $collapsed ? "0s" : "0.05s"};
 `;
 
 const Chevron = styled(FiChevronRight)`
-  margin-left: auto;
+  flex: 0 0 auto;
+  max-width: ${({ $collapsed }) => ($collapsed ? "0" : "16px")};
+  margin-left: ${({ $collapsed }) => ($collapsed ? "0" : "auto")};
+  overflow: hidden;
+  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
+  visibility: ${({ $collapsed }) => ($collapsed ? "hidden" : "visible")};
   color: var(--sidebar-text-muted);
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease, opacity 0.07s ease;
+  transition-delay: ${({ $collapsed }) =>
+    $collapsed ? "0s" : "0.1s"};
   transform: rotate(${(props) => (props.$open ? "90deg" : "0deg")});
 `;
 
@@ -168,6 +235,12 @@ const SubMenuWrap = styled.div`
   grid-template-rows: 0fr;
   opacity: 0;
   transition: grid-template-rows 0.22s ease, opacity 0.16s ease;
+
+  ${({ $collapsed }) =>
+    $collapsed &&
+    css`
+      display: none;
+    `}
 
   ${(props) =>
     props.$open &&
@@ -207,7 +280,103 @@ const SubMenuItem = styled(Link)`
     `}
 `;
 
+const MenuGroup = styled.div`
+  position: relative;
+`;
+
+const CollapsedMenuPanel = styled.div`
+  position: absolute;
+  top: 0;
+  left: calc(100% + 12px);
+  z-index: 1100;
+  width: 190px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: var(--sidebar-bg);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.38);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    right: 100%;
+    width: 24px;
+    height: calc(100% + 20px);
+  }
+`;
+
+const CollapsedMenuTitle = styled.div`
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-inverse);
+  font-size: 13px;
+  font-weight: 700;
+`;
+
+const CollapsedMenuLink = styled(Link)`
+  display: block;
+  margin-top: 4px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  color: var(--sidebar-text-muted);
+  font-size: 13px;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--sidebar-text);
+  }
+
+  ${({ $active }) =>
+    $active &&
+    css`
+      background: rgba(37, 99, 235, 0.24);
+      color: var(--color-text-inverse);
+      font-weight: 600;
+    `}
+`;
+
+const ToggleSection = styled.div`
+  display: flex;
+  justify-content: ${({ $collapsed }) =>
+    $collapsed ? "center" : "flex-end"};
+  padding: 14px ${({ $collapsed }) => ($collapsed ? "10px" : "18px")} 0;
+  transform: translateY(6px);
+`;
+
+const CollapseButton = styled.button`
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--sidebar-text-muted);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-inverse);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sidebar-active);
+    outline-offset: 2px;
+  }
+`;
+
 export default function SideBar({ activeItem }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedMenu, setCollapsedMenu] = useState(null);
   const defaultOpenGroup = MENU_ITEMS.find((item) =>
     item.children?.some((child) => child.key === activeItem)
   )?.key;
@@ -225,41 +394,76 @@ export default function SideBar({ activeItem }) {
   };
 
   return (
-    <Container>
-      <LogoSection>
+    <Container $collapsed={collapsed}>
+      <LogoSection $collapsed={collapsed}>
         <SidebarLogo
           src="/eum-battery-sidebar-logo.png"
+          $collapsed={collapsed}
           alt="이음 Battery"
         />
         <p><span className="eum">EUM</span> Battery</p>
       </LogoSection>
 
-      <SidebarDivider />
+      <SidebarDivider $collapsed={collapsed} />
 
-      <Nav>
+      <Nav $collapsed={collapsed}>
         {MENU_ITEMS.map((item) => {
           const Icon = item.icon;
 
           if (!item.children) {
             return (
-              <GroupLink key={item.key} to={item.path} $active={activeItem === item.key}>
+              <GroupLink
+                key={item.key}
+                to={item.path}
+                data-label={item.label}
+                $active={activeItem === item.key}
+                $collapsed={collapsed}
+              >
                 <Icon size={18} />
-                <GroupLabel>{item.label}</GroupLabel>
+                <GroupLabel $collapsed={collapsed}>{item.label}</GroupLabel>
               </GroupLink>
             );
           }
 
           const isOpen = openGroups.includes(item.key);
+          const isGroupActive = item.children.some(
+            (child) => child.key === activeItem
+          );
+
+          const isCollapsedMenuOpen = collapsedMenu === item.key;
 
           return (
-            <div key={item.key}>
-              <GroupButton type="button" onClick={() => toggleGroup(item.key)}>
+            <MenuGroup
+              key={item.key}
+              onMouseLeave={() => {
+                if (collapsed) {
+                  setCollapsedMenu(null);
+                }
+              }}
+            >
+              <GroupButton
+                type="button"
+                data-label={item.label}
+                aria-expanded={collapsed ? isCollapsedMenuOpen : isOpen}
+                onClick={() => {
+                  if (collapsed) {
+                    setCollapsedMenu((prev) =>
+                      prev === item.key ? null : item.key
+                    );
+                    return;
+                  }
+
+                  toggleGroup(item.key);
+                }}
+                $active={isGroupActive && (collapsed || !isOpen)}
+                $collapsed={collapsed}
+              >
                 <Icon size={18} />
-                <GroupLabel>{item.label}</GroupLabel>
-                <Chevron size={16} $open={isOpen} />
+                <GroupLabel $collapsed={collapsed}>{item.label}</GroupLabel>
+                <Chevron size={16} $open={isOpen} $collapsed={collapsed} />
               </GroupButton>
 
-              <SubMenuWrap $open={isOpen}>
+              <SubMenuWrap $open={isOpen} $collapsed={collapsed}>
                 <SubMenu>
                   {item.children.map((child) => (
                     <SubMenuItem
@@ -272,10 +476,44 @@ export default function SideBar({ activeItem }) {
                   ))}
                 </SubMenu>
               </SubMenuWrap>
-            </div>
+
+              {collapsed && isCollapsedMenuOpen && (
+                <CollapsedMenuPanel>
+                  <CollapsedMenuTitle>{item.label}</CollapsedMenuTitle>
+                  {item.children.map((child) => (
+                    <CollapsedMenuLink
+                      key={child.key}
+                      to={child.path}
+                      $active={activeItem === child.key}
+                      onClick={() => setCollapsedMenu(null)}
+                    >
+                      {child.label}
+                    </CollapsedMenuLink>
+                  ))}
+                </CollapsedMenuPanel>
+              )}
+            </MenuGroup>
           );
         })}
       </Nav>
+
+      <ToggleSection $collapsed={collapsed}>
+        <CollapseButton
+          type="button"
+          aria-label={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+          title={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+          onClick={() => {
+            setCollapsed((prev) => !prev);
+            setCollapsedMenu(null);
+          }}
+        >
+          {collapsed ? (
+            <FiChevronsRight size={18} />
+          ) : (
+            <FiChevronsLeft size={18} />
+          )}
+        </CollapseButton>
+      </ToggleSection>
 
     </Container>
   );
