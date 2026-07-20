@@ -8,6 +8,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
+import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
@@ -106,21 +107,6 @@ const ResultText = styled.span`
   strong { color: #0755d9; }
 `;
 
-const TableScroll = styled.div`width: 100%; overflow-x: auto;`;
-
-const Table = styled.table`
-  width: 100%;
-  min-width: 1050px;
-  border-collapse: collapse;
-  table-layout: fixed;
-  th, td { padding: 12px 14px; border-bottom: 1px solid #e3e7ed; font-size: 13px; text-align: center; vertical-align: middle; }
-  th { background: #f1f3f6; color: #535b68; font-weight: 600; }
-  td { color: #252a32; }
-  tbody tr { cursor: pointer; transition: background 0.15s ease; }
-  tbody tr:hover { background: #f6f9ff; }
-  tbody tr:last-child td { border-bottom: 0; }
-`;
-
 const TypeBadge = styled.span`
   min-width: 82px;
   padding: 5px 10px;
@@ -138,8 +124,6 @@ const TypeBadge = styled.span`
 
 const LotNumber = styled.strong`color: #174b9c; font-weight: 600;`;
 const Quantity = styled.strong`color: ${({ $type }) => $type === "INBOUND" ? "#0755d9" : "#d94852"};`;
-const PaginationArea = styled.div`border-top: 1px solid #e2e6ed;`;
-
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
@@ -175,8 +159,8 @@ const DrawerHeader = styled.header`
 
 const DrawerTitle = styled.h2`margin: 0; color: #20252d; font-size: 19px;`;
 
-const CloseButton = styled.button`
-  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+const CloseButton = styled(UiButton)`
+  width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;
   border: 0; border-radius: 8px; background: transparent; color: #505968; cursor: pointer;
   &:hover { background: #eef1f5; }
 `;
@@ -250,17 +234,56 @@ function MaterialTransactionHistory() {
     });
   }, [enrichedTransactions, filters]);
 
-  const currentRows = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredTransactions.slice(start, start + itemsPerPage);
-  }, [filteredTransactions, currentPage]);
-
   const changeFilters = (values) => {
     setFilters(values);
     setCurrentPage(1);
   };
 
   const typeLabel = (type) => type === "INBOUND" ? "자재입고" : "생산투입";
+
+  const transactionColumns = [
+    { key: "occurredAt", label: "일시", width: 145, align: "center" },
+    {
+      key: "type",
+      label: "구분",
+      width: 110,
+      align: "center",
+      render: (type) => (
+        <TypeBadge $type={type}>
+          {type === "INBOUND" ? <FiBox /> : <FiArrowUpCircle />}
+          {typeLabel(type)}
+        </TypeBadge>
+      ),
+    },
+    { key: "materialName", label: "자재명", width: 160, align: "center" },
+    {
+      key: "productLotNo",
+      label: "제품 LOT",
+      width: 160,
+      align: "center",
+      render: (lotNo) => lotNo === "-" ? "-" : <LotNumber>{lotNo}</LotNumber>,
+    },
+    {
+      key: "materialLotNo",
+      label: "자재 LOT 번호",
+      width: 190,
+      align: "center",
+      render: (lotNo) => <LotNumber>{lotNo}</LotNumber>,
+    },
+    {
+      key: "quantity",
+      label: "이동수량",
+      width: 90,
+      align: "center",
+      render: (quantity, item) => (
+        <Quantity $type={item.type}>
+          {item.type === "INBOUND" ? "+" : "-"}{formatNumber(quantity)}
+        </Quantity>
+      ),
+    },
+    { key: "unit", label: "단위", width: 60, align: "center" },
+    { key: "worker", label: "작업자", width: 90, align: "center" },
+  ];
 
   return <>
     <Page>
@@ -301,22 +324,27 @@ function MaterialTransactionHistory() {
 
       <TablePanel>
         <TableTop><PanelTitle style={{ margin: 0 }}>자재 입출고 이력</PanelTitle><ResultText>조회 결과 <strong>{filteredTransactions.length}</strong>건</ResultText></TableTop>
-        <TableScroll>
-          <Table>
-            <thead><tr><th style={{ width: 145 }}>일시</th><th className="division">구분</th><th style={{ width: 160 }}>자재명</th><th style={{ width: 160 }}>제품 LOT</th><th style={{ width: 190 }}>자재 LOT 번호</th><th style={{ width: 90 }}>이동수량</th><th style={{ width: 60 }}>단위</th><th style={{ width: 90 }}>작업자</th></tr></thead>
-            <tbody>{currentRows.map((item) => <tr key={item.id} onClick={() => setSelectedTransaction(item)}>
-              <td>{item.occurredAt}</td>
-              <td className="division"><TypeBadge $type={item.type}>{item.type === "INBOUND" ? <FiBox /> : <FiArrowUpCircle />}{typeLabel(item.type)}</TypeBadge></td>
-              <td>{item.materialName}</td>
-              <td>{item.productLotNo === "-" ? "-" : <LotNumber>{item.productLotNo}</LotNumber>}</td>
-              <td><LotNumber>{item.materialLotNo}</LotNumber></td>
-              <td><Quantity $type={item.type}>{item.type === "INBOUND" ? "+" : "-"}{formatNumber(item.quantity)}</Quantity></td>
-              <td>{item.unit}</td>
-              <td>{item.worker}</td>
-            </tr>)}</tbody>
-          </Table>
-        </TableScroll>
-        <PaginationArea><Pagination currentPage={currentPage} totalItems={filteredTransactions.length} itemsPerPage={itemsPerPage} visiblePages={7} height={66} background="#f5f6f8" borderTop="none" onPageChange={setCurrentPage} /></PaginationArea>
+        <Pagination
+          columns={transactionColumns}
+          rows={filteredTransactions}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          visiblePages={7}
+          height={66}
+          background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
+          onPageChange={setCurrentPage}
+          onRowClick={setSelectedTransaction}
+          tableProps={{
+            minWidth: 1050,
+            tableLayout: "fixed",
+            headerHeight: 40,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
+          }}
+        />
       </TablePanel>
     </Page>
 

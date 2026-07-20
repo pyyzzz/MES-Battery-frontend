@@ -20,6 +20,7 @@ import {
   YAxis,
 } from "recharts";
 
+import UiButton from "../../components/ui/Button";
 import SummaryCard from "../../components/ui/SummaryCard";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
@@ -310,60 +311,6 @@ const TableTitle = styled.h2`
   color: #282c34;
 `;
 
-const TableScroll = styled.div`
-  width: 100%;
-  overflow-x: auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  min-width: 1180px;
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  th,
-  td {
-    padding: 16px 14px;
-    border-bottom: 1px solid #e2e6ee;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 13px;
-  }
-
-  th {
-    height: 58px;
-    background: #f1f3f6;
-    color: #555d6c;
-    font-weight: 500;
-  }
-
-  td {
-    color: #22262d;
-    line-height: 1.45;
-  }
-
-  th:nth-child(4),
-  td:nth-child(4),
-  th:nth-child(6),
-  td:nth-child(6) {
-    white-space: nowrap;
-  }
-
-  tbody tr {
-    background: #ffffff;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  tbody tr:hover {
-    background: #f7faff;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-`;
-
 const ResultBadge = styled.span`
   display: inline-flex;
   align-items: center;
@@ -389,17 +336,6 @@ const ResultBadge = styled.span`
 const DefectText = styled.span`
   color: #d92d34;
   font-weight: 500;
-`;
-
-const PaginationArea = styled.div`
-  border-top: 1px solid #e2e6ee;
-`;
-
-const EmptyMessage = styled.div`
-  padding: 50px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #9299a5;
 `;
 
 /* Drawer */
@@ -456,9 +392,10 @@ const DrawerTitle = styled.div`
   }
 `;
 
-const CloseButton = styled.button`
+const CloseButton = styled(UiButton)`
   width: 36px;
   height: 36px;
+  padding: 0;
 
   display: flex;
   align-items: center;
@@ -630,14 +567,33 @@ function QualityPage() {
     });
   }, [rows, filters]);
 
-  const currentRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-
-    return filteredRows.slice(
-      startIndex,
-      startIndex + itemsPerPage
-    );
-  }, [filteredRows, currentPage]);
+  const qualityColumns = [
+    { key: "inspectedAt", label: "검사일시", width: 150 },
+    {
+      key: "result",
+      label: "판정",
+      width: 90,
+      render: (result) => (
+        <ResultBadge $result={result}>
+          {result === "OK" ? <FiCheckCircle /> : <FiXCircle />}
+          {result}
+        </ResultBadge>
+      ),
+    },
+    {
+      key: "defectType",
+      label: "불량 유형",
+      width: 120,
+      render: (defectType, row) => row.result === "NG" ? <DefectText>{defectType}</DefectText> : "-",
+    },
+    { key: "lotNo", label: "LOT", width: 200 },
+    { key: "productName", label: "제품명", width: 140 },
+    { key: "workOrderNo", label: "작업지시", width: 160 },
+    { key: "processName", label: "공정", width: 90 },
+    { key: "machineName", label: "설비", width: 140 },
+    { key: "voltage", label: "전압", width: 80, render: (voltage) => `${voltage}V` },
+    { key: "humidity", label: "습도", width: 80, render: (humidity) => `${humidity}%` },
+  ];
 
   const handleFilterChange = (nextFilters) => {
     setFilters((prev) => ({
@@ -904,93 +860,31 @@ function QualityPage() {
             <TableTitle>검사 이력</TableTitle>
           </TableHeader>
 
-          {currentRows.length > 0 ? (
-            <TableScroll>
-              <Table>
-                <colgroup>
-                  <col style={{ width: 150 }} />
-                  <col style={{ width: 90 }} />
-                  <col style={{ width: 120 }} />
-                  <col style={{ width: 200 }} />
-                  <col style={{ width: 140 }} />
-                  <col style={{ width: 160 }} />
-                  <col style={{ width: 90 }} />
-                  <col style={{ width: 140 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 80 }} />
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>검사일시</th>
-                    <th>판정</th>
-                    <th>불량 유형</th>
-                    <th>LOT</th>
-                    <th>제품명</th>
-                    <th>작업지시</th>
-                    <th>공정</th>
-                    <th>설비</th>
-                    <th>전압</th>
-                    <th>습도</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {currentRows.map((row) => (
-                    <tr
-                      key={row.id}
-                      onClick={() => openDetail(row)}
-                    >
-                      <td>{row.inspectedAt}</td>
-
-                      <td>
-                        <ResultBadge $result={row.result}>
-                          {row.result === "OK" ? (
-                            <FiCheckCircle />
-                          ) : (
-                            <FiXCircle />
-                          )}
-                          {row.result}
-                        </ResultBadge>
-                      </td>
-
-                      <td>
-                        {row.result === "NG" ? (
-                          <DefectText>{row.defectType}</DefectText>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-
-                      <td>{row.lotNo}</td>
-                      <td>{row.productName}</td>
-                      <td>{row.workOrderNo}</td>
-                      <td>{row.processName}</td>
-                      <td>{row.machineName}</td>
-                      <td>{row.voltage}V</td>
-                      <td>{row.humidity}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </TableScroll>
-          ) : (
-            <EmptyMessage>
-              조건에 맞는 검사 이력이 없습니다.
-            </EmptyMessage>
-          )}
-
-          <PaginationArea>
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filteredRows.length}
-              itemsPerPage={itemsPerPage}
-              visiblePages={5}
-              height={66}
-              borderTop="none"
-              background="#f5f6f8"
-              onPageChange={setCurrentPage}
-            />
-          </PaginationArea>
+          <Pagination
+            columns={qualityColumns}
+            rows={filteredRows}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            visiblePages={5}
+            height={66}
+            borderTop="1px solid #e2e6ee"
+            background="#f5f6f8"
+            onPageChange={setCurrentPage}
+            onRowClick={openDetail}
+            tableProps={{
+              minWidth: 1180,
+              tableLayout: "fixed",
+              headerHeight: 58,
+              rowHeight: 58,
+              cellPadding: "0 14px",
+              fontSize: 13,
+              headerBackground: "#f1f3f6",
+              headerColor: "#555d6c",
+              cellColor: "#22262d",
+              hoverBackground: "#f7faff",
+              emptyText: "조건에 맞는 검사 이력이 없습니다.",
+            }}
+          />
         </TablePanel>
       </Page>
 
