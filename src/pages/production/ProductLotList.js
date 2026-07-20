@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import FinishedLotDetailDrawer from "./ProductLotDetail";
-import Table from "../../components/ui/Table";
+import CommonPagination from "../../components/ui/Pagination";
 import Badge from "../../components/ui/Badge";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
@@ -234,17 +234,11 @@ export default function ProductLotList() {
     [filters],
   );
 
-  const pageCount = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-
-  // 현재 페이지에 보여줄 행만 잘라낸 데이터
-  // 예: 1페이지면 0~3번, 2페이지면 4~7번 데이터
-  const rows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // rows에 있는 LOT 원본 데이터를 테이블에서 바로 렌더링할 수 있는 화면용 행 데이터로 바꾸는 코드
-  const tableRows = rows.map((lot, index) => ({
+  // 공용 Pagination이 rows를 페이지별로 나누므로 전체 조회 결과를 전달한다.
+  const tableRows = filteredRows.map((lot, index) => ({
     ...lot,
     originalLot: lot,
-    no: (page - 1) * PAGE_SIZE + index + 1,
+    no: index + 1,
     lotNoCell: (
       <LotLink
         type="button"
@@ -387,65 +381,17 @@ export default function ProductLotList() {
             </TopResultText>
           </TableTop>
           <TableArea>
-            <Table
+            <CommonPagination
               columns={TABLE_COLUMNS}
               rows={tableRows}
+              currentPage={page}
+              totalItems={filteredRows.length}
+              itemsPerPage={PAGE_SIZE}
+              onPageChange={setPage}
               onRowClick={(row) => openLotDetail(row.originalLot)}
+              tableProps={{ minWidth: 1050 }}
             />
           </TableArea>
-
-          {/* 조회 결과 개수와 페이지 이동 메뉴 */}
-          <TableFooter>
-            <Pagination aria-label="페이지 이동">
-              <PageButton
-                type="button"
-                aria-label="첫 페이지"
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-              >
-                «
-              </PageButton>
-              <PageButton
-                type="button"
-                aria-label="이전 페이지"
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
-                disabled={page === 1}
-              >
-                ‹
-              </PageButton>
-              {Array.from({ length: pageCount }, (_, index) => index + 1).map(
-                (number) => (
-                  <PageButton
-                    key={number}
-                    type="button"
-                    $active={page === number}
-                    onClick={() => setPage(number)}
-                    aria-current={page === number ? "page" : undefined}
-                  >
-                    {number}
-                  </PageButton>
-                ),
-              )}
-              <PageButton
-                type="button"
-                aria-label="다음 페이지"
-                onClick={() =>
-                  setPage((value) => Math.min(pageCount, value + 1))
-                }
-                disabled={page === pageCount}
-              >
-                ›
-              </PageButton>
-              <PageButton
-                type="button"
-                aria-label="마지막 페이지"
-                onClick={() => setPage(pageCount)}
-                disabled={page === pageCount}
-              >
-                »
-              </PageButton>
-            </Pagination>
-          </TableFooter>
         </TablePanel>
       </Content>
       {/* 테이블 행 클릭 시 열리는 완제품 LOT 상세 drawer 메뉴 */}
@@ -730,37 +676,5 @@ const StatusDot = styled.span`
   background: currentColor;
 `;
 // 테이블 하단의 결과 개수 문구와 페이지 버튼을 담는 영역
-const TableFooter = styled.footer`
-  min-height: 66px;
-  padding: 8px 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f6f8;
-`;
 // 페이지 번호 버튼들을 묶는 영역
-const Pagination = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
 // 이전/다음/페이지 번호 버튼
-const PageButton = styled.button`
-  min-width: 38px;
-  height: 38px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 7px;
-  background: ${({ $active }) => ($active ? "#0b5ed7" : "transparent")};
-  color: ${({ $active }) => ($active ? "#fff" : "#344054")};
-  font-size: 13px;
-  cursor: pointer;
-  &:hover:not(:disabled) {
-    background: ${({ $active }) => ($active ? "#0b5ed7" : "#e8edf4")};
-  }
-  &:disabled {
-    color: #aeb7c4;
-    opacity: 1;
-    cursor: not-allowed;
-  }
-`;

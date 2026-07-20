@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
-import Table from "../../components/ui/Table";
+import CommonPagination from "../../components/ui/Pagination";
 import Button from "../../components/ui/Button";
 import WorkerDetail from "./WorkerDetail";
 import WorkerNewEdit from "./WorkerNewEdit";
@@ -78,10 +78,13 @@ const emptyFilters = {
   keyword: "",
 };
 
+const PAGE_SIZE = 6;
+
 export default function WorkerList() {
   // 지금은 프론트에서만 들고 있는 임시 목록, 나중에 목록 조회 API 결과로 교체하면 됨
   const [workers, setWorkers] = useState(initialWorkers);
   const [filters, setFilters] = useState(emptyFilters);
+  const [page, setPage] = useState(1);
 
   // 값이 있으면 상세 사이드 드로어가 열림
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -282,9 +285,13 @@ export default function WorkerList() {
           padding={0}
           border="0"
           background="transparent"
-          onChange={setFilters}
+          onChange={(nextFilters) => {
+            setFilters(nextFilters);
+            setPage(1);
+          }}
           onReset={() => {
             setFilters(emptyFilters);
+            setPage(1);
           }}
         />
       </FilterPanel>
@@ -296,12 +303,17 @@ export default function WorkerList() {
             조회 결과 <strong>{filteredWorkers.length}</strong>건
           </TopResultText>
         </TableTop>
-        <Table
+        <CommonPagination
           columns={columns}
           rows={rows}
+          currentPage={page}
+          totalItems={filteredWorkers.length}
+          itemsPerPage={PAGE_SIZE}
+          onPageChange={setPage}
           onRowClick={(worker) =>
             setSelectedWorker(workers.find(({ id }) => id === worker.id))
           }
+          tableProps={{ minWidth: 820 }}
         />
       </TableSection>
 

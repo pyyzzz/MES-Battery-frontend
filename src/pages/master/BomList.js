@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import BomEdit from "./BomEdit";
 import BomDetail from "./BomDetail";
-import Table from "../../components/ui/Table";
+import CommonPagination from "../../components/ui/Pagination";
 import SummaryCard from "../../components/ui/SummaryCard";
 import Button from "../../components/ui/Button";
 
@@ -138,6 +138,8 @@ const INITIAL_BOM = {
   ],
 };
 
+const PAGE_SIZE = 6;
+
 // 완제품 선택, BOM 데이터 변경, 수정/상세 드로어 상태를 관리하는 목록 화면
 function Bom() {
   // 제품 목록은 현재 고정 데이터이므로 setter 없이 읽기 전용 상태로 사용
@@ -146,6 +148,7 @@ function Bom() {
   // 현재 선택된 완제품과 제품별 BOM 데이터를 관리.
   const [selectedProductId, setSelectedProductId] = useState(1);
   const [bomData, setBomData] = useState(INITIAL_BOM);
+  const [page, setPage] = useState(1);
 
   // 수정/상세 드로어
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -162,6 +165,7 @@ function Bom() {
   // 다른 완제품을 선택하면 이전 자재의 상세 선택 상태도 함께 초기화
   const handleSelectProduct = (productId) => {
     setSelectedProductId(productId);
+    setPage(1);
     setIsDetailOpen(false);
     setSelectedBomItem(null);
   };
@@ -376,12 +380,15 @@ function Bom() {
           <QuantityGuide>
             소요수량은 <strong>상위 품목 1개 기준 소요수량</strong>입니다.
           </QuantityGuide>
-          <Table
+          <CommonPagination
             columns={bomColumns}
             rows={bomTableRows}
-            fixed
-            minWidth="760px"
+            currentPage={page}
+            totalItems={selectedBomRows.length}
+            itemsPerPage={PAGE_SIZE}
+            onPageChange={setPage}
             onRowClick={handleOpenDetail}
+            tableProps={{ minWidth: 760 }}
           />
         </BomTableArea>
       </BomSection>

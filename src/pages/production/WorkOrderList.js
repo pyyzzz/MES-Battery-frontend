@@ -13,7 +13,7 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 
-import Table from "../../components/ui/Table";
+import CommonPagination from "../../components/ui/Pagination";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import SummaryCard from "../../components/ui/SummaryCard";
@@ -244,7 +244,6 @@ export default function WorkOrderList() {
   );
 
   // 전체 페이지 수
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const dateFilterLabel =
     filters.dateType === "startedAt"
       ? "실제 시작일"
@@ -252,76 +251,74 @@ export default function WorkOrderList() {
         ? "완료일"
         : "납기일";
 
-  // 현재 페이지에 표시할 표 데이터
-  const rows = filtered
-    .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-    .map((order, index) => ({
-      ...order,
+  // 공용 Pagination이 rows를 페이지별로 나누므로 전체 조회 결과를 전달한다.
+  const rows = filtered.map((order, index) => ({
+    ...order,
 
-      originalOrder: order,
+    originalOrder: order,
 
-      no: (page - 1) * PAGE_SIZE + index + 1,
+    no: index + 1,
 
-      orderCell: <OrderNo>{order.workOrderNo}</OrderNo>,
+    orderCell: <OrderNo>{order.workOrderNo}</OrderNo>,
 
-      quantityCell: order.plannedQty.toLocaleString("ko-KR"),
+    quantityCell: order.plannedQty.toLocaleString("ko-KR"),
 
-      statusCell: (
-        <StatusBadge
-          $status={order.status}
-          tone={order.status === "완료" ? "success" : "neutral"}
+    statusCell: (
+      <StatusBadge
+        $status={order.status}
+        tone={order.status === "완료" ? "success" : "neutral"}
+      >
+        {order.status}
+      </StatusBadge>
+    ),
+
+    startCell: order.startedAt ? (
+      <>
+        <div>{order.startedAt.split(" ")[0]}</div>
+        <Small>{order.startedAt.split(" ")[1]}</Small>
+      </>
+    ) : (
+      "-"
+    ),
+
+    completedCell: order.completedAt ? (
+      <>
+        <div>{order.completedAt.split(" ")[0]}</div>
+        <Small>{order.completedAt.split(" ")[1]}</Small>
+      </>
+    ) : (
+      "-"
+    ),
+
+    // 수정/삭제 버튼
+    actionCell: (
+      <ActionButtons>
+        <EditButton
+          type="button"
+          aria-label={`${order.workOrderNo} 수정`}
+          title="수정"
+          onClick={(event) => {
+            event.stopPropagation();
+            openEditDrawer(order);
+          }}
         >
-          {order.status}
-        </StatusBadge>
-      ),
+          <FiEdit2 />
+        </EditButton>
 
-      startCell: order.startedAt ? (
-        <>
-          <div>{order.startedAt.split(" ")[0]}</div>
-          <Small>{order.startedAt.split(" ")[1]}</Small>
-        </>
-      ) : (
-        "-"
-      ),
-
-      completedCell: order.completedAt ? (
-        <>
-          <div>{order.completedAt.split(" ")[0]}</div>
-          <Small>{order.completedAt.split(" ")[1]}</Small>
-        </>
-      ) : (
-        "-"
-      ),
-
-      // 수정/삭제 버튼
-      actionCell: (
-        <ActionButtons>
-          <EditButton
-            type="button"
-            aria-label={`${order.workOrderNo} 수정`}
-            title="수정"
-            onClick={(event) => {
-              event.stopPropagation();
-              openEditDrawer(order);
-            }}
-          >
-            <FiEdit2 />
-          </EditButton>
-
-          <DeleteButton
-            type="button"
-            aria-label={`${order.workOrderNo} 삭제`}
-            title="삭제"
-            onClick={(event) => {
-              event.stopPropagation();
-              deleteOrder(order);
-            }}
-          >
-            <FiTrash2 />
-          </DeleteButton>
-        </ActionButtons>
-      ),
-    }));
+        <DeleteButton
+          type="button"
+          aria-label={`${order.workOrderNo} 삭제`}
+          title="삭제"
+          onClick={(event) => {
+            event.stopPropagation();
+            deleteOrder(order);
+          }}
+        >
+          <FiTrash2 />
+        </DeleteButton>
+      </ActionButtons>
+    ),
+  }));
 
   // 표 컬럼 설정
   const columns = [
@@ -631,64 +628,17 @@ export default function WorkOrderList() {
             </TopResultText>
           </TableTop>
           <TableWrap>
-            <Table
+            <CommonPagination
               columns={columns}
               rows={rows}
+              currentPage={page}
+              totalItems={filtered.length}
+              itemsPerPage={PAGE_SIZE}
+              onPageChange={setPage}
               onRowClick={(row) => openOrderDetail(row.originalOrder)}
+              tableProps={{ minWidth: 1050 }}
             />
           </TableWrap>
-
-          {/* 표 하단 건수와 페이지 이동 */}
-          <TableFooter>
-            <Pagination>
-              <MoveButton
-                type="button"
-                aria-label="첫 페이지"
-                disabled={page === 1}
-                onClick={() => setPage(1)}
-              >
-                «
-              </MoveButton>
-              <MoveButton
-                type="button"
-                aria-label="이전 페이지"
-                disabled={page === 1}
-                onClick={() => setPage((current) => current - 1)}
-              >
-                ‹
-              </MoveButton>
-
-              {Array.from({ length: pageCount }, (_, index) => index + 1).map(
-                (number) => (
-                  <PageButton
-                    type="button"
-                    key={number}
-                    $active={page === number}
-                    onClick={() => setPage(number)}
-                  >
-                    {number}
-                  </PageButton>
-                ),
-              )}
-
-              <MoveButton
-                type="button"
-                aria-label="다음 페이지"
-                disabled={page === pageCount}
-                onClick={() => setPage((current) => current + 1)}
-              >
-                ›
-              </MoveButton>
-              <MoveButton
-                type="button"
-                aria-label="마지막 페이지"
-                disabled={page === pageCount}
-                onClick={() => setPage(pageCount)}
-              >
-                »
-              </MoveButton>
-            </Pagination>
-          </TableFooter>
         </TableCard>
       </Content>
 
@@ -1068,65 +1018,9 @@ const DeleteButton = styled.button`
 `;
 
 // 표 하단 영역
-const TableFooter = styled.footer`
-  min-height: 66px;
-  padding: 9px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #788396;
-  font-size: 11px;
-  background: #f5f6f8;
-`;
 
 // 페이지 이동 버튼 정렬
-const Pagination = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
 
 // 이전/다음 버튼
-const MoveButton = styled.button`
-  min-width: 38px;
-  height: 38px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: #344054;
-  font-size: 13px;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: #e8edf4;
-  }
-
-  &:disabled {
-    color: #aeb7c4;
-    opacity: 1;
-    cursor: not-allowed;
-  }
-`;
 
 // 이전/다음/페이지 번호 버튼
-const PageButton = styled.button`
-  min-width: 38px;
-  height: 38px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 7px;
-  background: ${({ $active }) => ($active ? "#0b5ed7" : "transparent")};
-  color: ${({ $active }) => ($active ? "#fff" : "#344054")};
-  font-size: 13px;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: ${({ $active }) => ($active ? "#0b5ed7" : "#e8edf4")};
-  }
-
-  &:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-`;
