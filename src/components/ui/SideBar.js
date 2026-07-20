@@ -10,6 +10,8 @@ import {
   FiArchive,
   FiBarChart2,
   FiChevronRight,
+  FiHeadphones,
+  FiUser,
 } from "react-icons/fi";
 
 const MENU_ITEMS = [
@@ -23,6 +25,7 @@ const MENU_ITEMS = [
       { key: "작업자", label: "작업자", path: "/mes/master/worker" },
       { key: "설비", label: "설비", path: "/mes/master/machine" },
       { key: "BOM", label: "BOM", path: "/mes/master/bom" },
+      { key: "자재", label: "자재", path: "/mes/master/material" },
       { key: "제품", label: "제품", path: "/mes/master/product" },
     ],
   },
@@ -41,7 +44,7 @@ const MENU_ITEMS = [
     label: "자재/재고관리",
     icon: FiArchive,
     children: [
-      { key: "자재관리", label: "자재관리", path: "/mes/inventory/material-list" },
+      { key: "자재재고", label: "자재재고", path: "/mes/inventory/material-list" },
       { key: "자재입출고이력", label: "자재입출고이력", path: "/mes/inventory/material-tx" },
       { key: "원료LOT", label: "원료LOT", path: "/mes/inventory/material-lot" },
     ],
@@ -55,23 +58,55 @@ const Container = styled.aside`
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  padding: 32px 0 24px;
+  padding: 25px 0 24px;
 `;
 
 const LogoSection = styled.div`
-  padding: 0 24px 32px;
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  padding: 0 24px 0px;
+  margin-bottom: 30px;
+  align-items: center;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,.2));
+
+  .eum {
+    color: rgba(255,255,255,.92);
+  }
+  p {
+    margin-top: 12px;
+    color: rgba(255,255,255,.92);
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-align: center;
+    filter: drop-shadow(0 0 4px rgba(255,255,255,.2));
+    /* margin-left: 3px; */
+  }
 `;
 
-const LogoTitle = styled.div`
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-inverse);
+const SidebarDivider = styled.div`
+  width: calc(100% - 48px);
+  height: 1px;
+  margin: 0 auto 27px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.36),
+    transparent
+  );
 `;
 
-const LogoSubtitle = styled.div`
-  font-size: var(--font-size-xs);
-  color: var(--sidebar-text-muted);
-  margin-top: 2px;
+const SidebarLogo = styled.img`
+  display: block;
+  width: 110px;
+  height: auto;
+  object-fit: contain;
+  /* filter:
+        drop-shadow(0.1px 0 0 #fff)
+        drop-shadow(-0.1px 0 0 #fff)
+        drop-shadow(0 0.3px 0 #fff)
+        drop-shadow(0 -0.3px 0 #fff); */
+  filter: brightness(1.18);
 `;
 
 const Nav = styled.nav`
@@ -174,6 +209,31 @@ const SubMenuItem = styled(Link)`
     `}
 `;
 
+const BottomSection = styled.div`
+  margin-top: 24px;
+  padding: 16px 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const BottomItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--sidebar-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--sidebar-text);
+  }
+`;
+
 export default function SideBar({ activeItem }) {
   const defaultOpenGroup = MENU_ITEMS.find((item) =>
     item.children?.some((child) => child.key === activeItem)
@@ -188,9 +248,14 @@ export default function SideBar({ activeItem }) {
   return (
     <Container>
       <LogoSection>
-        <LogoTitle>MES Admin</LogoTitle>
-        <LogoSubtitle>Process Master</LogoSubtitle>
+        <SidebarLogo
+          src="/eum-battery-sidebar-logo.png"
+          alt="이음 Battery"
+        />
+        <p><span className="eum">EUM</span> Battery</p>
       </LogoSection>
+
+      <SidebarDivider />
 
       <Nav>
         {MENU_ITEMS.map((item) => {
@@ -233,6 +298,16 @@ export default function SideBar({ activeItem }) {
         })}
       </Nav>
 
+      <BottomSection>
+        <BottomItem>
+          <FiHeadphones size={18} />
+          <span>Support</span>
+        </BottomItem>
+        <BottomItem>
+          <FiUser size={18} />
+          <span>Account</span>
+        </BottomItem>
+      </BottomSection>
     </Container>
   );
 }
