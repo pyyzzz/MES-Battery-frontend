@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import FinishedLotDetailDrawer from "./ProductLotDetail";
-import DataTable from "../../components/ui/Table";
+import Table from "../../components/ui/Table";
 import Badge from "../../components/ui/Badge";
-import FilterPanel, { FilterActions } from "../../components/ui/FilterPanel";
-import FilterDatePicker from "../../components/ui/FilterDatePicker";
+import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import SummaryCard from "../../components/ui/SummaryCard";
+import { FiCheckCircle, FiClock, FiRefreshCw } from "react-icons/fi";
 
 // 완제품 LOT 목록 목업 데이터
 // 아직 백엔드 API가 없어서 화면 테스트용으로 임시 데이터
@@ -146,8 +147,10 @@ const LOTS = [
 const PAGE_SIZE = 4;
 
 const TABLE_COLUMNS = [
+  { key: "no", label: "NO" },
   { key: "lotNoCell", label: "LOT ID" },
-  { key: "productCell", label: "제품명 / 작업지시" },
+  { key: "productNameCell", label: "제품명" },
+  { key: "workOrderCell", label: "작업지시 번호" },
   { key: "inspectionQtyCell", label: "검사 수량", align: "right" },
   { key: "resultCell", label: "합격 / 불합격", align: "right" },
   { key: "createdCell", label: "LOT 생성일" },
@@ -177,8 +180,7 @@ const initialFilters = {
 };
 
 export default function ProductLotList() {
-  // draft는 사용자가 입력 중인 검색 조건, filters는 조회 버튼을 눌렀을 때 실제 적용되는 조건
-  const [draft, setDraft] = useState(initialFilters);
+  // 검색 조건이 바뀌면 바로 목록에 반영
   const [filters, setFilters] = useState(initialFilters);
 
   // 현재 보고 있는 페이지 번호
@@ -203,7 +205,18 @@ export default function ProductLotList() {
     [],
   );
 
-  // 조회 버튼을 눌렀을 때 적용된 조건(filters)을 기준으로 테이블에 표시할 LOT만 골라냄
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        ["생산완료", "생산중", "생산 대기"].map((status) => [
+          status,
+          LOTS.filter((lot) => lot.status === status).length,
+        ]),
+      ),
+    [],
+  );
+
+  // 현재 검색 조건(filters)을 기준으로 테이블에 표시할 LOT만 골라냄
   const filteredRows = useMemo(
     () =>
       LOTS.filter((lot) => {
@@ -228,9 +241,10 @@ export default function ProductLotList() {
   const rows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // rows에 있는 LOT 원본 데이터를 테이블에서 바로 렌더링할 수 있는 화면용 행 데이터로 바꾸는 코드
-  const tableRows = rows.map((lot) => ({
+  const tableRows = rows.map((lot, index) => ({
     ...lot,
     originalLot: lot,
+    no: (page - 1) * PAGE_SIZE + index + 1,
     lotNoCell: (
       <LotLink
         type="button"
@@ -242,12 +256,8 @@ export default function ProductLotList() {
         {lot.lotNo}
       </LotLink>
     ),
-    productCell: (
-      <>
-        <ProductName>{lot.productName}</ProductName>
-        <SubText>{lot.workOrderNo}</SubText>
-      </>
-    ),
+    productNameCell: <ProductName>{lot.productName}</ProductName>,
+    workOrderCell: <WorkOrderText>{lot.workOrderNo}</WorkOrderText>,
     inspectionQtyCell: formatNumber.format(lot.inspectionQty),
     resultCell: (
       <>
@@ -270,21 +280,8 @@ export default function ProductLotList() {
     ),
   }));
 
-  // 검색 조건 draft 값을 바꾸는 공통 함수
-  // key에는 "keyword", "productCode", "startDate" 같은 필드명이 들어감
-  const updateDraft = (key, value) =>
-    // input/select/date가 바뀔 때 draft 검색 조건만 먼저 수정
-    setDraft((current) => ({ ...current, [key]: value }));
-
-  const search = () => {
-    // 사용자가 입력한 draft 조건을 실제 필터로 확정하고 첫 페이지로 이동
-    setFilters(draft);
-    setPage(1);
-  };
-
   const reset = () => {
     // 검색 조건과 페이지를 모두 처음 상태로 되돌림
-    setDraft(initialFilters);
     setFilters(initialFilters);
     setPage(1);
   };
@@ -307,84 +304,90 @@ export default function ProductLotList() {
           </div>
         </Header>
 
-        {/* LOT 번호, 제품명, 작업지시, 생산 일자를 조회하는 검색 조건 메뉴 */}
-        <FilterPanel
-          $columns="minmax(150px, 1fr) minmax(150px, 1fr) minmax(170px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr)"
-          $gap="28px"
-          $padding="28px 30px"
-          onSubmit={(event) => {
-            event.preventDefault();
-            search();
-          }}
-        >
-          <Field>
-            <Label htmlFor="lot-number">LOT 번호</Label>
-            <Control
-              id="lot-number"
-              value={draft.keyword}
-              onChange={(event) => updateDraft("keyword", event.target.value)}
-              placeholder="예: LOT-2023-..."
-            />
-          </Field>
-          <Field>
-            <Label htmlFor="product-code">제품명</Label>
-            <Select
-              id="product-code"
-              value={draft.productCode}
-              onChange={(event) =>
-                updateDraft("productCode", event.target.value)
-              }
-            >
-              <option value="ALL">전체 제품군</option>
-              {productOptions.map(([code, name]) => (
-                <option key={code} value={code}>
-                  {name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field>
-            <Label htmlFor="work-order">작업지시 번호</Label>
-            <Select
-              id="work-order"
-              value={draft.workOrderNo}
-              onChange={(event) =>
-                updateDraft("workOrderNo", event.target.value)
-              }
-            >
-              <option value="ALL">전체 작업지시</option>
-              {workOrderOptions.map((number) => (
-                <option key={number} value={number}>
-                  {number}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field>
-            <Label>시작일</Label>
-            <FilterDatePicker
-              value={draft.startDate}
-              onChange={(value) => updateDraft("startDate", value)}
-              aria-label="시작일"
-            />
-          </Field>
+        <SummaryGrid>
+          <StatusSummaryCard
+            icon={<FiCheckCircle />}
+            title="생산완료"
+            value={counts.생산완료}
+            iconBackground="#e5f8ec"
+            iconColor="#16a765"
+          />
 
-          <Field>
-            <Label>종료일</Label>
-            <FilterDatePicker
-              value={draft.endDate}
-              onChange={(value) => updateDraft("endDate", value)}
-              aria-label="종료일"
-            />
-          </Field>
-          <FilterActions onReset={reset} $fullRow />
-          <HiddenSubmit type="submit" aria-hidden="true" tabIndex="-1" />
+          <StatusSummaryCard
+            icon={<FiRefreshCw />}
+            title="생산중"
+            value={counts.생산중}
+            iconBackground="#e7f0ff"
+            iconColor="#2563eb"
+          />
+
+          <StatusSummaryCard
+            icon={<FiClock />}
+            title="생산대기"
+            value={counts["생산 대기"]}
+            iconBackground="#fff4d8"
+            iconColor="#d98a00"
+          />
+        </SummaryGrid>
+
+        {/* LOT 번호, 제품명, 작업지시, 생산 일자를 조회하는 검색 조건 메뉴 */}
+        <FilterPanel>
+          <FilterTitle>완제품 LOT 검색</FilterTitle>
+
+          <SearchFilterBar
+            filters={[
+              {
+                name: "productCode",
+                label: "제품명",
+                width: 220,
+                options: [
+                  { value: "ALL", label: "전체 제품군" },
+                  ...productOptions.map(([value, label]) => ({
+                    value,
+                    label,
+                  })),
+                ],
+              },
+              {
+                name: "workOrderNo",
+                label: "작업지시 번호",
+                width: 190,
+                options: [
+                  { value: "ALL", label: "전체 작업지시" },
+                  ...workOrderOptions.map((value) => ({
+                    value,
+                    label: value,
+                  })),
+                ],
+              },
+            ]}
+            defaultValues={initialFilters}
+            keywordLabel="LOT 번호"
+            keywordPlaceholder="예: LOT-2023-..."
+            startDateLabel="생성 시작일"
+            endDateLabel="생성 종료일"
+            showSearchButton={false}
+            padding={0}
+            border="0"
+            background="transparent"
+            onChange={(values) => {
+              setFilters(values);
+              setPage(1);
+            }}
+            onReset={reset}
+          />
         </FilterPanel>
 
         {/* 완제품 LOT 조회 결과 테이블 메뉴 */}
         <TablePanel>
+          <TableTop>
+            <TableTitle>완제품 LOT 현황</TableTitle>
+            <TopResultText>
+              조회 결과 <strong>{filteredRows.length}</strong>건
+            </TopResultText>
+          </TableTop>
           <TableArea>
-            <DataTable
+            <Table
               columns={TABLE_COLUMNS}
               rows={tableRows}
               onRowClick={(row) => openLotDetail(row.originalLot)}
@@ -393,18 +396,22 @@ export default function ProductLotList() {
 
           {/* 조회 결과 개수와 페이지 이동 메뉴 */}
           <TableFooter>
-            <ResultText>
-              전체 {filteredRows.length}건 중{" "}
-              {filteredRows.length ? (page - 1) * PAGE_SIZE + 1 : 0}에서{" "}
-              {Math.min(page * PAGE_SIZE, filteredRows.length)}까지 표시
-            </ResultText>
             <Pagination aria-label="페이지 이동">
               <PageButton
                 type="button"
+                aria-label="첫 페이지"
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+              >
+                «
+              </PageButton>
+              <PageButton
+                type="button"
+                aria-label="이전 페이지"
                 onClick={() => setPage((value) => Math.max(1, value - 1))}
                 disabled={page === 1}
               >
-                이전
+                ‹
               </PageButton>
               {Array.from({ length: pageCount }, (_, index) => index + 1).map(
                 (number) => (
@@ -421,12 +428,21 @@ export default function ProductLotList() {
               )}
               <PageButton
                 type="button"
+                aria-label="다음 페이지"
                 onClick={() =>
                   setPage((value) => Math.min(pageCount, value + 1))
                 }
                 disabled={page === pageCount}
               >
-                다음
+                ›
+              </PageButton>
+              <PageButton
+                type="button"
+                aria-label="마지막 페이지"
+                onClick={() => setPage(pageCount)}
+                disabled={page === pageCount}
+              >
+                »
               </PageButton>
             </Pagination>
           </TableFooter>
@@ -484,67 +500,92 @@ const Description = styled.p`
   font-size: 13px;
   line-height: 1.5;
 `;
-// LOT 번호, 제품명, 작업지시, 생산일자 검색 조건을 담는 필터 박스
-// 필터 안에서 label과 input/select를 한 세트로 묶는 칸
-const Field = styled.div`
-  width: 100%;
-  min-width: 0;
-`;
-// 필터 입력칸 위에 붙는 작은 제목
-const Label = styled.label`
-  display: block;
-  margin-bottom: 10px;
-  color: #4c566a;
-  font-size: 12px;
-  font-weight: 600;
-`;
-// 일반 input/select가 공통으로 쓰는 기본 입력 스타일
-const controlStyles = `height: 42px; width: 100%; padding: 0 14px; border: 1px solid #cbd3e1; border-radius: 6px; background: #f8faff; color: #273147; font-size: 12px; outline: none;`;
-// LOT 번호 검색처럼 직접 텍스트를 입력하는 칸
-const Control = styled.input`
-  ${controlStyles} &::placeholder {
-    color: #8c95a7;
-  }
-  &:focus {
-    border-color: #2c67ad;
-    box-shadow: 0 0 0 3px rgba(44, 103, 173, 0.1);
-  }
-`;
-// 제품명/작업지시 번호처럼 목록에서 선택하는 칸
-const Select = styled.select`
-  ${controlStyles}
-  padding-right: 38px;
-  cursor: pointer;
 
-  appearance: none;
-  background-color: #f8faff;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23273147' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 12px 8px;
+const SummaryGrid = styled.section`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
 
-  &:focus {
-    border-color: #2c67ad;
-    box-shadow: 0 0 0 3px rgba(44, 103, 173, 0.1);
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
   }
 `;
-// Enter 키로 검색 form이 제출될 수 있게 숨겨둔 submit 버튼
-const HiddenSubmit = styled.button`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
+
+const StatusSummaryCard = styled(SummaryCard).attrs({
+  padding: 18,
+  gap: 18,
+  iconBoxSize: 50,
+  iconSize: 24,
+  iconBorderRadius: 16,
+  titleFontSize: 12,
+  titleFontWeight: 500,
+  titleColor: "#172033",
+  valueFontSize: 26,
+  valueFontWeight: 700,
+  valueColor: "#020817",
+  borderRadius: 16,
+  boxShadow: "0 2px 6px rgba(15, 23, 42, 0.04)",
+})`
+  && {
+    min-height: 116px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  > div:last-child {
+    justify-content: center;
+  }
+
+  > div:last-child > span {
+    margin-bottom: 6px;
+  }
 `;
+
+const FilterPanel = styled.section`
+  padding: 18px 20px;
+  border: 1px solid #d7dde8;
+  border-radius: 12px;
+  background: #fff;
+`;
+
+const FilterTitle = styled.h2`
+  margin: 0 0 12px;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 700;
+`;
+
 // 테이블 전체를 감싸는 카드형 영역
 const TablePanel = styled.section`
   margin-top: 26px;
   overflow: hidden;
-  border: 1px solid #cfd5e2;
-  border-radius: 10px;
+  border: 1px solid #dce1ea;
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(35, 50, 80, 0.04);
+`;
+const TableTop = styled.div`
+  min-height: 62px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+`;
+const TableTitle = styled.h2`
+  margin: 0;
+  color: #292d35;
+  font-size: 16px;
+  font-weight: 600;
+`;
+const TopResultText = styled.span`
+  color: #737b88;
+  font-size: 13px;
+
+  strong {
+    color: #0755d9;
+  }
 `;
 // 공용 Table 컴포넌트를 이 화면의 카드 톤에 맞게 감싸는 영역
 const TableArea = styled.div`
@@ -554,85 +595,92 @@ const TableArea = styled.div`
   }
 
   table {
-    min-width: 820px;
+    min-width: 1050px;
   }
 
   th {
-    height: 52px;
-    padding: 0 30px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e7ed;
     vertical-align: middle;
-    background: linear-gradient(180deg, #f2f6fc 0%, #e8eff8 100%);
-    color: #233b5d;
-    font-size: 14px;
-    font-weight: 700;
+    background: #f1f3f6;
+    color: #535b68;
+    font-size: 13px;
+    font-weight: 600;
     line-height: 1.2;
+    text-align: center !important;
   }
 
   th + th {
-    border-left: 1px solid rgba(184, 198, 218, 0.65);
+    border-left: 0;
   }
 
   th:first-child {
-    width: 19%;
+    width: 5%;
   }
   th:nth-child(2) {
-    width: 24%;
+    width: 16%;
   }
   th:nth-child(3) {
-    width: 13%;
+    width: 20%;
   }
   th:nth-child(4) {
-    width: 18%;
+    width: 16%;
   }
   th:nth-child(5) {
-    width: 15%;
+    width: 10%;
+  }
+  th:nth-child(6) {
+    width: 14%;
+  }
+  th:nth-child(7) {
+    width: 11%;
   }
   th:last-child {
-    width: 11%;
+    width: 8%;
   }
 
   td {
-    height: 67px;
-    padding: 9px 30px;
-    border-bottom: 1px solid #d7dce7;
-    color: #202a3c;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e7ed;
+    color: #252a32;
+    font-size: 13px;
+    text-align: center !important;
     vertical-align: middle;
     white-space: nowrap;
   }
 
   tbody tr:hover {
-    background: #fafcff;
+    background: #f6f9ff;
   }
 
-  @media (max-width: 1000px) {
-    th,
-    td {
-      padding-left: 18px;
-      padding-right: 18px;
-    }
+  tbody tr:last-child td {
+    border-bottom: 0;
   }
 `;
 // LOT ID 텍스트입니다. 클릭 가능한 행처럼 보이도록 파란색/밑줄 hover
 const LotLink = styled.button`
-  color: #0756ae;
-  font-family: var(--font-family-mono);
+  color: #174b9c;
+  font-family: var(--font-family-base);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
-  tr:hover & {
-    text-decoration: underline;
-  }
 `;
 // 테이블의 제품명 텍스트
 const ProductName = styled.div`
   color: #2c3548;
   font-weight: 600;
 `;
-// 제품명 아래 작업지시 번호, 생성 시간처럼 보조 정보를 작게 표시할 때 사용
+// 독립된 작업지시 번호 열의 텍스트
+const WorkOrderText = styled.div`
+  color: #536174;
+  font-size: 11px;
+  font-weight: 500;
+`;
+// 생성 시간처럼 날짜 아래 보조 정보를 작게 표시할 때 사용
 const SubText = styled.div`
   margin-top: 4px;
   color: #586376;
-  font-family: var(--font-family-mono);
+  font-family: var(--font-family-base);
   font-size: 10px;
 `;
 // LOT 생성일 날짜 텍스트
@@ -683,44 +731,36 @@ const StatusDot = styled.span`
 `;
 // 테이블 하단의 결과 개수 문구와 페이지 버튼을 담는 영역
 const TableFooter = styled.footer`
-  min-height: 50px;
+  min-height: 66px;
   padding: 8px 30px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  background: #f8f9fc;
-  @media (max-width: 600px) {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 14px 18px;
-  }
-`;
-// "전체 n건 중..." 결과 안내 문구
-const ResultText = styled.p`
-  color: #707a8e;
-  font-size: 10px;
+  justify-content: center;
+  background: #f5f6f8;
 `;
 // 페이지 번호 버튼들을 묶는 영역
 const Pagination = styled.nav`
   display: flex;
-  gap: 5px;
+  align-items: center;
+  gap: 4px;
 `;
 // 이전/다음/페이지 번호 버튼
 const PageButton = styled.button`
-  min-width: 34px;
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid ${({ $active }) => ($active ? "#084693" : "#cbd2df")};
-  border-radius: 4px;
-  background: ${({ $active }) => ($active ? "#084693" : "#fff")};
-  color: ${({ $active }) => ($active ? "#fff" : "#3d475a")};
-  font-size: 11px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: ${({ $active }) => ($active ? "#0b5ed7" : "transparent")};
+  color: ${({ $active }) => ($active ? "#fff" : "#344054")};
+  font-size: 13px;
+  cursor: pointer;
   &:hover:not(:disabled) {
-    border-color: #084693;
+    background: ${({ $active }) => ($active ? "#0b5ed7" : "#e8edf4")};
   }
   &:disabled {
-    opacity: 0.45;
+    color: #aeb7c4;
+    opacity: 1;
     cursor: not-allowed;
   }
 `;

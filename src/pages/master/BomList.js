@@ -1,9 +1,11 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { FiEdit2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import BomEdit from "./BomEdit";
 import BomDetail from "./BomDeatil";
 import Table from "../../components/ui/Table";
+import SummaryCard from "../../components/ui/SummaryCard";
+import Button from "../../components/ui/Button";
 
 // 화면에서 선택할 수 있는 완제품의 임시 데이터
 // 실제 API 연동 시 서버에서 받은 제품 목록으로 대체
@@ -55,7 +57,6 @@ const INITIAL_BOM = {
       materialName: "납(Pb)",
       requiredQty: 6,
       unit: "KG",
-      scrapRate: 1.5,
       process: "전극공정",
     },
     {
@@ -64,7 +65,6 @@ const INITIAL_BOM = {
       materialName: "양극판",
       requiredQty: 5,
       unit: "EA",
-      scrapRate: 0,
       process: "전극공정",
     },
     {
@@ -73,7 +73,6 @@ const INITIAL_BOM = {
       materialName: "음극판",
       requiredQty: 5,
       unit: "EA",
-      scrapRate: 0,
       process: "전극공정",
     },
   ],
@@ -85,7 +84,6 @@ const INITIAL_BOM = {
       materialName: "납(Pb)",
       requiredQty: 8,
       unit: "KG",
-      scrapRate: 1.2,
       process: "전극공정",
     },
     {
@@ -94,7 +92,6 @@ const INITIAL_BOM = {
       materialName: "양극판",
       requiredQty: 6,
       unit: "EA",
-      scrapRate: 0,
       process: "전극공정",
     },
   ],
@@ -106,7 +103,6 @@ const INITIAL_BOM = {
       materialName: "납(Pb)",
       requiredQty: 10,
       unit: "KG",
-      scrapRate: 1.7,
       process: "전극공정",
     },
     {
@@ -115,7 +111,6 @@ const INITIAL_BOM = {
       materialName: "전해액",
       requiredQty: 7,
       unit: "L",
-      scrapRate: 0.5,
       process: "주액공정",
     },
   ],
@@ -127,7 +122,6 @@ const INITIAL_BOM = {
       materialName: "납(Pb)",
       requiredQty: 12,
       unit: "KG",
-      scrapRate: 1.8,
       process: "전극공정",
     },
   ],
@@ -139,7 +133,6 @@ const INITIAL_BOM = {
       materialName: "납(Pb)",
       requiredQty: 4,
       unit: "KG",
-      scrapRate: 1.1,
       process: "전극공정",
     },
   ],
@@ -211,6 +204,25 @@ function Bom() {
     setSelectedBomItem(null);
   };
 
+  const handleEditFromDetail = () => {
+    setIsDetailOpen(false);
+    setSelectedBomItem(null);
+    setIsEditOpen(true);
+  };
+
+  const handleDeleteBomItem = (item) => {
+    if (
+      !window.confirm(`${item.materialName} 자재를 BOM에서 삭제하시겠습니까?`)
+    ) {
+      return;
+    }
+
+    setBomData((prev) => ({
+      ...prev,
+      [selectedProductId]: selectedBomRows.filter((row) => row.id !== item.id),
+    }));
+  };
+
   // 공용 Table이 사용하는 열 정의, key는 아래 bomTableRows의 필드와 대응
   const bomColumns = [
     {
@@ -219,14 +231,19 @@ function Bom() {
       label: "NO",
     },
     {
-      key: "material",
-      width: "32%",
+      key: "materialCode",
+      width: "24%",
+      label: "자재코드",
+    },
+    {
+      key: "materialName",
+      width: "24%",
       label: "자재명",
     },
     {
       key: "requiredQty",
       width: "15%",
-      label: "소요 수량",
+      label: "소요수량",
       align: "right",
     },
     {
@@ -235,15 +252,14 @@ function Bom() {
       label: "단위",
     },
     {
-      key: "scrapRate",
-      width: "15%",
-      label: "불량률 (%)",
-      align: "right",
-    },
-    {
       key: "process",
       width: "20%",
-      label: "투입 공정",
+      label: "투입공정",
+    },
+    {
+      key: "management",
+      width: "84px",
+      label: "관리",
     },
   ];
 
@@ -253,24 +269,42 @@ function Bom() {
 
     no: String(index + 1).padStart(2, "0"),
 
-    material: (
-      <MaterialInfo>
-        <strong>{row.materialName}</strong>
-        <span>{row.materialCode}</span>
-      </MaterialInfo>
-    ),
+    materialCode: row.materialCode,
+
+    materialName: row.materialName,
 
     requiredQty: Number(row.requiredQty).toFixed(2),
 
     unit: <UnitBadge>{row.unit}</UnitBadge>,
 
-    scrapRate: (
-      <ScrapText $warning={Number(row.scrapRate) > 0}>
-        {Number(row.scrapRate).toFixed(1)}%
-      </ScrapText>
-    ),
-
     process: <ProcessBadge>{row.process}</ProcessBadge>,
+
+    management: (
+      <Management>
+        <IconButton
+          type="button"
+          aria-label={`${row.materialName} 수정`}
+          title="수정"
+          onClick={(event) => {
+            event.stopPropagation();
+            setIsEditOpen(true);
+          }}
+        >
+          <FiEdit2 />
+        </IconButton>
+        <DeleteButton
+          type="button"
+          aria-label={`${row.materialName} 삭제`}
+          title="삭제"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleDeleteBomItem(row);
+          }}
+        >
+          <FiTrash2 />
+        </DeleteButton>
+      </Management>
+    ),
   }));
 
   return (
@@ -285,27 +319,39 @@ function Bom() {
           </PageDescription>
         </div>
 
-        <EditButton type="button" onClick={handleOpenEdit}>
-          <FiEdit2 size={17} />
+        <HeaderActionButton
+          type="button"
+          variant="primary"
+          onClick={handleOpenEdit}
+        >
+          <FiEdit2 size={16} />
           BOM 수정
-        </EditButton>
+        </HeaderActionButton>
       </PageHeader>
 
       {/* 제품 카드를 클릭하면 아래 BOM 테이블의 데이터가 해당 제품 기준 */}
       <ProductSection>
-        <SectionTitle>완제품 목록</SectionTitle>
+        <SectionTitle>BOM 품목 선택</SectionTitle>
 
         <ProductList>
           {products.map((product) => (
             <ProductCard
               key={product.id}
-              type="button"
               $active={selectedProductId === product.id}
               onClick={() => handleSelectProduct(product.id)}
-            >
-              <ProductName>{product.productName}</ProductName>
-              <ProductCode>{product.productCode}</ProductCode>
-            </ProductCard>
+              title={product.productName}
+              value={product.productCode}
+              padding={12}
+              gap={8}
+              titleFontSize={14}
+              titleFontWeight={600}
+              titleColor="#172033"
+              valueFontSize={11}
+              valueFontWeight={400}
+              valueColor={
+                selectedProductId === product.id ? "#0b57d0" : "#5d6676"
+              }
+            />
           ))}
         </ProductList>
       </ProductSection>
@@ -315,10 +361,21 @@ function Bom() {
         <SelectedProductTitle>
           <TitleDot />
 
-          <span>선택된 품목 : {selectedProduct?.productName}</span>
+          <div>
+            <SectionTitleText>BOM 자재 목록</SectionTitleText>
+            <SelectedProductName>
+              {selectedProduct?.productName}
+            </SelectedProductName>
+          </div>
+          <TableResultText>
+            조회 결과 <strong>{selectedBomRows.length}</strong>건
+          </TableResultText>
         </SelectedProductTitle>
 
         <BomTableArea>
+          <QuantityGuide>
+            소요수량은 <strong>상위 품목 1개 기준 소요수량</strong>입니다.
+          </QuantityGuide>
           <Table
             columns={bomColumns}
             rows={bomTableRows}
@@ -344,6 +401,7 @@ function Bom() {
         product={selectedProduct}
         bomItem={selectedBomItem}
         onClose={handleCloseDetail}
+        onEdit={handleEditFromDetail}
       />
     </PageContainer>
   );
@@ -369,10 +427,19 @@ const BomTableArea = styled.div`
     border-radius: 0;
   }
 
+  table {
+    min-width: 760px;
+    table-layout: fixed;
+  }
+
   /* 공용 Table 내부 헤더 */
   th {
-    height: 56px;
-    padding: 0 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e7ed;
+    background: #f1f3f6;
+    color: #535b68;
+    font-size: 13px;
+    font-weight: 600;
     text-align: center !important;
     vertical-align: middle !important;
     font-family: "Pretendard", sans-serif;
@@ -381,15 +448,13 @@ const BomTableArea = styled.div`
 
   /* 표 본문도 좌우·위아래 중앙 정렬 */
   td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e3e7ed;
+    color: #252a32;
+    font-size: 13px;
     text-align: center !important;
     vertical-align: middle !important;
     font-family: "Pretendard", sans-serif;
-  }
-
-  /* 자재명만 기존처럼 왼쪽 정렬 */
-  th:nth-child(2),
-  td:nth-child(2) {
-    text-align: left !important;
   }
 
   tbody tr {
@@ -397,7 +462,11 @@ const BomTableArea = styled.div`
   }
 
   tbody tr:hover {
-    background: #f5f8fd;
+    background: #f6f9ff;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
   }
 `;
 
@@ -423,31 +492,10 @@ const PageDescription = styled.p`
   font-size: 13px;
 `;
 
-// BOM 수정 드로어를 여는 주요 액션 버튼
-const EditButton = styled.button`
-  display: flex;
-  min-width: 130px;
-  height: 40px;
-  gap: 7px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 18px;
-  border: none;
-  border-radius: 8px;
-  background: #0744a0;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-
-  &:hover {
-    background: #063b8b;
-  }
-`;
-
 // 완제품 선택 카드들을 감싸는 흰색 패널
 const ProductSection = styled.section`
-  padding: 16px;
-  border: 1px solid #c9d1df;
+  padding: 18px 20px;
+  border: 1px solid #d7dde8;
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(32, 37, 48, 0.04);
@@ -456,8 +504,9 @@ const ProductSection = styled.section`
 // 각 콘텐츠 영역의 소제목
 const SectionTitle = styled.h2`
   margin: 0 0 16px;
-  font-size: 17px;
-  font-weight: 600;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 700;
 `;
 
 // 완제품 카드를 5열로 배치하는 그리드
@@ -468,62 +517,113 @@ const ProductList = styled.div`
 `;
 
 // 완제품 선택 버튼, $active가 true이면 선택 상태의 파란색으로 표시
-const ProductCard = styled.button`
-  min-height: 63px;
-  padding: 12px;
-  border: 1px solid ${({ $active }) => ($active ? "#0a53c9" : "#c9d1df")};
-  border-radius: 9px;
-  background: ${({ $active }) => ($active ? "#0a53c9" : "#f8f9fc")};
-  color: ${({ $active }) => ($active ? "#fff" : "#272d38")};
+const ProductCard = styled(SummaryCard)`
+  position: relative;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid ${({ $active }) => ($active ? "#9fc2ff" : "#d7dde8")};
+  border-radius: 12px;
+  background: ${({ $active }) => ($active ? "#eef4ff" : "#ffffff")};
+  color: #172033;
   text-align: left;
   cursor: pointer;
+  box-shadow: ${({ $active }) =>
+    $active
+      ? "0 4px 12px rgba(11, 87, 208, 0.12)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)"};
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    left: 0;
+    width: 4px;
+    border-radius: 0 999px 999px 0;
+    background: ${({ $active }) => ($active ? "#0b57d0" : "transparent")};
+  }
 
   &:hover {
-    border-color: #0a53c9;
+    border-color: #9fc2ff;
+    background: #f5f8ff;
   }
-`;
-
-// 제품 카드 안의 제품명
-const ProductName = styled.span`
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-`;
-
-// 제품명 아래에 보조 정보로 표시되는 제품 코드
-const ProductCode = styled.span`
-  display: block;
-  color: inherit;
-  font-size: 11px;
-  opacity: 0.7;
 `;
 
 // 선택 제품의 BOM 테이블 전체를 감싸는 패널
 const BomSection = styled.section`
   margin-top: 22px;
   overflow: hidden;
-  border: 1px solid #c9d1df;
+  border: 1px solid #dce1ea;
   border-radius: 12px;
   background: #fff;
+  box-shadow: 0 1px 2px rgba(32, 37, 48, 0.04);
 `;
 
 // BOM 테이블 상단에 현재 선택된 제품을 표시하는 제목
 const SelectedProductTitle = styled.div`
   display: flex;
-  height: 52px;
+  min-height: 64px;
   gap: 10px;
   align-items: center;
-  padding: 0 16px;
-  border-bottom: 1px solid #c9d1df;
-  font-size: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #d7dde8;
 `;
 
 // 선택 제품 제목 앞에 표시되는 강조
 const TitleDot = styled.span`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #0744a0;
+  width: 4px;
+  height: 34px;
+  border-radius: 999px;
+  background: #0b57d0;
+`;
+
+const SectionTitleText = styled.strong`
+  display: block;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 700;
+`;
+
+const SelectedProductName = styled.span`
+  display: block;
+  margin-top: 4px;
+  color: #5d6676;
+  font-size: 12px;
+`;
+
+const HeaderActionButton = styled(Button)`
+  width: 128px;
+  height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+`;
+
+const TableResultText = styled.span`
+  margin-left: auto;
+  color: #737b88;
+  font-size: 13px;
+
+  strong {
+    color: #0755d9;
+  }
+`;
+
+const QuantityGuide = styled.p`
+  margin: 0;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e5e9f0;
+  background: #f8faff;
+  color: #5d6676;
+  font-size: 12px;
+
+  strong {
+    color: #172033;
+    font-weight: 600;
+  }
 `;
 
 // KG, EA 같은 자재 단위를 태그 형태로 표시
@@ -551,23 +651,35 @@ const ProcessBadge = styled.span`
   font-size: 12px;
 `;
 
-// 테이블의 자재명과 자재 코드를 위아래로 묶어 표시
-const MaterialInfo = styled.div`
+const Management = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+`;
 
-  strong {
-    font-weight: 500;
-  }
+const IconButton = styled.button`
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #1769d2;
+  font-size: 15px;
+  cursor: pointer;
 
-  span {
-    color: #566174;
-    font-size: 11px;
+  &:hover {
+    background: #edf4ff;
   }
 `;
 
-// 불량률 텍스트, $warning이 true이면 경고 의미의 빨간색을 사용
-const ScrapText = styled.span`
-  color: ${({ $warning }) => ($warning ? "#df1616" : "#52627b")};
+const DeleteButton = styled(IconButton)`
+  color: #e55252;
+
+  &:hover {
+    background: #fff1f1;
+  }
 `;
