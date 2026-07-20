@@ -38,7 +38,7 @@ const PATH_TO_ACTIVE_ITEM = {
   "/mes/production/workorders": "작업지시",
   "/mes/production/product-lot": "완제품LOT",
   "/mes/quality/test-log": "품질관리",
-  "/mes/inventory/material-list": "자재관리",
+  "/mes/inventory/material-list": "자재재고",
   "/mes/inventory/material-tx": "자재입출고이력",
   "/mes/inventory/material-lot": "원료LOT",
   "/mes/report/trace": "리포트",
@@ -51,7 +51,15 @@ function MesLayout() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <SideBar activeItem={activeItem} />
-      <div style={{ flex: 1, minWidth: 0, height: "100vh", display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Header />
         <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <Outlet />
@@ -91,7 +99,9 @@ function App() {
                 <Route path="bom" element={<BomList />} />
                 <Route
                   path="material"
-                  element={<Navigate to="/mes/inventory/material-list" replace />}
+                  element={
+                    <Navigate to="/mes/inventory/material-list" replace />
+                  }
                 />
                 <Route path="product" element={<ProductList />} />
               </Route>
@@ -104,17 +114,20 @@ function App() {
 
               {/* 품질관리 (담당: 나) - DefectLog는 TestLog에 통합됨 */}
               <Route path="quality">
-                <Route
-                  path="test-log"
-                  element={<QualityPage />}
-                />
+                <Route path="test-log" element={<QualityPage />} />
               </Route>
 
               {/* 자재/재고관리 (담당: 상) */}
               <Route path="inventory">
                 <Route path="material-list" element={<MaterialInventory />} />
-                <Route path="material-tx" element={<MaterialTransactionHistory />} />
-                <Route path="material-lot" element={<MaterialLotManagement />} />
+                <Route
+                  path="material-tx"
+                  element={<MaterialTransactionHistory />}
+                />
+                <Route
+                  path="material-lot"
+                  element={<MaterialLotManagement />}
+                />
               </Route>
 
               {/* 리포트 (담당: 나) - ProcessLog는 Traceability 상세에 통합됨 */}
