@@ -335,11 +335,16 @@ export default function ProductList() {
 
   // 필터링 로직 (조회 버튼을 클릭하여 State가 세팅되었을 때 렌더링되게 설계됨)
   const filteredRows = products.filter((item) => {
+    const normalizedKeyword = String(keyword ?? "").toLowerCase();
     const matchKeyword =
-      item.product_code.toLowerCase().includes(keyword.toLowerCase()) ||
-      item.product_name.toLowerCase().includes(keyword.toLowerCase());
+      String(item.product_code ?? "")
+        .toLowerCase()
+        .includes(normalizedKeyword) ||
+      String(item.product_name ?? "")
+        .toLowerCase()
+        .includes(normalizedKeyword);
 
-    const itemDate = item.created_at.split(" ")[0];
+    const itemDate = String(item.created_at ?? "").split(" ")[0];
     const matchStart = startDate === "" || itemDate >= startDate;
     const matchEnd = endDate === "" || itemDate <= endDate;
 
@@ -371,6 +376,7 @@ export default function ProductList() {
   // 데이터 가공 및 컴포넌트 데이터셀 인젝션
   const tableRows = filteredRows.map((row) => ({
     ...row,
+    originalProduct: row,
     product_code: <ProductCodeText>{row.product_code}</ProductCodeText>,
     voltage_styled: `${row.voltage}V`,
     capacity_styled: `${row.capacity_ah}Ah`,
@@ -462,7 +468,7 @@ export default function ProductList() {
                   <tr
                     key={row.id}
                     onClick={() => {
-                      setSelectedProduct(row);
+                      setSelectedProduct(row.originalProduct);
                       setIsDetailOpen(true);
                     }}
                   >
