@@ -12,6 +12,7 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthGuard from "./context/AuthGuard";
 import Login from "./pages/Login";
 import SideBar from "./components/ui/SideBar";
+import Header from "./components/ui/Header";
 import ProductLotList from "./pages/production/ProductLotList";
 import WorkOrderList from "./pages/production/WorkOrderList";
 import DashBoard from "./pages/monitoring/Dashboard";
@@ -50,8 +51,11 @@ function MesLayout() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <SideBar activeItem={activeItem} />
-      <div style={{ flex: 1, minWidth: 0, height: "100vh", overflow: "auto" }}>
-        <Outlet />
+      <div style={{ flex: 1, minWidth: 0, height: "100vh", display: "flex", flexDirection: "column" }}>
+        <Header />
+        <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+          <Outlet />
+        </div>
       </div>
     </div>
   );

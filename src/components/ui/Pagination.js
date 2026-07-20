@@ -28,6 +28,73 @@ const PaginationWrapper = styled.nav`
   box-sizing: border-box;
 `;
 
+const TablePaginationWrapper = styled.div`
+  width: ${({ $width }) => toCssSize($width, "100%")};
+  overflow: hidden;
+  background: ${({ $background }) => $background};
+  border: ${({ $border }) => $border};
+  border-radius: ${({ $borderRadius }) => toCssSize($borderRadius, "0")};
+`;
+
+const TableScroll = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  border: ${({ $border }) => $border};
+  border-radius: ${({ $borderRadius }) => toCssSize($borderRadius, "0")};
+`;
+
+const DataTable = styled.table`
+  width: 100%;
+  min-width: ${({ $minWidth }) => toCssSize($minWidth, "1050px")};
+  border-collapse: collapse;
+  table-layout: ${({ $tableLayout }) => $tableLayout};
+  font-size: ${({ $fontSize }) => toCssSize($fontSize, "13px")};
+`;
+
+const TableHead = styled.th`
+  width: ${({ $width }) => toCssSize($width, "auto")};
+  height: ${({ $height }) => toCssSize($height, "46px")};
+  padding: ${({ $padding }) => $padding};
+  border-bottom: 1px solid #e3e7ed;
+  background: ${({ $background }) => $background};
+  color: ${({ $color }) => $color};
+  font-weight: 600;
+  text-align: ${({ $align }) => $align};
+  vertical-align: middle;
+  white-space: nowrap;
+`;
+
+const TableCell = styled.td`
+  height: ${({ $height }) => toCssSize($height, "48px")};
+  padding: ${({ $padding }) => $padding};
+  border-bottom: 1px solid #e3e7ed;
+  color: ${({ $color }) => $color};
+  text-align: ${({ $align }) => $align};
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+`;
+
+const TableRow = styled.tr`
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: ${({ $clickable, $hoverBackground }) =>
+      $clickable ? $hoverBackground : "transparent"};
+  }
+
+  &:last-child td {
+    border-bottom: 0;
+  }
+`;
+
+const EmptyCell = styled.td`
+  height: ${({ $height }) => toCssSize($height, "96px")};
+  padding: 24px;
+  color: #737b88;
+  text-align: center;
+`;
+
 const PageButton = styled.button`
   width: ${({ $size }) => toCssSize($size, "38px")};
   height: ${({ $size }) => toCssSize($size, "38px")};
@@ -80,7 +147,7 @@ const PageButton = styled.button`
 function Pagination({
   currentPage = 1,
 
-  totalItems = 0,
+  totalItems,
   itemsPerPage = 10,
 
   onPageChange,
@@ -112,9 +179,20 @@ function Pagination({
   hoverBackground = "#eef2f7",
   fontSize = 14,
 
+  columns,
+  rows = [],
+  paginateRows = true,
+  onRowClick,
+  tableProps = {},
+  containerWidth = "100%",
+  containerBackground = "#ffffff",
+  containerBorder = "none",
+  containerBorderRadius = 0,
+
   className,
 }) {
-  const safeTotalItems = Math.max(Number(totalItems) || 0, 0);
+  const resolvedTotalItems = totalItems ?? (columns ? rows.length : 0);
+  const safeTotalItems = Math.max(Number(resolvedTotalItems) || 0, 0);
   const safeItemsPerPage = Math.max(Number(itemsPerPage) || 1, 1);
 
   const totalPages = Math.max(
@@ -163,9 +241,32 @@ function Pagination({
     onPageChange?.(page);
   };
 
-  return (
+  const visibleRows = columns && paginateRows
+    ? rows.slice(
+        (safeCurrentPage - 1) * safeItemsPerPage,
+        safeCurrentPage * safeItemsPerPage
+      )
+    : rows;
+
+  const {
+    minWidth = 1050,
+    tableLayout = "fixed",
+    headerHeight = 46,
+    rowHeight = 48,
+    cellPadding = "0 14px",
+    fontSize: tableFontSize = 13,
+    headerBackground = "#f1f3f6",
+    headerColor = "#535b68",
+    cellColor = "#252a32",
+    hoverBackground: tableHoverBackground = "#f6f9ff",
+    border: tableBorder = "none",
+    borderRadius: tableBorderRadius = 0,
+    emptyText = "데이터가 없습니다.",
+  } = tableProps;
+
+  const pagination = (
     <PaginationWrapper
-      className={className}
+      className={columns ? undefined : className}
       aria-label="페이지 이동"
       $width={width}
       $height={height}
@@ -279,6 +380,77 @@ function Pagination({
         </PageButton>
       )}
     </PaginationWrapper>
+  );
+
+  if (!columns) return pagination;
+
+  return (
+    <TablePaginationWrapper
+      className={className}
+      $width={containerWidth}
+      $background={containerBackground}
+      $border={containerBorder}
+      $borderRadius={containerBorderRadius}
+    >
+      <TableScroll $border={tableBorder} $borderRadius={tableBorderRadius}>
+        <DataTable
+          $minWidth={minWidth}
+          $tableLayout={tableLayout}
+          $fontSize={tableFontSize}
+        >
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.key}
+                  $width={column.width}
+                  $height={headerHeight}
+                  $padding={column.padding ?? cellPadding}
+                  $background={headerBackground}
+                  $color={headerColor}
+                  $align={column.align ?? "center"}
+                >
+                  {column.label}
+                </TableHead>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.length === 0 ? (
+              <tr>
+                <EmptyCell colSpan={columns.length} $height={rowHeight}>
+                  {emptyText}
+                </EmptyCell>
+              </tr>
+            ) : (
+              visibleRows.map((row, rowIndex) => (
+                <TableRow
+                  key={row.id ?? rowIndex}
+                  onClick={() => onRowClick?.(row)}
+                  $clickable={Boolean(onRowClick)}
+                  $hoverBackground={tableHoverBackground}
+                >
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.key}
+                      $height={rowHeight}
+                      $padding={column.padding ?? cellPadding}
+                      $color={cellColor}
+                      $align={column.align ?? "center"}
+                    >
+                      {column.render
+                        ? column.render(row[column.key], row, rowIndex)
+                        : row[column.key]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </tbody>
+        </DataTable>
+      </TableScroll>
+      {pagination}
+    </TablePaginationWrapper>
   );
 }
 

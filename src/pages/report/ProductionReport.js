@@ -22,6 +22,7 @@ import {
   YAxis,
 } from "recharts";
 
+import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
@@ -569,57 +570,6 @@ const TableSummary = styled.span`
   }
 `;
 
-const TableScroll = styled.div`
-  width: 100%;
-  overflow-x: auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  min-width: 1080px;
-
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  th,
-  td {
-    padding: 15px 14px;
-    border-bottom: 1px solid #e2e6ed;
-
-    text-align: center;
-    vertical-align: middle;
-    font-size: 13px;
-  }
-
-  
-
-  th {
-    height: 48px;
-    box-sizing: border-box;
-
-    background: #f1f3f6;
-    color: #555d6b;
-    font-weight: 500;
-  }
-
-  td {
-    color: #23272e;
-  }
-
-  tbody tr {
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  tbody tr:hover {
-    background: #f6f9ff;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
-`;
-
 const LotNumber = styled.strong`
   display: inline-block;
   color: #174b9c;
@@ -650,14 +600,9 @@ const QuantityNg = styled.strong`
 
 const EmptyMessage = styled.div`
   padding: 60px 20px;
-
   text-align: center;
   font-size: 14px;
   color: #9198a4;
-`;
-
-const PaginationArea = styled.div`
-  border-top: 1px solid #e2e6ed;
 `;
 
 /* =========================================================
@@ -722,9 +667,10 @@ const DrawerTitle = styled.h2`
   color: #20252d;
 `;
 
-const CloseButton = styled.button`
+const CloseButton = styled(UiButton)`
   width: 36px;
   height: 36px;
+  padding: 0;
 
   display: flex;
   align-items: center;
@@ -1117,14 +1063,22 @@ function ProductionReport() {
     };
   }, [filteredRows]);
 
-  const currentRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-
-    return filteredRows.slice(
-      startIndex,
-      startIndex + itemsPerPage
-    );
-  }, [filteredRows, currentPage]);
+  const productionColumns = [
+    { key: "productionDate", label: "생산일", width: 120 },
+    { key: "lotNo", label: "LOT 번호", width: 190, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
+    { key: "productName", label: "제품명", width: 140 },
+    { key: "planQty", label: "계획", width: 80, render: (quantity) => quantity.toLocaleString() },
+    { key: "actualQty", label: "실적", width: 80, render: (quantity) => quantity.toLocaleString() },
+    { key: "goodQty", label: "양품", width: 80, render: (quantity) => quantity.toLocaleString() },
+    {
+      key: "defectQty",
+      label: "불량",
+      width: 80,
+      render: (quantity) => <QuantityNg $hasDefect={quantity > 0}>{quantity.toLocaleString()}</QuantityNg>,
+    },
+    { key: "yieldRate", label: "수율", width: 80, render: (rate) => `${rate}%` },
+    { key: "status", label: "상태", width: 130, render: () => <StatusBadge>생산 완료</StatusBadge> },
+  ];
 
   const handleFilterChange = (nextFilters) => {
     setFilters(nextFilters);
@@ -1414,87 +1368,30 @@ function ProductionReport() {
             </TableSummary>
           </TableTop>
 
-          {currentRows.length > 0 ? (
-            <TableScroll>
-              <Table>
-                <colgroup>
-                  <col style={{ width: 120 }} />
-                  <col style={{ width: 190 }} />
-                  <col style={{ width: 140 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 130 }} />
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>생산일</th>
-                    <th>LOT 번호</th>
-                    <th>제품명</th>
-                    <th>계획</th>
-                    <th>실적</th>
-                    <th>양품</th>
-                    <th>불량</th>
-                    <th>수율</th>
-                    <th>상태</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {currentRows.map((row) => (
-                    <tr
-                      key={row.id}
-                      onClick={() => handleOpenDetail(row)}
-                    >
-                      <td>{row.productionDate}</td>
-
-                      <td>
-                        <LotNumber>{row.lotNo}</LotNumber>
-                      </td>
-
-                      <td>{row.productName}</td>
-                      <td>{row.planQty.toLocaleString()}</td>
-                      <td>{row.actualQty.toLocaleString()}</td>
-                      <td>{row.goodQty.toLocaleString()}</td>
-
-                      <td>
-                        <QuantityNg
-                          $hasDefect={row.defectQty > 0}
-                        >
-                          {row.defectQty.toLocaleString()}
-                        </QuantityNg>
-                      </td>
-
-                      <td>{row.yieldRate}%</td>
-
-                      <td>
-                        <StatusBadge>생산 완료</StatusBadge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </TableScroll>
-          ) : (
-            <EmptyMessage>
-              조건에 맞는 생산 실적이 없습니다.
-            </EmptyMessage>
-          )}
-
-          <PaginationArea>
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filteredRows.length}
-              itemsPerPage={itemsPerPage}
-              visiblePages={5}
-              height={66}
-              background="#f5f6f8"
-              borderTop="none"
-              onPageChange={setCurrentPage}
-            />
-          </PaginationArea>
+          <Pagination
+            columns={productionColumns}
+            rows={filteredRows}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            visiblePages={5}
+            height={66}
+            background="#f5f6f8"
+            borderTop="1px solid #e2e6ed"
+            onPageChange={setCurrentPage}
+            onRowClick={handleOpenDetail}
+            tableProps={{
+              minWidth: 1080,
+              tableLayout: "fixed",
+              headerHeight: 48,
+              rowHeight: 48,
+              cellPadding: "0 14px",
+              fontSize: 13,
+              headerBackground: "#f1f3f6",
+              headerColor: "#555d6b",
+              cellColor: "#23272e",
+              emptyText: "조건에 맞는 생산 실적이 없습니다.",
+            }}
+          />
         </TablePanel>
       </Page>
 
