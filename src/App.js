@@ -26,6 +26,7 @@ import MaterialTransactionHistory from "./pages/inventory/MaterialTransactionHis
 import MaterialLotManagement from "./pages/inventory/MaterialLotManagement";
 import QualityPage from "./pages/quality/QualityPage";
 import ProductionReport from "./pages/report/ProductionReport";
+import MaterialList from "./pages/master/MaterialList";
 
 /* 라우트 경로 -> SideBar activeItem 매핑 */
 const PATH_TO_ACTIVE_ITEM = {
@@ -97,12 +98,7 @@ function App() {
                 <Route path="worker" element={<WorkerList />} />
                 <Route path="machine" element={<MachineList />} />
                 <Route path="bom" element={<BomList />} />
-                <Route
-                  path="material"
-                  element={
-                    <Navigate to="/mes/inventory/material-list" replace />
-                  }
-                />
+                <Route path="material" element={<MaterialList />} />
                 <Route path="product" element={<ProductList />} />
               </Route>
 
