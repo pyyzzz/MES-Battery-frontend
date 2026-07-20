@@ -7,6 +7,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
+import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
@@ -56,18 +57,6 @@ const FilterPanel = styled(Panel)`margin-bottom: 20px;`;
 const TablePanel = styled.section`overflow: hidden; background: #fff; border: 1px solid #dce1ea; border-radius: 12px;`;
 const TableTop = styled.div`min-height: 62px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e6ed;`;
 const ResultText = styled.span`color: #737b88; font-size: 13px; strong { color: #0755d9; }`;
-const TableScroll = styled.div`width: 100%; overflow-x: auto;`;
-
-const Table = styled.table`
-  width: 100%; min-width: 1120px; border-collapse: collapse; table-layout: fixed;
-  th, td { padding: 12px 14px; border-bottom: 1px solid #e3e7ed; font-size: 13px; text-align: center; vertical-align: middle; }
-  th { background: #f1f3f6; color: #535b68; font-weight: 600; }
-  td { color: #252a32; }
-  tbody tr { cursor: pointer; transition: background 0.15s ease; }
-  tbody tr:hover { background: #f6f9ff; }
-  tbody tr:last-child td { border-bottom: 0; }
-`;
-
 const StatusBadge = styled.span`
   min-width: 92px; padding: 5px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   box-sizing: border-box; border-radius: 999px; color: ${({ $status }) => STATUS_META[$status].color};
@@ -80,8 +69,6 @@ const RateCell = styled.div`display: flex; align-items: center; justify-content:
 const RateTrack = styled.span`width: 70px; height: 7px; overflow: hidden; flex-shrink: 0; background: #e7e9ed; border-radius: 999px;`;
 const RateFill = styled.span`display: block; width: ${({ $rate }) => `${Math.min(100, $rate)}%`}; height: 100%; background: ${({ $rate }) => $rate >= 95 ? "#ef4444" : "#0755d9"}; border-radius: inherit;`;
 const RateText = styled.span`min-width: 42px; color: #535b68; font-size: 12px;`;
-const PaginationArea = styled.div`border-top: 1px solid #e2e6ed;`;
-
 const Overlay = styled.div`position: fixed; inset: 0; z-index: 900; background: rgba(17, 24, 39, 0.46);`;
 const Drawer = styled.aside`
   position: fixed; top: 0; right: ${({ $open }) => $open ? "0" : "-600px"}; z-index: 901; width: 600px; max-width: 100%; height: 100vh;
@@ -89,7 +76,7 @@ const Drawer = styled.aside`
 `;
 const DrawerHeader = styled.header`min-height: 70px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 1px solid #dfe3eb;`;
 const DrawerTitle = styled.h2`margin: 0; color: #20252d; font-size: 19px;`;
-const CloseButton = styled.button`width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: #505968; cursor: pointer; &:hover { background: #eef1f5; }`;
+const CloseButton = styled(UiButton)`width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: #505968; cursor: pointer; &:hover { background: #eef1f5; }`;
 const DrawerBody = styled.div`flex: 1; overflow-y: auto; padding: 22px 24px 32px;`;
 const Section = styled.section`margin-bottom: 22px;`;
 const SectionTitle = styled.h3`margin: 0 0 12px; padding-left: 10px; border-left: 3px solid #0755d9; color: #252a32; font-size: 15px;`;
@@ -131,14 +118,34 @@ function MaterialLotManagement() {
     });
   }, [lots, filters]);
 
-  const currentRows = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredLots.slice(start, start + itemsPerPage);
-  }, [filteredLots, currentPage]);
-
   const changeFilters = (values) => { setFilters(values); setCurrentPage(1); };
   const getRate = (lot) => lot.totalStock > 0 ? Number(((lot.consumed / lot.totalStock) * 100).toFixed(1)) : 0;
   const getRemaining = (lot) => Math.max(0, lot.totalStock - lot.consumed);
+
+  const lotColumns = [
+    { key: "id", label: "No", width: 48 },
+    { key: "inboundAt", label: "입고일자", width: 145 },
+    {
+      key: "status",
+      label: "LOT 상태",
+      width: 115,
+      render: (status) => <StatusBadge $status={status}><span>⌛</span>{STATUS_META[status].label}</StatusBadge>,
+    },
+    { key: "lotNo", label: "LOT번호", width: 190, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
+    { key: "materialCode", label: "자재코드", width: 190 },
+    { key: "materialName", label: "자재명" },
+    { key: "totalStock", label: "총 재고", width: 90, render: formatNumber },
+    { key: "consumed", label: "생산투입", width: 90, render: formatNumber },
+    {
+      key: "consumptionRate",
+      label: "자재 소진율",
+      width: 150,
+      render: (_, lot) => {
+        const rate = getRate(lot);
+        return <RateCell><RateTrack><RateFill $rate={rate} /></RateTrack><RateText>{rate}%</RateText></RateCell>;
+      },
+    },
+  ];
 
   return <>
     <Page>
@@ -176,15 +183,27 @@ function MaterialLotManagement() {
 
       <TablePanel>
         <TableTop><PanelTitle style={{ margin: 0 }}>원료 LOT 현황</PanelTitle><ResultText>조회 결과 <strong>{filteredLots.length}</strong>건</ResultText></TableTop>
-        <TableScroll><Table>
-          <thead><tr><th style={{ width: 48 }}>No</th><th style={{ width: 145 }}>입고일자</th><th style={{ width: 115 }}>LOT 상태</th><th style={{ width: 190 }}>LOT번호</th><th style={{ width: 190 }}>자재코드</th><th>자재명</th><th style={{ width: 90 }}>총 재고</th><th style={{ width: 90 }}>생산투입</th><th style={{ width: 150 }}>자재 소진율</th></tr></thead>
-          <tbody>{currentRows.map((lot) => { const rate = getRate(lot); return <tr key={lot.id} onClick={() => setSelectedLot(lot)}>
-            <td>{lot.id}</td><td>{lot.inboundAt}</td><td><StatusBadge $status={lot.status}><span>⌛</span>{STATUS_META[lot.status].label}</StatusBadge></td>
-            <td><LotNumber>{lot.lotNo}</LotNumber></td><td>{lot.materialCode}</td><td>{lot.materialName}</td><td>{formatNumber(lot.totalStock)}</td><td>{formatNumber(lot.consumed)}</td>
-            <td><RateCell><RateTrack><RateFill $rate={rate} /></RateTrack><RateText>{rate}%</RateText></RateCell></td>
-          </tr>; })}</tbody>
-        </Table></TableScroll>
-        <PaginationArea><Pagination currentPage={currentPage} totalItems={filteredLots.length} itemsPerPage={itemsPerPage} visiblePages={5} height={66} background="#f5f6f8" borderTop="none" onPageChange={setCurrentPage} /></PaginationArea>
+        <Pagination
+          columns={lotColumns}
+          rows={filteredLots}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          visiblePages={5}
+          height={66}
+          background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
+          onPageChange={setCurrentPage}
+          onRowClick={setSelectedLot}
+          tableProps={{
+            minWidth: 1120,
+            tableLayout: "fixed",
+            headerHeight: 46,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
+          }}
+        />
       </TablePanel>
     </Page>
 

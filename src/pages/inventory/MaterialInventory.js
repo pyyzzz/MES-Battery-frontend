@@ -11,9 +11,22 @@ import {
 } from "react-icons/fi";
 
 import DonutChart from "../../components/ui/DonutChart";
+import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
+
+const TABLE_COLUMNS = [
+  { key: "number", label: "No", width: 48, align: "center" },
+  { key: "code", label: "자재 코드", width: 190, align: "center" },
+  { key: "name", label: "자재명" },
+  { key: "stock", label: "재고", align: "center" },
+  { key: "safetyStock", label: "안전재고", align: "center" },
+  { key: "unit", label: "단위", width: 65, align: "center" },
+  { key: "status", label: "재고 상태", align: "center" },
+  { key: "lastInboundAt", label: "최근 입고일자", width: 150, align: "center" },
+  { key: "registeredAt", label: "자재등록일자", width: 120, align: "center" },
+];
 
 const INITIAL_MATERIALS = [
   { id: 1, code: "MAT-20260209-0001", name: "납(Pb)", stock: 1101, safetyStock: 5000, unit: "KG", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "자재 창고 (Main)", lotNo: "ML-260208-0001-INIT" },
@@ -135,37 +148,6 @@ const ResultText = styled.span`
   strong { color: #0755d9; }
 `;
 
-const TableScroll = styled.div`
-  width: 100%;
-  overflow-x: auto;
-`;
-
-const InventoryTable = styled.table`
-  width: 100%;
-  min-width: 1050px;
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  th, td {
-    padding: 13px 14px;
-    border-bottom: 1px solid #e3e7ed;
-    font-size: 13px;
-    text-align: center;
-    vertical-align: middle;
-  }
-
-  th {
-    background: #f1f3f6;
-    color: #535b68;
-    font-weight: 600;
-  }
-
-  td { color: #252a32; }
-  tbody tr { cursor: pointer; transition: background 0.15s ease; }
-  tbody tr:hover { background: #f6f9ff; }
-  tbody tr:last-child td { border-bottom: 0; }
-`;
-
 const Code = styled.strong`
   color: #174b9c;
   font-weight: 600;
@@ -184,10 +166,6 @@ const StatusBadge = styled.span`
   background: ${({ $status }) => $status === "safe" ? "#e7f8ee" : $status === "warning" ? "#fff5df" : "#fdebec"};
   font-size: 12px;
   font-weight: 600;
-`;
-
-const PaginationArea = styled.div`
-  border-top: 1px solid #e2e6ed;
 `;
 
 const Overlay = styled.div`
@@ -229,9 +207,10 @@ const DrawerTitle = styled.h2`
   color: #20252d;
 `;
 
-const IconButton = styled.button`
+const IconButton = styled(UiButton)`
   width: 36px;
   height: 36px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,7 +296,7 @@ const DrawerFooter = styled.footer`
   border-top: 1px solid #dfe3eb;
 `;
 
-const Button = styled.button`
+const ActionButton = styled(UiButton)`
   height: 40px;
   padding: 0 20px;
   display: inline-flex;
@@ -420,11 +399,6 @@ function MaterialInventory() {
     });
   }, [materials, filters]);
 
-  const currentRows = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredMaterials.slice(start, start + itemsPerPage);
-  }, [filteredMaterials, currentPage]);
-
   const handleFilterChange = (values) => {
     setFilters(values);
     setCurrentPage(1);
@@ -459,6 +433,23 @@ function MaterialInventory() {
     if (status === "warning") return { status, label: "주의", icon: <FiAlertTriangle /> };
     return { status, label: "경고", icon: <FiXCircle /> };
   };
+
+  const tableRows = filteredMaterials.map((material, index) => {
+    const info = statusInfo(material);
+    return {
+      id: material.id,
+      material,
+      number: index + 1,
+      code: <Code>{material.code}</Code>,
+      name: material.name,
+      stock: formatNumber(material.stock),
+      safetyStock: formatNumber(material.safetyStock),
+      unit: material.unit,
+      status: <StatusBadge $status={info.status}>{info.icon}{info.label}</StatusBadge>,
+      lastInboundAt: material.lastInboundAt,
+      registeredAt: material.registeredAt,
+    };
+  });
 
   return (
     <>
@@ -528,30 +519,27 @@ function MaterialInventory() {
             <PanelTitle style={{ margin: 0 }}>자재별 재고 현황</PanelTitle>
             <ResultText>조회 결과 <strong>{filteredMaterials.length}</strong>건</ResultText>
           </TableHeader>
-          <TableScroll>
-            <InventoryTable>
-              <thead><tr><th style={{ width: 48 }}>No</th><th style={{ width: 190 }}>자재 코드</th><th>자재명</th><th>재고</th><th>안전재고</th><th style={{ width: 65 }}>단위</th><th>재고 상태</th><th style={{ width: 150 }}>최근 입고일자</th><th style={{ width: 120 }}>자재등록일자</th></tr></thead>
-              <tbody>
-                {currentRows.map((material, index) => {
-                  const info = statusInfo(material);
-                  return <tr key={material.id} onClick={() => setSelectedMaterial(material)}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td><Code>{material.code}</Code></td>
-                    <td>{material.name}</td>
-                    <td>{formatNumber(material.stock)}</td>
-                    <td>{formatNumber(material.safetyStock)}</td>
-                    <td>{material.unit}</td>
-                    <td><StatusBadge $status={info.status}>{info.icon}{info.label}</StatusBadge></td>
-                    <td>{material.lastInboundAt}</td>
-                    <td>{material.registeredAt}</td>
-                  </tr>;
-                })}
-              </tbody>
-            </InventoryTable>
-          </TableScroll>
-          <PaginationArea>
-            <Pagination currentPage={currentPage} totalItems={filteredMaterials.length} itemsPerPage={itemsPerPage} visiblePages={5} height={66} background="#f5f6f8" borderTop="none" onPageChange={setCurrentPage} />
-          </PaginationArea>
+          <Pagination
+            columns={TABLE_COLUMNS}
+            rows={tableRows}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            visiblePages={5}
+            height={66}
+            background="#f5f6f8"
+            borderTop="1px solid #e2e6ed"
+            onPageChange={setCurrentPage}
+            onRowClick={(row) => setSelectedMaterial(row.material)}
+            tableProps={{
+              minWidth: 1050,
+              tableLayout: "fixed",
+              headerHeight: 46,
+              rowHeight: 46,
+              cellPadding: "0 14px",
+              fontSize: 13,
+              headerBackground: "#f1f3f6",
+            }}
+          />
         </TablePanel>
       </Page>
 
@@ -587,7 +575,7 @@ function MaterialInventory() {
               <MiniTable><thead><tr><th>LOT 번호</th><th>입고일</th><th>잔량</th><th>상태</th></tr></thead><tbody><tr><td>{selectedMaterial.lotNo}</td><td>{selectedMaterial.lastInboundAt}</td><td>{formatNumber(selectedMaterial.stock)}</td><td><StatusBadge $status="safe"><FiCheck /> OK</StatusBadge></td></tr></tbody></MiniTable>
             </DetailSection>
           </DrawerBody>
-          <DrawerFooter><Button type="button" onClick={closeDrawer}>닫기</Button><Button type="button" $primary onClick={openInbound}><FiPlus /> 입고 등록</Button></DrawerFooter>
+          <DrawerFooter><ActionButton type="button" variant="outline" onClick={closeDrawer}>닫기</ActionButton><ActionButton type="button" $primary onClick={openInbound}><FiPlus /> 입고 등록</ActionButton></DrawerFooter>
         </>}
       </Drawer>
 
@@ -596,7 +584,7 @@ function MaterialInventory() {
         <MaterialSummary><span>자재명<br /><strong>{selectedMaterial.name}</strong></span><span>현재고<br /><strong>{formatNumber(selectedMaterial.stock)} {selectedMaterial.unit}</strong></span></MaterialSummary>
         <ModalLabel htmlFor="inbound-quantity">입고 수량 입력</ModalLabel>
         <QuantityInput id="inbound-quantity" type="number" min="1" value={inboundQuantity} placeholder="수량을 입력하세요" onChange={(event) => setInboundQuantity(event.target.value)} onKeyDown={(event) => event.key === "Enter" && confirmInbound()} autoFocus />
-        <ModalActions><Button type="button" onClick={() => setInboundOpen(false)}>취소</Button><Button type="button" $primary disabled={!Number(inboundQuantity) || Number(inboundQuantity) <= 0} onClick={confirmInbound}>입고 확정</Button></ModalActions>
+        <ModalActions><ActionButton type="button" variant="outline" onClick={() => setInboundOpen(false)}>취소</ActionButton><ActionButton type="button" $primary disabled={!Number(inboundQuantity) || Number(inboundQuantity) <= 0} onClick={confirmInbound}>입고 확정</ActionButton></ModalActions>
       </Modal></>}
     </>
   );
