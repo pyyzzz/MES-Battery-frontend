@@ -2,7 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import BomEdit from "./BomEdit";
-import BomDetail from "./BomDeatil";
+import BomDetail from "./BomDetail";
 import Table from "../../components/ui/Table";
 import SummaryCard from "../../components/ui/SummaryCard";
 import Button from "../../components/ui/Button";
