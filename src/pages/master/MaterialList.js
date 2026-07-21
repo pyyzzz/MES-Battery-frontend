@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { FiBox, FiEdit2, FiPackage, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
-import SummaryCard from "../../components/ui/SummaryCard";
 import Button from "../../components/ui/Button";
 import MaterialNewEdit from "./MaterialNewEdit";
 
@@ -106,7 +105,6 @@ const columns = [
   { key: "codeCell", label: "자재코드", width: 200 },
   { key: "lot", label: "LOT 번호", width: 160 },
   { key: "name", label: "자재명", width: 160 },
-  { key: "unit", label: "단위", width: 90 },
   { key: "registeredAt", label: "등록일", width: 140 },
   { key: "management", label: "관리", width: 90 },
 ];
@@ -257,11 +255,6 @@ export default function MaterialList() {
     ),
   }));
 
-  const unitCount = new Set(materials.map((material) => material.unit)).size;
-  const todayCount = materials.filter(
-    (material) => material.registeredAt === getToday(),
-  ).length;
-
   return (
     <Page>
       <PageHeader>
@@ -281,53 +274,6 @@ export default function MaterialList() {
           신규 자재 등록
         </HeaderActionButton>
       </PageHeader>
-
-      <SummaryGrid>
-        <MaterialSummaryCard
-          height={116}
-          padding={18}
-          gap={14}
-          icon={<FiPackage />}
-          iconBoxSize={50}
-          iconSize={24}
-          iconBackground="#e8efff"
-          iconColor="#0755d9"
-          title="전체 자재"
-          titleFontSize={13}
-          value={`${materials.length}종`}
-          valueFontSize={25}
-        />
-
-        <MaterialSummaryCard
-          height={116}
-          padding={18}
-          gap={14}
-          icon={<FiBox />}
-          iconBoxSize={50}
-          iconSize={24}
-          iconBackground="#e8f8ef"
-          iconColor="#18a860"
-          title="사용 단위"
-          titleFontSize={13}
-          value={`${unitCount}개`}
-          valueFontSize={25}
-        />
-
-        <MaterialSummaryCard
-          height={116}
-          padding={18}
-          gap={14}
-          icon={<FiPlus />}
-          iconBoxSize={50}
-          iconSize={24}
-          iconBackground="#fff5df"
-          iconColor="#e39400"
-          title="오늘 등록"
-          titleFontSize={13}
-          value={`${todayCount}건`}
-          valueFontSize={25}
-        />
-      </SummaryGrid>
 
       <FilterPanel>
         <PanelTitle>자재 검색</PanelTitle>
@@ -442,22 +388,6 @@ const HeaderActionButton = styled(Button)`
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
-`;
-
-const SummaryGrid = styled.section`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const MaterialSummaryCard = styled(SummaryCard)`
-  flex-direction: row;
-  align-items: center;
 `;
 
 const Panel = styled.section`

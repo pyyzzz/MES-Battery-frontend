@@ -155,6 +155,11 @@ const TableSummary = styled.span`
   }
 `;
 
+const CodeText = styled.strong`
+  color: #174b9c;
+  font-weight: 600;
+`;
+
 const StatusBadge = styled.span`
   display: inline-block;
   padding: 4px 8px;
@@ -363,21 +368,7 @@ export default function ProcessList() {
 
   const tableRows = filteredRows.map((row) => ({
     ...row,
-    step_code_badge: (
-      <span
-        style={{
-          fontFamily: "var(--font-family-mono)",
-          fontWeight: "var(--font-weight-bold)",
-          color: "var(--color-primary)",
-          background: "var(--color-primary-light)",
-          padding: "4px 8px",
-          borderRadius: "var(--radius-sm)",
-          display: "inline-block",
-        }}
-      >
-        {row.step_code}
-      </span>
-    ),
+    step_code_badge: <CodeText>{row.step_code}</CodeText>,
     status_badge: (
       <StatusBadge $isActive={row.is_active}>
         {row.is_active ? "사용" : "미사용"}
@@ -468,8 +459,9 @@ export default function ProcessList() {
           iconColor="var(--color-primary)"
           title="전체 공정"
           titleFontSize={13}
-          value={`${totalCount}건`}
+          value={totalCount}
           valueFontSize={25}
+          valueColor="#17191d"
         />
 
         <ProcessSummaryCard
@@ -483,9 +475,9 @@ export default function ProcessList() {
           iconColor="var(--color-success)"
           title="활성 공정"
           titleFontSize={13}
-          value={`${activeCount}건`}
+          value={activeCount}
           valueFontSize={25}
-          valueColor="var(--color-success)"
+          valueColor="#17191d"
         />
 
         <ProcessSummaryCard
@@ -499,9 +491,9 @@ export default function ProcessList() {
           iconColor="var(--color-neutral)"
           title="비활성 공정"
           titleFontSize={13}
-          value={`${inactiveCount}건`}
+          value={inactiveCount}
           valueFontSize={25}
-          valueColor="var(--color-neutral)"
+          valueColor="#17191d"
         />
       </SummaryGrid>
 
@@ -516,6 +508,7 @@ export default function ProcessList() {
             keywordPlaceholder="PROC-..."
             keywordWidth={220}
             showDateRange={false}
+            showSearchButton={false}
             onSearch={handleSearch}
             onReset={handleReset}
             inputHeight={38}

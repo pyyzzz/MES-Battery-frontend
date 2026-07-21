@@ -273,7 +273,7 @@ function Bom() {
 
     no: String(index + 1).padStart(2, "0"),
 
-    materialCode: row.materialCode,
+    materialCode: <CodeText>{row.materialCode}</CodeText>,
 
     materialName: row.materialName,
 
@@ -639,6 +639,11 @@ const TableResultText = styled.span`
   strong {
     color: #0755d9;
   }
+`;
+
+const CodeText = styled.strong`
+  color: #174b9c;
+  font-weight: 600;
 `;
 
 const QuantityGuide = styled.p`

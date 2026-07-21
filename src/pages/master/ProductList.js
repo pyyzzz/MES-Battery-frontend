@@ -131,15 +131,9 @@ const TableSummary = styled.span`
 
 // 제품 코드 스타일 블루 계열 볼드 텍스트 적용
 const ProductCodeText = styled.strong`
-  display: inline-block;
   color: #174b9c;
   font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
 `;
 
 const Management = styled.div`
@@ -386,6 +380,7 @@ export default function ProductList() {
             keywordWidth={280}
             showDateRange={true} // 등록일 필터용 Date Range 사용 선언
             dateLabel="등록일"
+            showSearchButton={false}
             onSearch={handleSearch}
             onReset={handleReset}
             inputHeight={38}

@@ -74,6 +74,7 @@ const initialWorkers = [
 const emptyFilters = {
   startDate: "",
   endDate: "",
+  role: "",
   isActive: "",
   keyword: "",
 };
@@ -122,6 +123,7 @@ export default function WorkerList() {
         return (
           (!filters.startDate || worker.hiredAt >= filters.startDate) &&
           (!filters.endDate || worker.hiredAt <= filters.endDate) &&
+          (!filters.role || worker.role === filters.role) &&
           (filters.isActive === "" ||
             worker.isActive === (filters.isActive === "true")) &&
           (!keyword ||
@@ -301,8 +303,20 @@ export default function WorkerList() {
         <SearchFilterBar
           filters={[
             {
+              name: "role",
+              label: "직급/권한",
+              placeholder: "전체 권한",
+              width: 150,
+              options: [
+                { value: "관리자", label: "관리자" },
+                { value: "작업자", label: "작업자" },
+                { value: "품질 관리자", label: "품질 관리자" },
+              ],
+            },
+            {
               name: "isActive",
               label: "재직 상태",
+              width: 150,
               options: [
                 { value: "true", label: "재직" },
                 { value: "false", label: "퇴사" },
@@ -312,11 +326,15 @@ export default function WorkerList() {
           defaultValues={emptyFilters}
           keywordLabel="사원번호/사원명"
           keywordPlaceholder="사원번호 / 사원명 검색"
+          keywordWidth={220}
           startDateLabel="입사일 시작"
           endDateLabel="입사일 종료"
+          dateWidth={145}
+          inputHeight={38}
+          gap={16}
           showSearchButton={false}
           padding={0}
-          border="0"
+          border="none"
           background="transparent"
           onChange={(nextFilters) => {
             setFilters(nextFilters);
@@ -353,7 +371,7 @@ export default function WorkerList() {
           tableProps={{
             minWidth: 820,
             tableLayout: "fixed",
-            headerHeight: 46,
+            headerHeight: 40,
             rowHeight: 48,
             cellPadding: "0 14px",
             fontSize: 13,
@@ -383,40 +401,42 @@ export default function WorkerList() {
 const Page = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 32px 24px;
+  padding: 28px 32px 44px;
+  box-sizing: border-box;
+  background: #f7f8fa;
 `;
 
 // 제목 영역과 등록 버튼을 양쪽 끝으로 배치
 const Header = styled.div`
+  margin-bottom: 22px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
 `;
 
 // 목록 화면의 메인 제목
 const Title = styled.h1`
-  margin: 0 0 8px;
-  color: var(--color-text);
+  margin: 0;
+  color: #17191d;
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 650;
+  letter-spacing: -0.8px;
 `;
 
-// 제목 아래 설명 문구
 const Description = styled.p`
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 12px;
+  margin: 7px 0 0;
+  color: #818896;
+  font-size: 14px;
 `;
 
 const SummaryGrid = styled.section`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 
-  @media (max-width: 760px) {
+  @media (max-width: 900px) {
     grid-template-columns: 1fr;
   }
 `;
@@ -427,6 +447,7 @@ const StatusSummaryCard = styled(SummaryCard)`
 `;
 
 const FilterPanel = styled.section`
+  margin-bottom: 20px;
   padding: 18px 20px;
   border: 1px solid #d7dde8;
   border-radius: 12px;
@@ -434,10 +455,10 @@ const FilterPanel = styled.section`
 `;
 
 const FilterTitle = styled.h2`
-  margin: 0 0 12px;
-  color: #172033;
-  font-size: 15px;
-  font-weight: 700;
+  margin: 0 0 14px;
+  color: #292d35;
+  font-size: 16px;
+  font-weight: 600;
 `;
 
 // 작업자 목록 표 전용 정렬, 공용 Table 컴포넌트는 건드리지 않음
@@ -488,10 +509,6 @@ const TopResultText = styled.span`
 
   strong {
     color: #0755d9;
-  }
-
-  th:first-child {
-    width: 56px;
   }
 `;
 

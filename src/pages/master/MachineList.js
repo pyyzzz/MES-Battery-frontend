@@ -212,6 +212,11 @@ const UseYnBadge = styled.span`
     `}
 `;
 
+const CodeText = styled.strong`
+  color: #174b9c;
+  font-weight: 600;
+`;
+
 const ErrorText = styled.span`
   color: var(--color-danger);
   font-weight: var(--font-weight-medium);
@@ -260,8 +265,9 @@ export default function MachineList() {
 
   const [filterValues, setFilterValues] = useState({
     processId: "",
-    machineName: "",
+    keyword: "",
     status: "",
+    useYn: "",
   });
 
   const [machines, setMachines] = useState([
@@ -313,44 +319,45 @@ export default function MachineList() {
   ]);
 
   const filteredRows = machines.filter((item) => {
-    const matchProcess = item.process_id
-      .toLowerCase()
-      .includes((filterValues.processId || "").toLowerCase());
-    const matchName = item.machine_name
-      .toLowerCase()
-      .includes((filterValues.machineName || "").toLowerCase());
-    const matchStatus =
-      !filterValues.status || filterValues.status === ""
-        ? true
-        : item.status === filterValues.status;
+    const keyword = filterValues.keyword.toLowerCase();
 
-    return matchProcess && matchName && matchStatus;
+    const matchProcess =
+      !filterValues.processId || item.process_id === filterValues.processId;
+
+    const matchKeyword =
+      !keyword ||
+      item.machine_name.toLowerCase().includes(keyword) ||
+      item.machine_code.toLowerCase().includes(keyword);
+
+    const matchStatus =
+      !filterValues.status || item.status === filterValues.status;
+
+    const matchUseYn =
+      !filterValues.useYn || item.use_yn === filterValues.useYn;
+
+    return matchProcess && matchKeyword && matchStatus && matchUseYn;
   });
 
   const handleFilterChange = (nextValues) => {
     setFilterValues({
       processId: nextValues.processId || "",
-      machineName: nextValues.keyword || "",
+      keyword: nextValues.keyword || "",
       status: nextValues.status || "",
+      useYn: nextValues.useYn || "",
     });
 
     setPage(1);
   };
 
-  const handleSearch = (values) => {
-    setFilterValues({
-      processId: values.processId || "",
-      machineName: values.keyword || "",
-      status: values.status || "",
-    });
-  };
-
   const handleReset = () => {
     setFilterValues({
       processId: "",
-      machineName: "",
+      keyword: "",
       status: "",
+      useYn: "",
     });
+
+    setPage(1);
   };
 
   const handleSaveMachine = (newMachine) => {
@@ -407,8 +414,13 @@ export default function MachineList() {
 
   const columns = [
     { key: "machine_id", label: "ID", align: "center", width: 70 },
-    { key: "process_id", label: "공정코드", align: "center", width: 130 },
-    { key: "machine_code", label: "설비코드", align: "center", width: 130 },
+    { key: "process_id_cell", label: "공정코드", align: "center", width: 130 },
+    {
+      key: "machine_code_cell",
+      label: "설비코드",
+      align: "center",
+      width: 130,
+    },
     { key: "machine_name", label: "설비명", align: "left", width: 130 },
     { key: "status_badge", label: "설비상태", align: "center", width: 120 },
     { key: "use_yn_badge", label: "사용 여부", align: "center", width: 120 },
@@ -422,6 +434,10 @@ export default function MachineList() {
     return {
       ...mac,
       id: mac.machine_id,
+
+      process_id_cell: <CodeText>{mac.process_id}</CodeText>,
+      machine_code_cell: <CodeText>{mac.machine_code}</CodeText>,
+
       status_badge: (
         <StatusBadge $status={mac.status}>{mac.status}</StatusBadge>
       ),
@@ -498,8 +514,9 @@ export default function MachineList() {
           iconColor="var(--color-primary)"
           title="총 설비 수"
           titleFontSize={13}
-          value={`${machines.length} 대`}
+          value={machines.length}
           valueFontSize={25}
+          valueColor="#17191d"
         />
 
         <MachineSummaryCard
@@ -513,9 +530,9 @@ export default function MachineList() {
           iconColor="#64748b"
           title="가동 중인 설비"
           titleFontSize={13}
-          value={`${machines.filter((m) => m.status === "가동").length} 대`}
+          value={machines.filter((m) => m.status === "가동").length}
           valueFontSize={25}
-          valueColor="var(--color-primary)"
+          valueColor="#17191d"
         />
 
         <MachineSummaryCard
@@ -529,12 +546,12 @@ export default function MachineList() {
           iconColor="var(--color-danger)"
           title="장애/ERROR 설비"
           titleFontSize={13}
-          value={`${
+          value={
             machines.filter((m) => m.status === "에러" || m.status === "ERROR")
               .length
-          } 대`}
+          }
           valueFontSize={25}
-          valueColor="var(--color-danger)"
+          valueColor="#17191d"
         />
 
         <MachineSummaryCard
@@ -550,7 +567,7 @@ export default function MachineList() {
           titleFontSize={13}
           value="84.5%"
           valueFontSize={25}
-          valueColor="var(--color-success)"
+          valueColor="#17191d"
         />
       </SummaryGrid>
 
@@ -593,9 +610,19 @@ export default function MachineList() {
                   { value: "에러", label: "에러" },
                 ],
               },
+              {
+                name: "useYn",
+                label: "사용 여부",
+                width: 140,
+                placeholder: "전체",
+                options: [
+                  { value: "Y", label: "사용 중" },
+                  { value: "N", label: "사용 중지" },
+                ],
+              },
             ]}
+            showSearchButton={false}
             onChange={handleFilterChange}
-            onSearch={handleSearch}
             onReset={handleReset}
           />
         </FilterBarWrapper>
