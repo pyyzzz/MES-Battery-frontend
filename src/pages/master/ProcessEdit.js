@@ -11,13 +11,14 @@ const Backdrop = styled.div`
   background: rgba(15, 23, 42, 0.38);
 `;
 
-// 우측 사이드 패널 (너비를 600px에서 480px로 축소)
+// 우측 사이드 패널
 const Panel = styled.div`
   position: fixed;
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%);
+  width: 600px;
+  max-width: 100%;
   height: 100dvh;
   display: flex;
   flex-direction: column;
