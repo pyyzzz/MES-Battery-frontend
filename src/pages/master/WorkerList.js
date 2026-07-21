@@ -78,6 +78,17 @@ const emptyFilters = {
   keyword: "",
 };
 
+const createWorkerCode = (workers) => {
+  const today = new Date().toISOString().slice(2, 10).replaceAll("-", "");
+
+  const maxNumber = workers.reduce((max, worker) => {
+    const number = Number(worker.workerCode?.split("-").pop()) || 0;
+    return Math.max(max, number);
+  }, 0);
+
+  return `W-${today}-${String(maxNumber + 1).padStart(4, "0")}`;
+};
+
 const PAGE_SIZE = 8;
 
 export default function WorkerList() {
@@ -360,6 +371,7 @@ export default function WorkerList() {
       <WorkerNewEdit
         open={formOpen}
         worker={editingWorker}
+        previewWorkerCode={createWorkerCode(workers)}
         onClose={closeForm}
         onSubmit={saveWorker}
       />

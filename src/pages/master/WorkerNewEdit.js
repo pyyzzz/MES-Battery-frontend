@@ -6,7 +6,13 @@ import Button from "../../components/ui/Button";
 // 등록 폼의 기본값, 수정 모드에서는 선택한 작업자 값으로 덮어씀
 const emptyForm = { workerCode: "", workerName: "", hiredAt: "", role: "" };
 
-export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
+export default function WorkerNewEdit({
+  open,
+  worker,
+  previewWorkerCode = "",
+  onClose,
+  onSubmit,
+}) {
   const [form, setForm] = useState(emptyForm);
 
   // worker가 있으면 수정 모드, 없으면 신규 등록 모드
@@ -24,7 +30,10 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
             hiredAt: worker.hiredAt,
             role: worker.role,
           }
-        : emptyForm,
+        : {
+            ...emptyForm,
+            workerCode: previewWorkerCode,
+          },
     );
 
     // 드로어가 열린 동안 배경 스크롤을 막고 ESC 키로 닫을 수 있게 처리
@@ -37,7 +46,7 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, worker, onClose]);
+  }, [open, worker, previewWorkerCode, onClose]);
 
   if (!open) return null;
 
@@ -47,7 +56,6 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
   const submit = (event) => {
     event.preventDefault();
 
-    // 임시 프론트 검증, 백엔드 연결 후 서버 검증 메시지와 맞춰 조정
     if (
       !form.workerCode.trim() ||
       !form.workerName.trim() ||
@@ -57,9 +65,11 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
       return;
     }
 
-    onSubmit(form);
+    onSubmit({
+      ...form,
+      workerCode: editing ? worker.workerCode : previewWorkerCode,
+    });
   };
-
   return (
     <>
       <Backdrop onClick={onClose} />
@@ -84,10 +94,10 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
               <Label htmlFor="workerCode">사원 번호</Label>
               <Input
                 id="workerCode"
-                name="workerCode"
+                type="text"
                 value={form.workerCode}
-                onChange={change}
-                placeholder="사원번호를 입력하세요"
+                placeholder="자동 생성"
+                disabled
               />
             </Field>
             <Field>
@@ -118,7 +128,6 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
                 <option value="">권한을 선택하세요</option>
                 <option value="관리자">관리자</option>
                 <option value="작업자">작업자</option>
-                <option value="품질 관리자">품질 관리자</option>
               </Select>
             </Field>
           </Body>
@@ -275,6 +284,13 @@ const control = `
 
   &::placeholder {
     color: #bbc1cb;
+  }
+
+  &:disabled {
+    border-color: #c7cee0;
+    background: #f1f2fb;
+    color: #8d929b;
+    cursor: not-allowed;
   }
 `;
 
