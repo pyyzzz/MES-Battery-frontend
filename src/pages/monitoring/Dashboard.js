@@ -1,21 +1,63 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import KpiCard from "../../components/ui/KpiCard";
+import SummaryCard from "../../components/ui/SummaryCard";
 import DonutChart from "../../components/ui/DonutChart";
-import Table from "../../components/ui/Table";
+import Pagination from "../../components/ui/Pagination";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   FiSettings,
-  FiCheckCircle,
   FiAlertTriangle,
   FiArchive,
 } from "react-icons/fi";
 import { MdPrecisionManufacturing } from "react-icons/md";
 
+const HOURLY_PRODUCTION_DATA = [
+  { time: "08:00", good: 58, defect: 2 },
+  { time: "09:00", good: 77, defect: 3 },
+  { time: "10:00", good: 38, defect: 2 },
+  { time: "11:00", good: 96, defect: 4 },
+  { time: "12:00", good: 116, defect: 4 },
+  { time: "13:00", good: 87, defect: 3 },
+  { time: "14:00", good: 144, defect: 6 },
+  { time: "15:00", good: 163, defect: 7 },
+];
+
+const DASHBOARD_TABLE_PROPS = {
+  minWidth: 0,
+  tableLayout: "fixed",
+  headerHeight: 42,
+  rowHeight: 48,
+  cellPadding: "0 10px",
+  fontSize: 12,
+  headerBackground: "#f5f7fa",
+};
+
+const DASHBOARD_PAGINATION_PROPS = {
+  visiblePages: 3,
+  showFirstLast: false,
+  height: 50,
+  padding: 8,
+  gap: 4,
+  buttonSize: 30,
+  fontSize: 12,
+  background: "#f8f9fb",
+  borderTop: "1px solid var(--color-border)",
+};
+
 // 레이아웃 스타일링
 const DashboardWrapper = styled.div`
   background-color: var(--color-bg-canvas);
-  padding: var(--spacing-gutter);
+  padding: 30px 32px 44px;
   font-family: var(--font-family-base);
   display: flex;
   flex-direction: column;
@@ -25,23 +67,37 @@ const DashboardWrapper = styled.div`
 const Header = styled.div`
   margin-bottom: 8px;
   h1 {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
+    font-size: 30px;
+    font-weight: 600;
     color: var(--color-text);
   }
   p {
-    font-size: var(--font-size-xs);
+    font-size: 14px;
     color: var(--color-neutral);
-    margin-top: 4px;
+    margin-top: 6px;
   }
 `;
 
 const KpiGrid = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  flex-wrap: nowrap;
-  width: 100%;
+
+  @media (max-width: 850px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 `;
+
+const DashboardSummaryCard = styled(SummaryCard)`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const getDescriptionColor = (type) => {
+  if (type === "danger") return "var(--color-danger)";
+  if (type === "success") return "var(--color-success)";
+  return "var(--color-neutral)";
+};
 
 const SectionGrid = styled.div`
   display: grid;
@@ -58,6 +114,16 @@ const BoardCard = styled.div`
   padding: 24px;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--color-border);
+`;
+
+const YieldCard = styled(BoardCard)`
+  display: flex;
+  flex-direction: column;
+`;
+
+const TableBoardCard = styled(BoardCard)`
+  padding-bottom: 18px;
+  overflow: hidden;
 `;
 
 const CardTitle = styled.div`
@@ -100,109 +166,198 @@ const MachineNameWrapper = styled.div`
   }
 `;
 
-const FakeBarGrid = styled.div`
+const ChartBox = styled.div`
+  width: 100%;
+  height: 260px;
+`;
+
+const ProductionLegend = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #535b68;
+  font-size: 12px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  i {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+  }
+`;
+
+const renderProductionLegend = () => (
+  <ProductionLegend>
+    <span><i style={{ background: "#0755d9" }} />양품</span>
+    <span><i style={{ background: "#e34b55" }} />불량</span>
+  </ProductionLegend>
+);
+
+const ProductionTooltipBox = styled.div`
+  padding: 9px 11px;
+  background: #ffffff;
+  border: 1px solid #d9dee8;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  color: #252a32;
+  font-size: 12px;
+  line-height: 1.6;
+
+  strong,
+  span {
+    display: block;
+  }
+`;
+
+function ProductionTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+
+  const good = payload.find((item) => item.dataKey === "good")?.value ?? 0;
+  const defect = payload.find((item) => item.dataKey === "defect")?.value ?? 0;
+
+  return (
+    <ProductionTooltipBox>
+      <strong>{label}</strong>
+      <span style={{ color: "#0755d9" }}>양품 : {good}</span>
+      <span style={{ color: "#e34b55" }}>불량 : {defect}</span>
+    </ProductionTooltipBox>
+  );
+}
+
+const YieldOverview = styled.div`
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  height: 200px;
-  padding-top: 20px;
+  margin-bottom: 20px;
 `;
-const BarColumn = styled.div`
+
+const YieldContent = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-`;
-const Bar = styled.div`
-  width: 32px;
-  height: ${(props) => props.$height}px;
-  background-color: var(--color-primary);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  opacity: 0.6;
-  &:hover {
-    opacity: 1;
-  }
+  justify-content: center;
+  min-height: 0;
 `;
 
-// 🚀 양품률 섹션 전용 스타일 컴포넌트 추가
-const YieldBigValue = styled.div`
-  font-size: 32px;
-  font-weight: var(--font-weight-bold);
+const YieldRate = styled.strong`
+  display: block;
   color: var(--color-primary);
-  margin-bottom: 20px;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  span {
-    font-size: var(--font-size-sm);
-    color: var(--color-neutral);
-    font-weight: normal;
-  }
+  font-size: 35px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
 `;
 
-const YieldRow = styled.div`
-  margin-bottom: 16px;
+const YieldLabel = styled.span`
+  display: block;
+  margin-bottom: 10px;
+  color: var(--color-neutral);
+  font-size: var(--font-size-xs);
 `;
 
-const YieldRowHeader = styled.div`
+const TargetBadge = styled.span`
+  padding: 6px 10px;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+`;
+
+const YieldTrack = styled.div`
+  position: relative;
+  width: 100%;
+  height: 12px;
+  background: #e8ecf2;
+  border-radius: 999px;
+  overflow: hidden;
+`;
+
+const YieldFill = styled.div`
+  height: 100%;
+  width: ${(props) => props.$percent}%;
+  background: linear-gradient(90deg, #0755d9, #2f80ed);
+  border-radius: inherit;
+`;
+
+const YieldScale = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: var(--font-size-sm);
-  margin-bottom: 6px;
-  color: var(--color-text);
-  span:last-child {
+  margin-top: 8px;
+  color: var(--color-neutral);
+  font-size: 11px;
+`;
+
+const YieldStats = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+`;
+
+const YieldStat = styled.div`
+  padding: 14px;
+  background: ${({ $danger }) => ($danger ? "#fff5f5" : "#f3faf6")};
+  border: 1px solid ${({ $danger }) => ($danger ? "#f4d3d5" : "#d5eddf")};
+  border-radius: 10px;
+
+  span {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-neutral);
+    font-size: var(--font-size-xs);
+  }
+
+  strong {
+    color: ${({ $danger }) =>
+      $danger ? "var(--color-danger)" : "var(--color-success)"};
+    font-size: 20px;
     font-weight: var(--font-weight-bold);
   }
 `;
 
-const ProgressBarContainer = styled.div`
-  width: 100%;
-  height: 6px;
-  background-color: var(--color-bg-canvas);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-`;
-
-const ProgressBarFill = styled.div`
-  height: 100%;
-  width: ${(props) => props.$percent}%;
-  background-color: ${(props) => props.$color || "var(--color-primary)"};
-`;
-
 function DashBoard() {
+  const [machinePage, setMachinePage] = useState(1);
+  const [materialPage, setMaterialPage] = useState(1);
+  const [workerPage, setWorkerPage] = useState(1);
+
   // 상단 KPI 카드 데이터
   const [kpiData] = useState([
     {
-      icon: <FiArchive size={24} color="var(--color-primary)" />,
+      icon: <FiArchive />,
+      iconBackground: "#e8efff",
+      iconColor: "#0755d9",
       title: "금일 생산량",
       value: "14,423",
       subText: "완료 수량",
       subType: "normal",
     },
     {
-      icon: <FiSettings size={24} color="var(--color-text)" />,
+      icon: <FiSettings />,
+      iconBackground: "#e8f8ef",
+      iconColor: "#17a964",
       title: "설비 가동률",
       value: "92.8%",
       subText: "정상 운전 중",
       subType: "success",
     },
     {
-      icon: <FiCheckCircle size={24} color="var(--color-success)" />,
-      title: "양품",
-      value: "14,250",
-      subText: "양품률 98.8%",
-      subType: "success",
-    },
-    {
-      icon: <FiAlertTriangle size={24} color="var(--color-danger)" />,
+      icon: <FiAlertTriangle />,
+      iconBackground: "#fdecec",
+      iconColor: "#d92d34",
       title: "불량",
       value: "1.2%",
       subText: "임계값 2% 미만",
       subType: "danger",
     },
     {
-      icon: <MdPrecisionManufacturing size={24} color="var(--color-neutral)" />,
+      icon: <MdPrecisionManufacturing />,
+      iconBackground: "#eef1ff",
+      iconColor: "#415fd5",
       title: "가동 설비",
       value: "24 / 26",
       subText: "온라인",
@@ -212,19 +367,19 @@ function DashBoard() {
 
   // 불량 유형 분석
   const [defectTypeData] = useState([
-    { name: "고온", value: 45, color: "#2563eb" },
-    { name: "라벨", value: 25, color: "#d97706" },
-    { name: "저전압", value: 15, color: "#059669" },
-    { name: "기타", value: 15, color: "#cbd5e1" },
+    { name: "고온", value: 77, color: "#2563eb" },
+    { name: "라벨", value: 43, color: "#d97706" },
+    { name: "저전압", value: 26, color: "#059669" },
+    { name: "기타", value: 25, color: "#cbd5e1" },
   ]);
 
   // 설비 가동 현황
   const machineColumns = [
-    { key: "machineName", label: "설비명" },
-    { key: "temp", label: "온도" },
-    { key: "humidity", label: "습도" },
-    { key: "volt", label: "전압" },
-    { key: "status", label: "상태" },
+    { key: "machineName", label: "설비명", width: "25%" },
+    { key: "temp", label: "온도", width: "17%" },
+    { key: "humidity", label: "습도", width: "17%" },
+    { key: "volt", label: "전압", width: "17%" },
+    { key: "status", label: "상태", width: "17%" },
   ];
 
   const [machineRows] = useState([
@@ -369,20 +524,31 @@ function DashBoard() {
   return (
     <DashboardWrapper>
       <Header>
-        <h1>Dashboard</h1>
+        <h1>대시보드</h1>
         <p>실시간 생산 모니터링 시스템</p>
       </Header>
 
       {/* 상단 5개 공통 카드 영역 */}
       <KpiGrid>
         {kpiData.map((kpi, idx) => (
-          <KpiCard
+          <DashboardSummaryCard
             key={idx}
             icon={kpi.icon}
             title={kpi.title}
             value={kpi.value}
-            subText={kpi.subText}
-            subType={kpi.subType}
+            description={kpi.subText}
+            descriptionColor={getDescriptionColor(kpi.subType)}
+            height={120}
+            padding={18}
+            gap={14}
+            iconBoxSize={50}
+            iconSize={24}
+            iconBackground={kpi.iconBackground}
+            iconColor={kpi.iconColor}
+            titleFontSize={13}
+            valueFontSize={24}
+            descriptionFontSize="var(--font-size-xs)"
+            descriptionFontWeight="var(--font-weight-normal)"
           />
         ))}
       </KpiGrid>
@@ -393,102 +559,144 @@ function DashBoard() {
           <CardTitle>
             시간별 생산 현황 <span>양품 / 불량</span>
           </CardTitle>
-          <FakeBarGrid>
-            <BarColumn>
-              <Bar $height={60} />
-              <span style={{ fontSize: "12px" }}>08:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={80} />
-              <span style={{ fontSize: "12px" }}>09:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={40} />
-              <span style={{ fontSize: "12px" }}>10:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={100} />
-              <span style={{ fontSize: "12px" }}>11:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={120} />
-              <span style={{ fontSize: "12px" }}>12:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={90} />
-              <span style={{ fontSize: "12px" }}>13:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={150} />
-              <span style={{ fontSize: "12px" }}>14:00</span>
-            </BarColumn>
-            <BarColumn>
-              <Bar $height={170} />
-              <span style={{ fontSize: "12px" }}>15:00</span>
-            </BarColumn>
-          </FakeBarGrid>
+          <ChartBox>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={HOURLY_PRODUCTION_DATA}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#e5e8ee"
+                />
+                <XAxis
+                  dataKey="time"
+                  tick={{ fontSize: 11 }}
+                  stroke="#8a919d"
+                />
+                <YAxis tick={{ fontSize: 12 }} stroke="#8a919d" />
+                <Tooltip
+                  cursor={{ fill: "rgba(7, 85, 217, 0.05)" }}
+                  content={<ProductionTooltip />}
+                />
+                <Legend content={renderProductionLegend} />
+                <Bar
+                  dataKey="good"
+                  name="양품"
+                  fill="#0755d9"
+                  radius={[5, 5, 0, 0]}
+                />
+                <Bar
+                  dataKey="defect"
+                  name="불량"
+                  fill="#e34b55"
+                  radius={[5, 5, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartBox>
         </BoardCard>
 
         <BoardCard>
           <CardTitle>불량 유형 분석</CardTitle>
-          <DonutChart total="171" data={defectTypeData} />
+          <DonutChart
+            data={defectTypeData}
+            height={260}
+            chartSize={180}
+            innerRadius={60}
+            outerRadius={80}
+            totalLabel="전체 불량"
+            justifyContent="center"
+            gap={28}
+            legendFontSize={14}
+            showTooltip
+            valueFormatter={(value) => Number(value).toLocaleString()}
+          />
         </BoardCard>
       </SectionGrid>
 
       {/* 설비 가동 현황 및 양품률 */}
       <SectionGrid>
-        <BoardCard>
+        <TableBoardCard>
           <CardTitle>
             설비 가동 현황 (실시간) <span>센서 데이터 수신중</span>
           </CardTitle>
-          <Table columns={machineColumns} rows={machineRows} />
-        </BoardCard>
-        <BoardCard>
+          <Pagination
+            {...DASHBOARD_PAGINATION_PROPS}
+            columns={machineColumns}
+            rows={machineRows}
+            currentPage={machinePage}
+            itemsPerPage={3}
+            onPageChange={setMachinePage}
+            tableProps={DASHBOARD_TABLE_PROPS}
+          />
+        </TableBoardCard>
+        <YieldCard>
           <CardTitle>양품률</CardTitle>
-          <YieldBigValue>
-            98.8% <span>97.0%</span>
-          </YieldBigValue>
+          <YieldContent>
+            <YieldOverview>
+              <div>
+                <YieldLabel>현재 양품률</YieldLabel>
+                <YieldRate>98.8%</YieldRate>
+              </div>
+              <TargetBadge>목표 97.0%</TargetBadge>
+            </YieldOverview>
 
-          <YieldRow>
-            <YieldRowHeader>
-              <span>🔹 가동</span>
-              <span>22</span>
-            </YieldRowHeader>
-            <ProgressBarContainer>
-              <ProgressBarFill $percent={85} $color="var(--color-primary)" />
-            </ProgressBarContainer>
-          </YieldRow>
+            <YieldTrack aria-label="현재 양품률 98.8%">
+              <YieldFill $percent={98.8} />
+            </YieldTrack>
+            <YieldScale>
+              <span>0%</span>
+              <span>100%</span>
+            </YieldScale>
 
-          <YieldRow style={{ marginBottom: 0 }}>
-            <YieldRowHeader>
-              <span style={{ color: "var(--color-neutral)" }}>
-                재작업 / 폐기
-              </span>
-              <span style={{ color: "var(--color-danger)" }}>171</span>
-            </YieldRowHeader>
-            <ProgressBarContainer>
-              <ProgressBarFill $percent={15} $color="var(--color-danger)" />
-            </ProgressBarContainer>
-          </YieldRow>
-        </BoardCard>
+            <YieldStats>
+              <YieldStat>
+                <span>양품 수량</span>
+                <strong>14,250</strong>
+              </YieldStat>
+              <YieldStat $danger>
+                <span>불량 수량</span>
+                <strong>171</strong>
+              </YieldStat>
+            </YieldStats>
+          </YieldContent>
+        </YieldCard>
       </SectionGrid>
 
       {/* 최하단 단: 자재 현황 및 작업자 현황 */}
       <SectionGrid style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <BoardCard>
+        <TableBoardCard>
           <CardTitle>자재 현황 (Inventory Status)</CardTitle>
-          <Table columns={materialColumns} rows={materialRows} />
-        </BoardCard>
+          <Pagination
+            {...DASHBOARD_PAGINATION_PROPS}
+            columns={materialColumns}
+            rows={materialRows}
+            currentPage={materialPage}
+            itemsPerPage={3}
+            onPageChange={setMaterialPage}
+            tableProps={DASHBOARD_TABLE_PROPS}
+          />
+        </TableBoardCard>
 
-        <BoardCard>
+        <TableBoardCard>
           <CardTitle>
             작업자 현황{" "}
             <span style={{ color: "var(--color-primary)" }}>
               총원: 12 근무: 8
             </span>
           </CardTitle>
-          <Table columns={workerColumns} rows={workerRows} />
-        </BoardCard>
+          <Pagination
+            {...DASHBOARD_PAGINATION_PROPS}
+            columns={workerColumns}
+            rows={workerRows}
+            currentPage={workerPage}
+            itemsPerPage={3}
+            onPageChange={setWorkerPage}
+            tableProps={DASHBOARD_TABLE_PROPS}
+          />
+        </TableBoardCard>
       </SectionGrid>
     </DashboardWrapper>
   );
