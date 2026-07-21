@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
-import { FiX, FiTrash2 } from "react-icons/fi"; // FiX 아이콘 추가
+import { FiX } from "react-icons/fi";
+import BomMaterialEditor from "../../components/ui/BomMaterialEditor";
 
 /* ProductDetail 기반 통일된 디자인 시스템 적용 */
 const DrawerOverlay = styled.div`
@@ -17,11 +18,11 @@ const DrawerContainer = styled.div`
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%);
+  width: min(600px, 100%);
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #f7f9fc;
   box-shadow: -12px 0 36px rgba(15, 23, 42, 0.18);
   transform: ${(props) =>
     props.$isOpen ? "translateX(0)" : "translateX(100%)"};
@@ -29,17 +30,19 @@ const DrawerContainer = styled.div`
 `;
 
 const Header = styled.header`
-  min-height: 86px;
-  padding: 0 30px;
+  height: 84px;
+  flex-shrink: 0;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #d9deea;
+  border-bottom: 1px solid #cbd3e0;
+  background: #fff;
 
   h3 {
     margin: 0;
     color: #202738;
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 700;
   }
 `;
@@ -64,10 +67,10 @@ const CloseButton = styled.button`
 const FormBody = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 32px 30px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 30px;
 `;
 
 const Section = styled.div`
@@ -76,19 +79,20 @@ const Section = styled.div`
 `;
 
 const SectionTitle = styled.h3`
-  margin: 0 0 24px;
+  margin: 0 0 17px;
+  padding-left: 11px;
+  border-left: 4px solid #0744a0;
   color: #202738;
   font-size: 18px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8px;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 18px;
+  margin-bottom: 0;
 
   label {
     display: block;
@@ -100,11 +104,11 @@ const FormGroup = styled.div`
   input,
   select {
     width: 100%;
-    height: 42px;
-    padding: 0 16px;
-    border: 1px solid #c7cddd;
-    border-radius: 8px;
-    font-size: 13px;
+    height: 47px;
+    padding: 0 13px;
+    border: 1px solid #c7cee0;
+    border-radius: 9px;
+    font-size: 14px;
     outline: none;
     background-color: #fff;
     color: #262d3c;
@@ -142,112 +146,13 @@ const InputWithSuffix = styled.div`
   }
 `;
 
-const BomAddContainer = styled.div`
-  background-color: #f7f8fd;
-  border: 1px solid #c7cddd;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-`;
-
-const BomAddActionRow = styled.div`
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-
-  & > div {
-    flex: 1;
-    margin-bottom: 0;
-  }
-`;
-
-/* 좁은 폭에서도 텍스트가 잘리지 않도록 가로 스크롤 컨테이너 추가 */
-const TableWrapper = styled.div`
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid #c7cddd;
-  border-radius: 8px;
-
-  /* 스크롤바 디자인 (선택 사항) */
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #c7cddd;
-    border-radius: 4px;
-  }
-`;
-
-const BomTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  /* 가로폭 확보를 위해 auto 혹은 테이블 최소 크기 지정 가능 */
-  table-layout: auto; 
-  min-width: 500px; 
-  display: table;
-
-  th,
-  td {
-    height: 44px;
-    padding: 0 10px;
-    border-bottom: 1px solid #c7cddd;
-    color: #303748;
-    font-size: 12px;
-    vertical-align: middle;
-    /* 말줄임표 처리 제거하여 텍스트 온전히 노출 */
-    white-space: nowrap; 
-  }
-
-  th {
-    background: #eef0f8;
-    font-weight: 700;
-    color: #202738;
-  }
-
-  td {
-    color: #262d3c;
-  }
-
-  tr:last-child td {
-    border-bottom: none;
-  }
-`;
-
-const Badge = styled.span`
-  background-color: #eef0f8;
-  color: #084693;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-`;
-
-const DeleteActionBtn = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  border-radius: 6px;
-  margin: 0 auto;
-
-  &:hover {
-    background-color: #f1f3f8;
-  }
-`;
-
 const Footer = styled.div`
-  min-height: 92px;
-  padding: 20px 30px;
+  padding: 16px 18px;
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  border-top: 1px solid #d9deea;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  border-top: 1px solid #cbd3e0;
   background-color: #fff;
   box-sizing: border-box;
 `;
@@ -260,18 +165,13 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
   const [capacity, setCapacity] = useState("0");
   const [unit, setUnit] = useState("EA");
 
-  // BOM 자재 입력용 인라인 임시 State
-  const [selectedMaterial, setSelectedMaterial] = useState("");
-  const [selectedProcess, setSelectedProcess] = useState("");
-  const [quantity, setQuantity] = useState("0.00");
-
   // BOM 리스트 State
   const [bomList, setBomList] = useState([
     {
       id: 1,
       materialCode: "MAT-CELL-01",
       materialName: "Lithium Cell Unit",
-      qty: "4.00",
+      requiredQty: 4,
       unit: "EA",
       process: "조립공정",
     },
@@ -279,47 +179,11 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
       id: 2,
       materialCode: "MAT-BMS-03",
       materialName: "BMS Module v2",
-      qty: "1.00",
+      requiredQty: 1,
       unit: "EA",
       process: "조립공정",
     },
   ]);
-
-  // BOM 자재 임시 추가 핸들러
-  const handleAddBomItem = () => {
-    if (!selectedMaterial || !selectedProcess || Number(quantity) <= 0) {
-      alert("자재, 투입 공정 및 소요량을 정확히 설정해주세요.");
-      return;
-    }
-
-    // 예시 맵핑 데이터 기반 이름 바인딩
-    const matName =
-      selectedMaterial === "MAT-CELL-01"
-        ? "Lithium Cell Unit"
-        : "BMS Module v2";
-
-    const newItem = {
-      id: Date.now(),
-      materialCode: selectedMaterial,
-      materialName: matName,
-      qty: Number(quantity).toFixed(2),
-      unit: "EA",
-      process: selectedProcess,
-    };
-
-    setBomList((prev) => [...prev, newItem]);
-    // 추가 후 입력 폼 초기화
-    setSelectedMaterial("");
-    setSelectedProcess("");
-    setQuantity("0.00");
-  };
-
-  // BOM 자재 목록 삭제 핸들러
-  const handleDeleteBomItem = (id) => {
-    if (window.confirm("이 자재를 BOM 목록에서 삭제하시겠습니까?")) {
-      setBomList((prev) => prev.filter((item) => item.id !== id));
-    }
-  };
 
   // 마스터 최종 등록 전송
   const handleSubmit = () => {
@@ -334,7 +198,10 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
       voltage: Number(voltage),
       capacity_ah: Number(capacity),
       unit: unit,
-      bom: bomList,
+      bom: bomList.map(({ requiredQty, ...item }) => ({
+        ...item,
+        qty: Number(requiredQty).toFixed(2),
+      })),
     };
 
     // 상위 부모 컴포넌트로 데이터 emit 후 드로어 닫기
@@ -354,7 +221,7 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
         id: 1,
         materialCode: "MAT-CELL-01",
         materialName: "Lithium Cell Unit",
-        qty: "4.00",
+        requiredQty: 4,
         unit: "EA",
         process: "조립공정",
       },
@@ -362,7 +229,7 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
         id: 2,
         materialCode: "MAT-BMS-03",
         materialName: "BMS Module v2",
-        qty: "1.00",
+        requiredQty: 1,
         unit: "EA",
         process: "조립공정",
       },
@@ -385,27 +252,29 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
           <Section>
             <SectionTitle>제품 정보</SectionTitle>
 
-            <FormGroup>
-              <label>제품 코드</label>
-              <input
-                type="text"
-                placeholder="예: BAT-12V-100AH-LI"
-                value={productCode}
-                onChange={(e) => setProductCode(e.target.value)}
-              />
-            </FormGroup>
+            <RowFields $cols={2}>
+              <FormGroup>
+                <label>제품 코드</label>
+                <input
+                  type="text"
+                  placeholder="예: BAT-12V-100AH-LI"
+                  value={productCode}
+                  onChange={(e) => setProductCode(e.target.value)}
+                />
+              </FormGroup>
 
-            <FormGroup>
-              <label>제품명</label>
-              <input
-                type="text"
-                placeholder="제품명을 입력하세요"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-              />
-            </FormGroup>
+              <FormGroup>
+                <label>제품명</label>
+                <input
+                  type="text"
+                  placeholder="제품명을 입력하세요"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                />
+              </FormGroup>
+            </RowFields>
 
-            <RowFields $cols={3}>
+            <RowFields $cols={3} style={{ marginTop: "18px" }}>
               <FormGroup>
                 <label>전압(V)</label>
                 <select
@@ -440,119 +309,11 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
             </RowFields>
           </Section>
 
-          <Section>
-            <SectionTitle>BOM 자재 추가</SectionTitle>
-            <BomAddContainer>
-              <RowFields $cols={2}>
-                <FormGroup>
-                  <label>자재 선택</label>
-                  <select
-                    value={selectedMaterial}
-                    onChange={(e) => setSelectedMaterial(e.target.value)}
-                  >
-                    <option value="">자재를 선택하세요</option>
-                    <option value="MAT-CELL-01">
-                      MAT-CELL-01 (Lithium Cell Unit)
-                    </option>
-                    <option value="MAT-BMS-03">
-                      MAT-BMS-03 (BMS Module v2)
-                    </option>
-                  </select>
-                </FormGroup>
-
-                <FormGroup>
-                  <label>투입 공정</label>
-                  <select
-                    value={selectedProcess}
-                    onChange={(e) => setSelectedProcess(e.target.value)}
-                  >
-                    <option value="">투입 공정을 선택하세요</option>
-                    <option value="조립공정">조립공정</option>
-                    <option value="패킹공정">패킹공정</option>
-                  </select>
-                </FormGroup>
-              </RowFields>
-
-              <BomAddActionRow>
-                <FormGroup>
-                  <label>소요량</label>
-                  <InputWithSuffix>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                    />
-                    <span className="suffix">EA</span>
-                  </InputWithSuffix>
-                </FormGroup>
-                <Button
-                  variant="primary"
-                  type="button"
-                  onClick={handleAddBomItem}
-                  style={{
-                    width: "140px",
-                    height: "42px",
-                    backgroundColor: "#084693",
-                    fontWeight: "700",
-                    borderRadius: "8px",
-                    border: "none",
-                  }}
-                >
-                  + 자재 추가
-                </Button>
-              </BomAddActionRow>
-            </BomAddContainer>
-          </Section>
-
-          <Section>
-            <SectionTitle>BOM 리스트</SectionTitle>
-            {/* 가로 스크롤 래퍼로 감싸 리스트 가독성 확보 */}
-            <TableWrapper>
-              <BomTable>
-                <thead>
-                  <tr>
-                    <th style={{ width: "22%" }}>자재 코드</th>
-                    <th style={{ width: "28%" }}>자재명</th>
-                    <th style={{ width: "12%", textAlign: "right" }}>소요량</th>
-                    <th style={{ width: "12%", textAlign: "center" }}>단위</th>
-                    <th style={{ width: "16%", textAlign: "center" }}>
-                      투입 공정
-                    </th>
-                    <th style={{ width: "10%", textAlign: "center" }}>관리</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bomList.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.materialCode}</td>
-                      <td>{item.materialName}</td>
-                      <td
-                        style={{
-                          textAlign: "right",
-                          fontWeight: "700",
-                        }}
-                      >
-                        {item.qty}
-                      </td>
-                      <td style={{ textAlign: "center" }}>{item.unit}</td>
-                      <td style={{ textAlign: "center" }}>
-                        <Badge>{item.process}</Badge>
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        <DeleteActionBtn
-                          type="button"
-                          onClick={() => handleDeleteBomItem(item.id)}
-                        >
-                          <FiTrash2 size={16} color="#ef4444" />
-                        </DeleteActionBtn>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </BomTable>
-            </TableWrapper>
-          </Section>
+          <BomMaterialEditor
+            rows={bomList}
+            onChange={setBomList}
+            variant="compact"
+          />
         </FormBody>
 
         <Footer>
@@ -560,14 +321,14 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
             variant="outline"
             onClick={handleDrawerClose}
             style={{
-              width: "140px",
-              height: "44px",
-              borderRadius: "8px",
+              minWidth: "84px",
+              height: "38px",
+              borderRadius: "7px",
               fontSize: "14px",
-              fontWeight: "700",
-              border: "none",
-              background: "#eaebf3",
-              color: "#61697a",
+              fontWeight: "400",
+              border: "1px solid #d1d7e3",
+              background: "#fff",
+              color: "#111827",
             }}
           >
             취소
@@ -576,15 +337,14 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
             variant="primary"
             onClick={handleSubmit}
             style={{
-              width: "140px",
-              height: "44px",
-              borderRadius: "8px",
+              minWidth: "84px",
+              height: "38px",
+              borderRadius: "7px",
               fontSize: "14px",
               fontWeight: "700",
               border: "none",
-              background: "#084693",
+              background: "#0b57d0",
               color: "#fff",
-              boxShadow: "0 5px 12px rgba(8, 70, 147, 0.2)",
             }}
           >
             등록

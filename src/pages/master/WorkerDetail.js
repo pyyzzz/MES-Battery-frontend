@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiUser, FiX } from "react-icons/fi";
-import Table from "../../components/ui/Table";
+import CommonPagination from "../../components/ui/Pagination";
+
+const HISTORY_PAGE_SIZE = 5;
 
 // 작업 이력 API가 붙기 전까지 상세 화면 표를 확인하기 위한 임시 데이터
 const dummyHistory = [
@@ -20,6 +22,12 @@ const dummyHistory = [
 }));
 
 export default function WorkerDetail({ worker, onClose, onEdit }) {
+  const [historyPage, setHistoryPage] = useState(1);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [worker?.id]);
+
   useEffect(() => {
     if (!worker) return undefined;
 
@@ -103,7 +111,24 @@ export default function WorkerDetail({ worker, onClose, onEdit }) {
           <History>
             <SectionTitle>최근 작업 이력</SectionTitle>
             <TableWrap>
-              <Table columns={historyColumns} rows={history} />
+              <CommonPagination
+                columns={historyColumns}
+                rows={history}
+                currentPage={historyPage}
+                totalItems={history.length}
+                itemsPerPage={HISTORY_PAGE_SIZE}
+                onPageChange={setHistoryPage}
+                height={58}
+                padding={10}
+                buttonSize={34}
+                tableProps={{
+                  minWidth: 500,
+                  headerHeight: 44,
+                  rowHeight: 44,
+                  cellPadding: "0 16px",
+                  fontSize: 12,
+                }}
+              />
             </TableWrap>
           </History>
         </Body>
