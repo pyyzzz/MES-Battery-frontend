@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
+import Button from "../../components/ui/Button";
 
 // product 프로퍼티로 공정 데이터를 받아오고, onEdit과 onClose를 처리합니다.
 export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
@@ -23,7 +24,11 @@ export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
   return (
     <>
       <Backdrop onClick={onClose} />
-      <Drawer role="dialog" aria-modal="true" aria-labelledby="process-detail-title">
+      <Drawer
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="process-detail-title"
+      >
         <Header>
           <Title id="process-detail-title">공정 상세 조회</Title>
           <Close type="button" onClick={onClose} aria-label="닫기">
@@ -41,7 +46,7 @@ export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
             <Label>공정 코드</Label>
             <Value $code>{product.step_code}</Value>
           </Field>
-          
+
           <Grid>
             <Field>
               <Label>담당 설비</Label>
@@ -52,7 +57,7 @@ export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
               <Value>{product.worker || "미지정"}</Value>
             </Field>
           </Grid>
-          
+
           <Field>
             <Label>사용 여부</Label>
             <Value>{product.is_active ? "사용" : "미사용"}</Value>
@@ -60,19 +65,26 @@ export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
 
           <Field>
             <Label>공정 설명</Label>
-            <Value style={{ minHeight: "80px", alignItems: "flex-start", paddingTop: "12px" }}>
+            <Value
+              style={{
+                minHeight: "80px",
+                alignItems: "flex-start",
+                paddingTop: "12px",
+              }}
+            >
               {product.description || "등록된 설명이 없습니다."}
             </Value>
           </Field>
         </Body>
 
         <Footer>
-          <Secondary type="button" onClick={onClose}>
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             닫기
-          </Secondary>
-          <Primary type="button" onClick={onEdit}>
+          </ActionButton>
+
+          <ActionButton type="button" $primary onClick={onEdit}>
             수정
-          </Primary>
+          </ActionButton>
         </Footer>
       </Drawer>
     </>
@@ -92,7 +104,8 @@ const Drawer = styled.aside`
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%); /* 가로 폭을 기존 600px에서 480px로 변경 */
+  width: 600px;
+  max-width: 100%;
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -176,7 +189,8 @@ const Value = styled.div`
   border-radius: 8px;
   background: #f7f8fd;
   color: ${({ $code }) => ($code ? "#084693" : "#262d3c")};
-  font-family: ${({ $code }) => ($code ? "var(--font-family-mono)" : "inherit")};
+  font-family: ${({ $code }) =>
+    $code ? "var(--font-family-mono)" : "inherit"};
   font-size: 13px;
   font-weight: ${({ $code }) => ($code ? 700 : 500)};
 `;
@@ -186,46 +200,50 @@ const Grid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 
-  @media (max-width: 440px) { /* 반응형 트리거 시점을 다른 모달 컴포넌트와 동일하게 440px로 수정 */
+  @media (max-width: 440px) {
+    /* 반응형 트리거 시점을 다른 모달 컴포넌트와 동일하게 440px로 수정 */
     grid-template-columns: 1fr;
     gap: 0;
   }
 `;
 
 const Footer = styled.footer`
-  min-height: 92px;
-  padding: 20px 30px;
+  flex-shrink: 0;
+  padding: 16px 24px;
+
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
+  background: #fff;
+`;
+
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
-  border-top: 1px solid #d9deea;
-`;
+  gap: 7px;
 
-const FooterButton = styled.button`
-  width: 140px; /* 버튼 가로 폭을 기존 160px에서 다른 모달들과 동일하게 140px로 축소 */
-  height: 44px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  border: none;
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
-`;
-
-const Secondary = styled(FooterButton)`
-  background: #eaebf3;
-  color: #61697a;
 
   &:hover {
-    background: #dfe1eb;
-  }
-`;
-
-const Primary = styled(FooterButton)`
-  background: #084693;
-  color: #fff;
-  box-shadow: 0 5px 12px rgba(8, 70, 147, 0.2);
-
-  &:hover {
-    background: #063b7d;
+    opacity: 0.9;
   }
 `;

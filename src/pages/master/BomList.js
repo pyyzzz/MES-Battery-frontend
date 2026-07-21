@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import BomEdit from "./BomEdit";
 import BomDetail from "./BomDetail";
-import CommonPagination from "../../components/ui/Pagination";
+import Pagination from "../../components/ui/Pagination";
 import SummaryCard from "../../components/ui/SummaryCard";
 import Button from "../../components/ui/Button";
 
@@ -262,7 +262,7 @@ function Bom() {
     },
     {
       key: "management",
-      width: "84px",
+      width: "90px",
       label: "관리",
     },
   ];
@@ -273,7 +273,7 @@ function Bom() {
 
     no: String(index + 1).padStart(2, "0"),
 
-    materialCode: row.materialCode,
+    materialCode: <CodeText>{row.materialCode}</CodeText>,
 
     materialName: row.materialName,
 
@@ -296,6 +296,7 @@ function Bom() {
         >
           <FiEdit2 />
         </IconButton>
+
         <DeleteButton
           type="button"
           aria-label={`${row.materialName} 삭제`}
@@ -361,7 +362,7 @@ function Bom() {
       </ProductSection>
 
       {/* 선택한 제품의 BOM 자재 목록 */}
-      <BomSection>
+      <TablePanel>
         <SelectedProductTitle>
           <TitleDot />
 
@@ -380,18 +381,31 @@ function Bom() {
           <QuantityGuide>
             소요수량은 <strong>상위 품목 1개 기준 소요수량</strong>입니다.
           </QuantityGuide>
-          <CommonPagination
+          <Pagination
             columns={bomColumns}
             rows={bomTableRows}
             currentPage={page}
             totalItems={selectedBomRows.length}
             itemsPerPage={PAGE_SIZE}
+            visiblePages={5}
+            height={66}
+            background="#f5f6f8"
+            borderTop="1px solid #e2e6ed"
             onPageChange={setPage}
             onRowClick={handleOpenDetail}
-            tableProps={{ minWidth: 760 }}
+            tableProps={{
+              minWidth: 760,
+              tableLayout: "fixed",
+              headerHeight: 46,
+              rowHeight: 48,
+              cellPadding: "0 14px",
+              fontSize: 13,
+              headerBackground: "#f1f3f6",
+              emptyText: "등록된 BOM 자재가 없습니다.",
+            }}
           />
         </BomTableArea>
-      </BomSection>
+      </TablePanel>
 
       {/* 수정 드로어: 저장 결과를 handleBomSave로 받아 목록 상태에 반영. */}
       <BomEdit
@@ -557,7 +571,7 @@ const ProductCard = styled(SummaryCard)`
 `;
 
 // 선택 제품의 BOM 테이블 전체를 감싸는 패널
-const BomSection = styled.section`
+const TablePanel = styled.section`
   margin-top: 22px;
   overflow: hidden;
   border: 1px solid #dce1ea;
@@ -599,14 +613,22 @@ const SelectedProductName = styled.span`
 `;
 
 const HeaderActionButton = styled(Button)`
-  width: 128px;
+  width: 148px;
   height: 40px;
-  padding: 0 14px;
+  padding: 0 16px;
+  box-sizing: border-box;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
+
+  flex-shrink: 0;
+  white-space: nowrap;
+
   font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
 `;
 
 const TableResultText = styled.span`
@@ -617,6 +639,11 @@ const TableResultText = styled.span`
   strong {
     color: #0755d9;
   }
+`;
+
+const CodeText = styled.strong`
+  color: #174b9c;
+  font-weight: 600;
 `;
 
 const QuantityGuide = styled.p`

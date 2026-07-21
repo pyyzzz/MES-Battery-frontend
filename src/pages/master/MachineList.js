@@ -6,21 +6,22 @@ import {
   FiSettings,
   FiAlertTriangle,
   FiCheckCircle,
-  FiEdit3,
+  FiEdit2,
+  FiTrash2,
 } from "react-icons/fi";
 
 // 공통 UI 컴포넌트 import
-import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 
 // 공통 신규 컴포넌트 import
 import SummaryCard from "../../components/ui/SummaryCard";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import Pagination from "../../components/ui/Pagination";
 
 // 신규 추가한 우측 사이드 패널 컴포넌트들 import
 import MachineNew from "./MachineNew";
 import MachineEdit from "./MachineEdit";
-import MachineDetail from "./MachineDetail"; 
+import MachineDetail from "./MachineDetail";
 
 /* ================= Styled Components ================= */
 const Container = styled.div`
@@ -37,6 +38,25 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+`;
+
+const HeaderActionButton = styled(Button)`
+  width: 148px;
+  height: 40px;
+  padding: 0 16px;
+  box-sizing: border-box;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
 `;
 
 const TitleSection = styled.div`
@@ -60,7 +80,7 @@ const TitleSection = styled.div`
   }
 `;
 
-const KpiGrid = styled.div`
+const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
@@ -71,6 +91,11 @@ const KpiGrid = styled.div`
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const MachineSummaryCard = styled(SummaryCard)`
+  flex-direction: row;
+  align-items: center;
 `;
 
 const StyledFilterPanel = styled.section`
@@ -98,7 +123,7 @@ const FilterBarWrapper = styled.div`
   }
 
   /* SearchFilterBar 내부의 우측 버튼 그룹 내에서 검색/초기화 버튼 순서를 뒤집음 */
-  & div[class*="ButtonGroup"], 
+  & div[class*="ButtonGroup"],
   & div[class*="button-group"],
   & div:has(> button) {
     display: flex;
@@ -136,52 +161,6 @@ const TableSummary = styled.span`
 
   strong {
     color: #0755d9;
-  }
-`;
-
-const TableScroll = styled.div`
-  width: 100%;
-  overflow-x: auto;
-`;
-
-const StyledTable = styled.table`
-  width: 100%;
-  min-width: 1000px;
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  th,
-  td {
-    padding: 15px 14px;
-    border-bottom: 1px solid #e2e6ed;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 13px;
-  }
-
-  th {
-    height: 48px;
-    box-sizing: border-box;
-    background: #f1f3f6;
-    color: #555d6b;
-    font-weight: 500;
-  }
-
-  td {
-    color: #23272e;
-  }
-
-  tbody tr {
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  tbody tr:hover {
-    background: #f6f9ff;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
   }
 `;
 
@@ -233,52 +212,62 @@ const UseYnBadge = styled.span`
     `}
 `;
 
+const CodeText = styled.strong`
+  color: #174b9c;
+  font-weight: 600;
+`;
+
 const ErrorText = styled.span`
   color: var(--color-danger);
   font-weight: var(--font-weight-medium);
 `;
 
-const ActionGroup = styled.div`
+const Management = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
 `;
 
-const ActionButton = styled.button`
-  background: none;
-  border: none;
+const IconButton = styled.button`
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #1769d2;
+  font-size: 15px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s;
 
   &:hover {
-    background-color: #e2e6ed;
+    background: #edf4ff;
   }
 `;
 
-const EmptyMessage = styled.div`
-  padding: 60px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #9198a4;
-`;
+const DeleteButton = styled(IconButton)`
+  color: #e55252;
 
+  &:hover {
+    background: #fff1f1;
+  }
+`;
 
 /* ================= Component Logic ================= */
 export default function MachineList() {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false); 
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState(null);
+  const [page, setPage] = useState(1);
 
   const [filterValues, setFilterValues] = useState({
     processId: "",
-    machineName: "",
+    keyword: "",
     status: "",
+    useYn: "",
   });
 
   const [machines, setMachines] = useState([
@@ -330,42 +319,45 @@ export default function MachineList() {
   ]);
 
   const filteredRows = machines.filter((item) => {
-    const matchProcess = item.process_id
-      .toLowerCase()
-      .includes((filterValues.processId || "").toLowerCase());
-    const matchName = item.machine_name
-      .toLowerCase()
-      .includes((filterValues.machineName || "").toLowerCase());
-    const matchStatus =
-      !filterValues.status || filterValues.status === ""
-        ? true
-        : item.status === filterValues.status;
+    const keyword = filterValues.keyword.toLowerCase();
 
-    return matchProcess && matchName && matchStatus;
+    const matchProcess =
+      !filterValues.processId || item.process_id === filterValues.processId;
+
+    const matchKeyword =
+      !keyword ||
+      item.machine_name.toLowerCase().includes(keyword) ||
+      item.machine_code.toLowerCase().includes(keyword);
+
+    const matchStatus =
+      !filterValues.status || item.status === filterValues.status;
+
+    const matchUseYn =
+      !filterValues.useYn || item.use_yn === filterValues.useYn;
+
+    return matchProcess && matchKeyword && matchStatus && matchUseYn;
   });
 
   const handleFilterChange = (nextValues) => {
     setFilterValues({
       processId: nextValues.processId || "",
-      machineName: nextValues.keyword || "",
+      keyword: nextValues.keyword || "",
       status: nextValues.status || "",
+      useYn: nextValues.useYn || "",
     });
-  };
 
-  const handleSearch = (values) => {
-    setFilterValues({
-      processId: values.processId || "",
-      machineName: values.keyword || "",
-      status: values.status || "",
-    });
+    setPage(1);
   };
 
   const handleReset = () => {
     setFilterValues({
       processId: "",
-      machineName: "",
+      keyword: "",
       status: "",
+      useYn: "",
     });
+
+    setPage(1);
   };
 
   const handleSaveMachine = (newMachine) => {
@@ -402,7 +394,7 @@ export default function MachineList() {
   };
 
   const handleEditClick = (e, row) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     const originMachine = machines.find((m) => m.machine_id === row.machine_id);
     if (originMachine) {
       setSelectedMachine(originMachine);
@@ -410,15 +402,30 @@ export default function MachineList() {
     }
   };
 
+  const handleDeleteMachine = (machine) => {
+    if (!window.confirm(`${machine.machine_name} 설비를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    setMachines((prev) =>
+      prev.filter((item) => item.machine_id !== machine.machine_id),
+    );
+  };
+
   const columns = [
     { key: "machine_id", label: "ID", align: "center", width: 70 },
-    { key: "process_id", label: "공정코드", align: "center", width: 130 },
-    { key: "machine_code", label: "설비코드", align: "center", width: 130 },
-    { key: "machine_name", label: "설비명", align: "left", width: 220 },
-    { key: "status", label: "설비상태", align: "center", width: 120 },
-    { key: "use_yn", label: "사용 여부", align: "center", width: 120 },
-    { key: "message", label: "메시지", align: "left", width: 280 },
-    { key: "actions", label: "관리", align: "center", width: 90 },
+    { key: "process_id_cell", label: "공정코드", align: "center", width: 130 },
+    {
+      key: "machine_code_cell",
+      label: "설비코드",
+      align: "center",
+      width: 130,
+    },
+    { key: "machine_name", label: "설비명", align: "left", width: 130 },
+    { key: "status_badge", label: "설비상태", align: "center", width: 120 },
+    { key: "use_yn_badge", label: "사용 여부", align: "center", width: 120 },
+    { key: "message_el", label: "메시지", align: "left", width: 200 },
+    { key: "management", label: "관리", align: "center", width: 90 },
   ];
 
   const rows = filteredRows.map((mac) => {
@@ -427,20 +434,48 @@ export default function MachineList() {
     return {
       ...mac,
       id: mac.machine_id,
-      status_badge: <StatusBadge $status={mac.status}>{mac.status}</StatusBadge>,
-      use_yn_badge: <UseYnBadge $useYn={displayUseYn}>{displayUseYn}</UseYnBadge>,
+
+      process_id_cell: <CodeText>{mac.process_id}</CodeText>,
+      machine_code_cell: <CodeText>{mac.machine_code}</CodeText>,
+
+      status_badge: (
+        <StatusBadge $status={mac.status}>{mac.status}</StatusBadge>
+      ),
+      use_yn_badge: (
+        <UseYnBadge $useYn={displayUseYn}>{displayUseYn}</UseYnBadge>
+      ),
       message_el:
         mac.status === "ERROR" || mac.status === "에러" ? (
           <ErrorText>{mac.message}</ErrorText>
         ) : (
           mac.message
         ),
-      actions: (
-        <ActionGroup>
-          <ActionButton onClick={(e) => handleEditClick(e, mac)} title="수정">
-            <FiEdit3 size={18} color="var(--color-text-secondary)" />
-          </ActionButton>
-        </ActionGroup>
+      management: (
+        <Management>
+          <IconButton
+            type="button"
+            title="수정"
+            aria-label={`${mac.machine_name} 수정`}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleEditClick(event, mac);
+            }}
+          >
+            <FiEdit2 />
+          </IconButton>
+
+          <DeleteButton
+            type="button"
+            title="삭제"
+            aria-label={`${mac.machine_name} 삭제`}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleDeleteMachine(mac);
+            }}
+          >
+            <FiTrash2 />
+          </DeleteButton>
+        </Management>
       ),
     };
   });
@@ -456,76 +491,85 @@ export default function MachineList() {
             관리합니다.
           </p>
         </TitleSection>
-        <Button
+        <HeaderActionButton
+          type="button"
           variant="primary"
           onClick={() => setIsNewModalOpen(true)}
-          style={{
-            padding: "10px 20px",
-            fontWeight: "var(--font-weight-medium)",
-          }}
         >
-          <FiPlus style={{ marginRight: "4px" }} /> 설비 등록
-        </Button>
+          <FiPlus size={16} />
+          설비 등록
+        </HeaderActionButton>
       </Header>
 
       {/* 상단 4개 요약 KPI 카드 */}
-      <KpiGrid>
-        <SummaryCard
-          title="총 설비 수"
-          value={`${machines.length} 대`}
+      <SummaryGrid>
+        <MachineSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiArchive />}
-          padding={16}
-          gap={12}
-          titleFontSize={14}
-          valueFontSize={24}
-          iconBoxSize={44}
-          iconSize={20}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="var(--color-primary-light)"
           iconColor="var(--color-primary)"
+          title="총 설비 수"
+          titleFontSize={13}
+          value={machines.length}
+          valueFontSize={25}
+          valueColor="#17191d"
         />
-        <SummaryCard
-          title="가동 중인 설비"
-          value={`${machines.filter((m) => m.status === "가동").length} 대`}
-          valueColor="var(--color-primary)"
+
+        <MachineSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiSettings />}
-          padding={16}
-          gap={12}
-          titleFontSize={14}
-          valueFontSize={24}
-          iconBoxSize={44}
-          iconSize={20}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#f1f5f9"
           iconColor="#64748b"
+          title="가동 중인 설비"
+          titleFontSize={13}
+          value={machines.filter((m) => m.status === "가동").length}
+          valueFontSize={25}
+          valueColor="#17191d"
         />
-        <SummaryCard
-          title="장애/ERROR 설비"
-          value={`${machines.filter((m) => m.status === "에러" || m.status === "ERROR").length} 대`}
-          valueColor="var(--color-danger)"
+
+        <MachineSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiAlertTriangle />}
-          padding={16}
-          gap={12}
-          titleFontSize={14}
-          valueFontSize={24}
-          iconBoxSize={44}
-          iconSize={20}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#fee2e2"
           iconColor="var(--color-danger)"
+          title="장애/ERROR 설비"
+          titleFontSize={13}
+          value={
+            machines.filter((m) => m.status === "에러" || m.status === "ERROR")
+              .length
+          }
+          valueFontSize={25}
+          valueColor="#17191d"
         />
-        <SummaryCard
-          title="평균 가동률"
-          value="84.5%"
-          valueColor="var(--color-success)"
+
+        <MachineSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiCheckCircle />}
-          padding={16}
-          gap={12}
-          titleFontSize={14}
-          valueFontSize={24}
-          iconBoxSize={44}
-          iconSize={20}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#e6f4ea"
           iconColor="#137333"
+          title="평균 가동률"
+          titleFontSize={13}
+          value="84.5%"
+          valueFontSize={25}
+          valueColor="#17191d"
         />
-      </KpiGrid>
+      </SummaryGrid>
 
       {/* 검색 박스 영역 스타일 적용 */}
       <StyledFilterPanel>
@@ -566,9 +610,19 @@ export default function MachineList() {
                   { value: "에러", label: "에러" },
                 ],
               },
+              {
+                name: "useYn",
+                label: "사용 여부",
+                width: 140,
+                placeholder: "전체",
+                options: [
+                  { value: "Y", label: "사용 중" },
+                  { value: "N", label: "사용 중지" },
+                ],
+              },
             ]}
+            showSearchButton={false}
             onChange={handleFilterChange}
-            onSearch={handleSearch}
             onReset={handleReset}
           />
         </FilterBarWrapper>
@@ -578,49 +632,35 @@ export default function MachineList() {
       <TablePanel>
         <TableTop>
           <TableTitle>설비 목록</TableTitle>
+
           <TableSummary>
-            조회 설비 <strong>{filteredRows.length}</strong>대
+            조회 결과 <strong>{rows.length}</strong>건
           </TableSummary>
         </TableTop>
 
-        {rows.length > 0 ? (
-          <TableScroll>
-            <StyledTable>
-              <colgroup>
-                {columns.map((col) => (
-                  <col key={col.key} style={{ width: col.width }} />
-                ))}
-              </colgroup>
-              <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th key={col.key} style={{ textAlign: col.align }}>
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.machine_id} onClick={() => handleRowClick(row)}>
-                    <td style={{ textAlign: "center" }}>{row.machine_id}</td>
-                    <td style={{ textAlign: "center" }}>{row.process_id}</td>
-                    <td style={{ textAlign: "center" }}>{row.machine_code}</td>
-                    <td style={{ textAlign: "left" }}>{row.machine_name}</td>
-                    <td style={{ textAlign: "center" }}>{row.status_badge}</td>
-                    <td style={{ textAlign: "center" }}>{row.use_yn_badge}</td>
-                    <td style={{ textAlign: "left" }}>{row.message_el}</td>
-                    <td style={{ textAlign: "center" }}>{row.actions}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </StyledTable>
-          </TableScroll>
-        ) : (
-          <EmptyMessage>
-            조회된 설비 내역이 존재하지 않습니다.
-          </EmptyMessage>
-        )}
+        <Pagination
+          columns={columns}
+          rows={rows}
+          currentPage={page}
+          totalItems={rows.length}
+          itemsPerPage={8}
+          visiblePages={5}
+          height={66}
+          background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
+          onPageChange={setPage}
+          onRowClick={handleRowClick}
+          tableProps={{
+            minWidth: 1000,
+            tableLayout: "fixed",
+            headerHeight: 46,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
+            emptyText: "조회된 설비 내역이 존재하지 않습니다.",
+          }}
+        />
       </TablePanel>
 
       <MachineNew
@@ -630,17 +670,17 @@ export default function MachineList() {
       />
 
       <MachineDetail
-  isOpen={isDetailOpen}
-  onClose={() => {
-    setIsDetailOpen(false);
-    setSelectedMachine(null);
-  }}
-  selectedMachine={selectedMachine}
-  onEdit={() => {
-    setIsDetailOpen(false);
-    setIsEditModalOpen(true);
-  }}
-/>
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedMachine(null);
+        }}
+        selectedMachine={selectedMachine}
+        onEdit={() => {
+          setIsDetailOpen(false);
+          setIsEditModalOpen(true);
+        }}
+      />
 
       <MachineEdit
         isOpen={isEditModalOpen}

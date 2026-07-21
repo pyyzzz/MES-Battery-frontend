@@ -1,10 +1,17 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import SummaryCard from "../../components/ui/SummaryCard";
+import Pagination from "../../components/ui/Pagination";
 
-import { FiCpu, FiActivity, FiSlash, FiEdit3, FiTrash2 } from "react-icons/fi";
+import {
+  FiCpu,
+  FiActivity,
+  FiSlash,
+  FiEdit2,
+  FiTrash2,
+  FiPlus,
+} from "react-icons/fi";
 
 // 공용 SearchFilterBar 컴포넌트 import
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
@@ -12,7 +19,7 @@ import SearchFilterBar from "../../components/ui/SearchFilterBar";
 // 신규 등록, 수정 및 상세 정보 조회 사이드 패널 컴포넌트 import
 import ProcessNew from "./ProcessNew";
 import ProcessEdit from "./ProcessEdit";
-import ProcessDetail from "./ProcessDetail"; 
+import ProcessDetail from "./ProcessDetail";
 
 /* Styled Components */
 const Container = styled.div`
@@ -49,7 +56,26 @@ const Header = styled.div`
   }
 `;
 
-const KpiGrid = styled.div`
+const HeaderActionButton = styled(Button)`
+  width: 148px;
+  height: 40px;
+  padding: 0 16px;
+  box-sizing: border-box;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+`;
+
+const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -57,6 +83,11 @@ const KpiGrid = styled.div`
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const ProcessSummaryCard = styled(SummaryCard)`
+  flex-direction: row;
+  align-items: center;
 `;
 
 const StyledFilterPanel = styled.section`
@@ -83,7 +114,7 @@ const FilterBarWrapper = styled.div`
     width: 100%;
   }
 
-  & div[class*="ButtonGroup"], 
+  & div[class*="ButtonGroup"],
   & div[class*="button-group"],
   & div:has(> button) {
     display: flex;
@@ -124,50 +155,9 @@ const TableSummary = styled.span`
   }
 `;
 
-const TableScroll = styled.div`
-  width: 100%;
-  overflow-x: auto;
-`;
-
-const StyledTable = styled.table`
-  width: 100%;
-  min-width: 900px;
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  th,
-  td {
-    padding: 15px 14px;
-    border-bottom: 1px solid #e2e6ed;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 13px;
-  }
-
-  th {
-    height: 48px;
-    box-sizing: border-box;
-    background: #f1f3f6;
-    color: #555d6b;
-    font-weight: 500;
-  }
-
-  td {
-    color: #23272e;
-  }
-
-  tbody tr {
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  tbody tr:hover {
-    background: #f6f9ff;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
+const CodeText = styled.strong`
+  color: #174b9c;
+  font-weight: 600;
 `;
 
 const StatusBadge = styled.span`
@@ -191,79 +181,36 @@ const StatusBadge = styled.span`
       `}
 `;
 
-const ActionGroup = styled.div`
+const Management = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
-const ActionButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  transition: background-color 0.15s;
-
-  &:hover {
-    background-color: #e2e6ed;
-  }
-`;
-
-const EmptyMessage = styled.div`
-  padding: 60px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #9198a4;
-`;
-
-const PaginationContainer = styled.div`
-  border-top: 1px solid #e2e6ed;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  background: #f5f6f8;
-
-  .page-buttons {
-    display: flex;
-    gap: 4px;
-  }
-`;
-
-const PageBtn = styled.button`
-  min-width: 32px;
-  height: 32px;
-  padding: 0 6px;
-  border-radius: var(--radius-sm);
-  border: 1px solid
-    ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-border)"};
-  background: ${(props) =>
-    props.$active ? "var(--color-primary)" : "var(--color-bg)"};
-  color: ${(props) =>
-    props.$active ? "var(--color-text-inverse)" : "var(--color-text)"};
-  font-weight: ${(props) =>
-    props.$active ? "var(--font-weight-bold)" : "var(--font-weight-normal)"};
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const IconButton = styled.button`
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #1769d2;
+  font-size: 15px;
   cursor: pointer;
 
   &:hover {
-    background: ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-bg-canvas)"};
+    background: #edf4ff;
   }
+`;
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+const DeleteButton = styled(IconButton)`
+  color: #e55252;
+
+  &:hover {
+    background: #fff1f1;
   }
 `;
 
@@ -324,6 +271,7 @@ export default function ProcessList() {
   const [searchCode, setSearchCode] = useState("");
   const [searchName, setSearchName] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
+  const [page, setPage] = useState(1);
 
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -357,8 +305,8 @@ export default function ProcessList() {
 
   // 💡 상세 패널 내에서 수정 버튼을 눌렀을 때 작동할 핸들러 추가
   const handleDetailEdit = () => {
-    setIsDetailOpen(false);      // 상세 보기 닫기
-    setIsEditModalOpen(true);    // 수정 모달 열기 (기존에 선택된 selectedProcess가 주입됨)
+    setIsDetailOpen(false); // 상세 보기 닫기
+    setIsEditModalOpen(true); // 수정 모달 열기 (기존에 선택된 selectedProcess가 주입됨)
   };
 
   const handleRegister = () => {
@@ -369,12 +317,14 @@ export default function ProcessList() {
     setSearchCode(filterValues.step_code || "");
     setSearchName(filterValues.step_name || "");
     setSearchStatus(filterValues.is_active || "");
+    setPage(1);
   };
 
   const handleReset = () => {
     setSearchCode("");
     setSearchName("");
     setSearchStatus("");
+    setPage(1);
   };
 
   const handleRegisterProcess = (newProcess) => {
@@ -413,48 +363,43 @@ export default function ProcessList() {
     { key: "step_code_badge", label: "공정코드", align: "center", width: 180 },
     { key: "step_name", label: "공정명", align: "left", width: 320 },
     { key: "status_badge", label: "상태", align: "center", width: 140 },
-    { key: "actions", label: "작업", align: "center", width: 120 },
+    { key: "management", label: "관리", align: "center", width: 90 },
   ];
 
   const tableRows = filteredRows.map((row) => ({
     ...row,
-    step_code_badge: (
-      <span
-        style={{
-          fontFamily: "var(--font-family-mono)",
-          fontWeight: "var(--font-weight-bold)",
-          color: "var(--color-primary)",
-          background: "var(--color-primary-light)",
-          padding: "4px 8px",
-          borderRadius: "var(--radius-sm)",
-          display: "inline-block",
-        }}
-      >
-        {row.step_code}
-      </span>
-    ),
+    step_code_badge: <CodeText>{row.step_code}</CodeText>,
     status_badge: (
       <StatusBadge $isActive={row.is_active}>
         {row.is_active ? "사용" : "미사용"}
       </StatusBadge>
     ),
-    actions: (
-      <ActionGroup onClick={(e) => e.stopPropagation()}>
-        <ActionButton
-          onClick={(e) => handleEdit(e, row)}
+    management: (
+      <Management>
+        <IconButton
+          type="button"
           title="수정"
-          type="button"
+          aria-label={`${row.step_name} 수정`}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleEdit(event, row);
+          }}
         >
-          <FiEdit3 size={18} color="var(--color-text-secondary)" />
-        </ActionButton>
-        <ActionButton
-          onClick={(e) => handleDelete(e, row.id)}
+          <FiEdit2 />
+        </IconButton>
+
+        <DeleteButton
+          type="button"
           title="삭제"
-          type="button"
+          aria-label={`${row.step_name} 삭제`}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleDelete(event, row.id);
+          }}
         >
-          <FiTrash2 size={18} color="var(--color-danger)" />
-        </ActionButton>
-      </ActionGroup>
+          <FiTrash2 />
+        </DeleteButton>
+      </Management>
     ),
   }));
 
@@ -492,67 +437,65 @@ export default function ProcessList() {
           <h2>공정 관리</h2>
           <p>실시간 공정 정의 및 시퀀스 관리 시스템</p>
         </div>
-        <Button
+        <HeaderActionButton
+          type="button"
           variant="primary"
           onClick={handleRegister}
-          style={{
-            padding: "10px 20px",
-            fontWeight: "var(--font-weight-medium)",
-          }}
         >
-          + 공정 등록
-        </Button>
+          <FiPlus size={16} />
+          공정 등록
+        </HeaderActionButton>
       </Header>
 
-      <KpiGrid>
-        <SummaryCard
+      <SummaryGrid>
+        <ProcessSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiCpu />}
-          title="전체 공정"
-          value={`${totalCount}건`}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="var(--color-primary-light)"
           iconColor="var(--color-primary)"
-          iconSize={20}
-          iconBoxSize={40}
-          padding={16}
-          gap={12}
-          titleFontSize="var(--font-size-xs)"
-          titleColor="var(--color-text-secondary)"
-          valueFontSize="var(--font-size-md)"
-          valueColor="var(--color-text)"
+          title="전체 공정"
+          titleFontSize={13}
+          value={totalCount}
+          valueFontSize={25}
+          valueColor="#17191d"
         />
 
-        <SummaryCard
+        <ProcessSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiActivity />}
-          title="활성 공정"
-          value={`${activeCount}건`}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="var(--color-success-bg)"
           iconColor="var(--color-success)"
-          iconSize={20}
-          iconBoxSize={40}
-          padding={16}
-          gap={12}
-          titleFontSize="var(--font-size-xs)"
-          titleColor="var(--color-text-secondary)"
-          valueFontSize="var(--font-size-md)"
-          valueColor="var(--color-success)"
+          title="활성 공정"
+          titleFontSize={13}
+          value={activeCount}
+          valueFontSize={25}
+          valueColor="#17191d"
         />
 
-        <SummaryCard
+        <ProcessSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiSlash />}
-          title="비활성 공정"
-          value={`${inactiveCount}건`}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="var(--color-bg-canvas)"
           iconColor="var(--color-neutral)"
-          iconSize={20}
-          iconBoxSize={40}
-          padding={16}
-          gap={12}
-          titleFontSize="var(--font-size-xs)"
-          titleColor="var(--color-text-secondary)"
-          valueFontSize="var(--font-size-md)"
-          valueColor="var(--color-neutral)"
+          title="비활성 공정"
+          titleFontSize={13}
+          value={inactiveCount}
+          valueFontSize={25}
+          valueColor="#17191d"
         />
-      </KpiGrid>
+      </SummaryGrid>
 
       <StyledFilterPanel>
         <PanelTitle>공정 검색</PanelTitle>
@@ -565,6 +508,7 @@ export default function ProcessList() {
             keywordPlaceholder="PROC-..."
             keywordWidth={220}
             showDateRange={false}
+            showSearchButton={false}
             onSearch={handleSearch}
             onReset={handleReset}
             inputHeight={38}
@@ -579,62 +523,35 @@ export default function ProcessList() {
       <TablePanel>
         <TableTop>
           <TableTitle>공정 목록</TableTitle>
+
           <TableSummary>
-            조회 공정 <strong>{filteredRows.length}</strong>건
+            조회 결과 <strong>{tableRows.length}</strong>건
           </TableSummary>
         </TableTop>
 
-        {tableRows.length > 0 ? (
-          <TableScroll>
-            <StyledTable>
-              <colgroup>
-                {columns.map((col) => (
-                  <col key={col.key} style={{ width: col.width }} />
-                ))}
-              </colgroup>
-              <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th key={col.key} style={{ textAlign: col.align }}>
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {tableRows.map((row) => (
-                  <tr key={row.id} onClick={() => handleRowClick(row)}>
-                    <td style={{ textAlign: "center" }}>{row.seq}</td>
-                    <td style={{ textAlign: "center" }}>
-                      {row.step_code_badge}
-                    </td>
-                    <td style={{ textAlign: "left" }}>{row.step_name}</td>
-                    <td style={{ textAlign: "center" }}>{row.status_badge}</td>
-                    <td style={{ textAlign: "center" }}>{row.actions}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </StyledTable>
-          </TableScroll>
-        ) : (
-          <EmptyMessage>
-            조건에 맞는 공정이 존재하지 않습니다.
-          </EmptyMessage>
-        )}
-
-        <PaginationContainer>
-          <div>
-            전체 {filteredRows.length}개 항목 중 1에서 {filteredRows.length}까지
-            표시
-          </div>
-          <div className="page-buttons">
-            <PageBtn disabled>&lt;</PageBtn>
-            <PageBtn $active>1</PageBtn>
-            <PageBtn>2</PageBtn>
-            <PageBtn>3</PageBtn>
-            <PageBtn>&gt;</PageBtn>
-          </div>
-        </PaginationContainer>
+        <Pagination
+          columns={columns}
+          rows={tableRows}
+          currentPage={page}
+          totalItems={tableRows.length}
+          itemsPerPage={8}
+          visiblePages={5}
+          height={66}
+          background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
+          onPageChange={setPage}
+          onRowClick={handleRowClick}
+          tableProps={{
+            minWidth: 900,
+            tableLayout: "fixed",
+            headerHeight: 46,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
+            emptyText: "조건에 맞는 공정이 존재하지 않습니다.",
+          }}
+        />
       </TablePanel>
 
       <ProcessNew

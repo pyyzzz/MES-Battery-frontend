@@ -11,13 +11,14 @@ const Backdrop = styled.div`
   background: rgba(15, 23, 42, 0.38);
 `;
 
-// 우측 사이드 패널 (너비를 600px에서 480px로 축소)
+// 우측 사이드 패널
 const Panel = styled.div`
   position: fixed;
   top: 0;
   right: 0;
   z-index: 1000;
-  width: min(480px, 100%);
+  width: 600px;
+  max-width: 100%;
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -175,20 +176,44 @@ const TextArea = styled.textarea`
 `;
 
 // 하단 푸터 영역
-const Footer = styled.div`
-  min-height: 92px;
-  padding: 20px 30px;
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  border-top: 1px solid #d9deea;
-  background: #ffffff;
+const Footer = styled.footer`
+  flex-shrink: 0;
+  padding: 16px 24px;
 
-  button {
-    width: 140px; /* 전체 너비가 줄었으므로 버튼 크기도 160px에서 140px로 조금 줄임 */
-    height: 44px;
-    font-size: 14px;
-    font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
+  background: #fff;
+`;
+
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
   }
 `;
 
@@ -354,12 +379,13 @@ export default function ProcessEdit({
         </Form>
 
         <Footer>
-          <Button variant="outline" type="button" onClick={onClose}>
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             취소
-          </Button>
-          <Button variant="primary" type="submit" form="process-edit-form">
-            수정
-          </Button>
+          </ActionButton>
+
+          <ActionButton type="submit" $primary form="process-edit-form">
+            저장
+          </ActionButton>
         </Footer>
       </Panel>
     </Backdrop>

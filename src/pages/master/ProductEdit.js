@@ -139,15 +139,45 @@ const InputWithSuffix = styled.div`
   }
 `;
 
-const Footer = styled.div`
-  min-height: 92px;
-  padding: 20px 30px;
+const Footer = styled.footer`
+  flex-shrink: 0;
+  padding: 16px 24px;
+
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
+  background: #fff;
+`;
+
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
-  border-top: 1px solid #d9deea;
-  background-color: #fff;
-  box-sizing: border-box;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 export default function ProductEdit({ isOpen, product, onClose, onSave }) {
@@ -167,6 +197,8 @@ export default function ProductEdit({ isOpen, product, onClose, onSave }) {
       setUnit(product.unit || "EA");
     }
   }, [product]);
+
+  if (!isOpen) return null;
 
   const handleUpdate = () => {
     onSave({
@@ -245,39 +277,13 @@ export default function ProductEdit({ isOpen, product, onClose, onSave }) {
         </FormBody>
 
         <Footer>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            style={{
-              width: "140px",
-              height: "44px",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "700",
-              border: "none",
-              background: "#eaebf3",
-              color: "#61697a",
-            }}
-          >
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             취소
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleUpdate}
-            style={{
-              width: "140px",
-              height: "44px",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "700",
-              border: "none",
-              background: "#084693",
-              color: "#fff",
-              boxShadow: "0 5px 12px rgba(8, 70, 147, 0.2)",
-            }}
-          >
-            수정
-          </Button>
+          </ActionButton>
+
+          <ActionButton type="button" $primary onClick={handleUpdate}>
+            저장
+          </ActionButton>
         </Footer>
       </DrawerContainer>
     </>
