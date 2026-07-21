@@ -35,6 +35,7 @@ const PATH_TO_ACTIVE_ITEM = {
   "/mes/master/worker": "작업자",
   "/mes/master/machine": "설비",
   "/mes/master/bom": "BOM",
+  "/mes/master/material": "자재",
   "/mes/master/product": "제품",
   "/mes/production/workorders": "작업지시",
   "/mes/production/product-lot": "완제품LOT",
