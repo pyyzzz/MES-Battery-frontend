@@ -226,7 +226,7 @@ export default function MaterialList() {
 
   const rows = filteredMaterials.map((material, index) => ({
     ...material,
-    no: (page - 1) * PAGE_SIZE + index + 1,
+    no: index + 1,
     codeCell: <Code>{material.code}</Code>,
     management: (
       <Management>
@@ -272,54 +272,60 @@ export default function MaterialList() {
           </Description>
         </div>
 
-        <NewButton type="button" variant="primary" onClick={handleOpenNew}>
+        <HeaderActionButton
+          type="button"
+          variant="primary"
+          onClick={handleOpenNew}
+        >
           <FiPlus size={17} />
           신규 자재 등록
-        </NewButton>
+        </HeaderActionButton>
       </PageHeader>
 
       <SummaryGrid>
         <MaterialSummaryCard
-          height={118}
-          padding={20}
+          height={116}
+          padding={18}
           gap={14}
           icon={<FiPackage />}
-          iconBoxSize={52}
-          iconSize={25}
+          iconBoxSize={50}
+          iconSize={24}
+          iconBackground="#e8efff"
+          iconColor="#0755d9"
           title="전체 자재"
           titleFontSize={13}
           value={`${materials.length}종`}
-          valueFontSize={27}
+          valueFontSize={25}
         />
 
         <MaterialSummaryCard
-          height={118}
-          padding={20}
+          height={116}
+          padding={18}
           gap={14}
           icon={<FiBox />}
-          iconBoxSize={52}
-          iconSize={25}
-          iconBackground="#e7f8ee"
-          iconColor="#16a461"
+          iconBoxSize={50}
+          iconSize={24}
+          iconBackground="#e8f8ef"
+          iconColor="#18a860"
           title="사용 단위"
           titleFontSize={13}
           value={`${unitCount}개`}
-          valueFontSize={27}
+          valueFontSize={25}
         />
 
         <MaterialSummaryCard
-          height={118}
-          padding={20}
+          height={116}
+          padding={18}
           gap={14}
           icon={<FiPlus />}
-          iconBoxSize={52}
-          iconSize={25}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#fff5df"
           iconColor="#e39400"
           title="오늘 등록"
           titleFontSize={13}
           value={`${todayCount}건`}
-          valueFontSize={27}
+          valueFontSize={25}
         />
       </SummaryGrid>
 
@@ -358,13 +364,20 @@ export default function MaterialList() {
           rows={rows}
           currentPage={page}
           totalItems={filteredMaterials.length}
-          itemsPerPage={PAGE_SIZE}
-          onPageChange={setPage}
+          itemsPerPage={8}
+          visiblePages={5}
           height={66}
           background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
+          onPageChange={setPage}
           tableProps={{
             minWidth: 900,
-            rowHeight: 54,
+            tableLayout: "fixed",
+            headerHeight: 46,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
             emptyText: "조건에 맞는 자재가 없습니다.",
           }}
         />
@@ -412,25 +425,23 @@ const Description = styled.p`
   font-size: 14px;
 `;
 
-const NewButton = styled(Button)`
-  min-width: 148px;
+const HeaderActionButton = styled(Button)`
+  width: 148px;
   height: 40px;
   padding: 0 16px;
+  box-sizing: border-box;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border: 1px solid #0b57d0;
-  border-radius: 8px;
-  background: #0b57d0;
-  color: #fff;
+
+  flex-shrink: 0;
+  white-space: nowrap;
+
   font-size: 13px;
   font-weight: 600;
-
-  &:hover {
-    background: #0849b5;
-    opacity: 1;
-  }
+  line-height: 1;
 `;
 
 const SummaryGrid = styled.section`

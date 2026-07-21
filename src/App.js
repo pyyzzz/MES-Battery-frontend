@@ -29,12 +29,14 @@ import ProductionReport from "./pages/report/ProductionReport";
 import MaterialList from "./pages/master/MaterialList";
 
 /* 라우트 경로 -> SideBar activeItem 매핑 */
+// 07-21 자재 추가
 const PATH_TO_ACTIVE_ITEM = {
   "/mes/dashboard": "대시보드",
   "/mes/master/process": "공정",
   "/mes/master/worker": "작업자",
   "/mes/master/machine": "설비",
   "/mes/master/bom": "BOM",
+  "/mes/master/material": "자재",
   "/mes/master/product": "제품",
   "/mes/production/workorders": "작업지시",
   "/mes/production/product-lot": "완제품LOT",

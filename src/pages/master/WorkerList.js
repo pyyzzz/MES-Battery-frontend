@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
-import CommonPagination from "../../components/ui/Pagination";
+import Pagination from "../../components/ui/Pagination";
 import Button from "../../components/ui/Button";
 import WorkerDetail from "./WorkerDetail";
 import WorkerNewEdit from "./WorkerNewEdit";
@@ -78,7 +78,7 @@ const emptyFilters = {
   keyword: "",
 };
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 
 export default function WorkerList() {
   // 지금은 프론트에서만 들고 있는 임시 목록, 나중에 목록 조회 API 결과로 교체하면 됨
@@ -207,6 +207,7 @@ export default function WorkerList() {
         >
           <FiEdit2 />
         </IconButton>
+
         <DeleteButton
           type="button"
           aria-label={`${worker.workerName} 삭제`}
@@ -238,27 +239,48 @@ export default function WorkerList() {
 
       <SummaryGrid>
         <StatusSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiUsers />}
-          title="전체 작업자"
-          value={counts.total}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#e7f0ff"
           iconColor="#0b57d0"
+          title="전체 작업자"
+          titleFontSize={13}
+          value={counts.total}
+          valueFontSize={25}
         />
 
         <StatusSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiUserCheck />}
-          title="재직"
-          value={counts.active}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#e5f8ec"
           iconColor="#168853"
+          title="재직"
+          titleFontSize={13}
+          value={counts.active}
+          valueFontSize={25}
         />
 
         <StatusSummaryCard
+          height={116}
+          padding={18}
+          gap={14}
           icon={<FiUserX />}
-          title="퇴사"
-          value={counts.inactive}
+          iconBoxSize={50}
+          iconSize={24}
           iconBackground="#f0f2f6"
           iconColor="#697386"
+          title="퇴사"
+          titleFontSize={13}
+          value={counts.inactive}
+          valueFontSize={25}
         />
       </SummaryGrid>
 
@@ -296,26 +318,39 @@ export default function WorkerList() {
         />
       </FilterPanel>
 
-      <TableSection>
+      <TablePanel>
         <TableTop>
           <TableTitle>작업자 현황</TableTitle>
           <TopResultText>
             조회 결과 <strong>{filteredWorkers.length}</strong>건
           </TopResultText>
         </TableTop>
-        <CommonPagination
+        <Pagination
           columns={columns}
           rows={rows}
           currentPage={page}
           totalItems={filteredWorkers.length}
           itemsPerPage={PAGE_SIZE}
+          visiblePages={5}
+          height={66}
+          background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
           onPageChange={setPage}
           onRowClick={(worker) =>
             setSelectedWorker(workers.find(({ id }) => id === worker.id))
           }
-          tableProps={{ minWidth: 820 }}
+          tableProps={{
+            minWidth: 820,
+            tableLayout: "fixed",
+            headerHeight: 46,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
+            emptyText: "조건에 맞는 작업자가 없습니다.",
+          }}
         />
-      </TableSection>
+      </TablePanel>
 
       <WorkerDetail
         worker={selectedWorker}
@@ -352,7 +387,7 @@ const Header = styled.div`
 const Title = styled.h1`
   margin: 0 0 8px;
   color: var(--color-text);
-  font-size: 22px;
+  font-size: 30px;
   font-weight: 700;
 `;
 
@@ -374,34 +409,9 @@ const SummaryGrid = styled.section`
   }
 `;
 
-const StatusSummaryCard = styled(SummaryCard).attrs({
-  padding: 18,
-  gap: 18,
-  iconBoxSize: 50,
-  iconSize: 24,
-  iconBorderRadius: 16,
-  titleFontSize: 12,
-  titleFontWeight: 500,
-  titleColor: "#172033",
-  valueFontSize: 26,
-  valueFontWeight: 700,
-  valueColor: "#020817",
-  borderRadius: 16,
-  boxShadow: "0 2px 6px rgba(15, 23, 42, 0.04)",
-})`
-  && {
-    min-height: 116px;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  > div:last-child {
-    justify-content: center;
-  }
-
-  > div:last-child > span {
-    margin-bottom: 6px;
-  }
+const StatusSummaryCard = styled(SummaryCard)`
+  flex-direction: row;
+  align-items: center;
 `;
 
 const FilterPanel = styled.section`
@@ -419,60 +429,31 @@ const FilterTitle = styled.h2`
 `;
 
 // 작업자 목록 표 전용 정렬, 공용 Table 컴포넌트는 건드리지 않음
-const TableSection = styled.div`
-  margin-top: 24px;
+const TablePanel = styled.section`
   overflow: hidden;
   border: 1px solid #dce1ea;
   border-radius: 12px;
   background: #fff;
-
-  table {
-    width: 100%;
-    min-width: 820px;
-    table-layout: fixed;
-    font-size: 13px;
-  }
-
-  th {
-    padding: 12px 14px;
-    border-bottom: 1px solid #e3e7ed;
-    background: #f1f3f6;
-    color: #535b68;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    vertical-align: middle;
-  }
-
-  td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #e3e7ed;
-    color: #252a32;
-    font-size: 13px;
-    text-align: center;
-    vertical-align: middle;
-  }
-
-  tbody tr:hover {
-    background: #f6f9ff;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
 `;
 
 const HeaderActionButton = styled(Button)`
-  width: 128px;
+  width: 148px;
   height: 40px;
-  padding: 0 14px;
+  padding: 0 16px;
+  box-sizing: border-box;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-`;
+  gap: 7px;
 
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+`;
 const TableTop = styled.div`
   min-height: 62px;
   padding: 0 20px;

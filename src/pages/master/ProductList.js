@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
-
-// 공용 SearchFilterBar 컴포넌트 import (ProcessList와 동일하게 이식)
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import Pagination from "../../components/ui/Pagination";
+import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 
 import ProductNew from "./ProductNew";
 import ProductEdit from "./ProductEdit";
@@ -43,6 +42,25 @@ const Header = styled.div`
   }
 `;
 
+const HeaderActionButton = styled(Button)`
+  width: 148px;
+  height: 40px;
+  padding: 0 16px;
+  box-sizing: border-box;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+`;
+
 // Filter 영역을 감싸는 패널 스타일
 const StyledFilterPanel = styled.section`
   padding: 22px;
@@ -69,7 +87,7 @@ const FilterBarWrapper = styled.div`
     width: 100%;
   }
 
-  & div[class*="ButtonGroup"], 
+  & div[class*="ButtonGroup"],
   & div[class*="button-group"],
   & div:has(> button) {
     display: flex;
@@ -111,52 +129,6 @@ const TableSummary = styled.span`
   }
 `;
 
-const TableScroll = styled.div`
-  width: 100%;
-  overflow-x: auto;
-`;
-
-const StyledTable = styled.table`
-  width: 100%;
-  min-width: 1080px;
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  th,
-  td {
-    padding: 15px 14px;
-    border-bottom: 1px solid #e2e6ed;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 13px;
-  }
-
-  th {
-    height: 48px;
-    box-sizing: border-box;
-    background: #f1f3f6;
-    color: #555d6b;
-    font-weight: 500;
-  }
-
-  td {
-    color: #23272e;
-  }
-
-  tbody tr {
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  tbody tr:hover {
-    background: #f6f9ff;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
-`;
-
 // 제품 코드 스타일 블루 계열 볼드 텍스트 적용
 const ProductCodeText = styled.strong`
   display: inline-block;
@@ -170,74 +142,36 @@ const ProductCodeText = styled.strong`
   }
 `;
 
-const EditTextBtn = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: var(--color-primary-light);
-    text-decoration: underline;
-  }
-`;
-
-const EmptyMessage = styled.div`
-  padding: 60px 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #9198a4;
-`;
-
-// 하단 페이지네이션 컨테이너
-const PaginationContainer = styled.div`
-  border-top: 1px solid #e2e6ed;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  background: #f5f6f8;
-
-  .page-buttons {
-    display: flex;
-    gap: 4px;
-  }
-`;
-
-const PageBtn = styled.button`
-  min-width: 32px;
-  height: 32px;
-  padding: 0 6px;
-  border-radius: var(--radius-sm);
-  border: 1px solid
-    ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-border)"};
-  background: ${(props) =>
-    props.$active ? "var(--color-primary)" : "var(--color-bg)"};
-  color: ${(props) =>
-    props.$active ? "var(--color-text-inverse)" : "var(--color-text)"};
-  font-weight: ${(props) =>
-    props.$active ? "var(--font-weight-bold)" : "var(--font-weight-normal)"};
+const Management = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+`;
+
+const IconButton = styled.button`
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #1769d2;
+  font-size: 15px;
   cursor: pointer;
 
   &:hover {
-    background: ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--color-bg-canvas)"};
+    background: #edf4ff;
   }
+`;
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+const DeleteButton = styled(IconButton)`
+  color: #e55252;
+
+  &:hover {
+    background: #fff1f1;
   }
 `;
 
@@ -302,6 +236,8 @@ export default function ProductList() {
   const [endDate, setEndDate] = useState("");
   const [keyword, setKeyword] = useState("");
 
+  const [page, setPage] = useState(1);
+
   // 모달 제어 State
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -313,6 +249,7 @@ export default function ProductList() {
     setStartDate(filterValues.startDate || "");
     setEndDate(filterValues.endDate || "");
     setKeyword(filterValues.keyword || "");
+    setPage(1);
   };
 
   // SearchFilterBar 연동 초기화 핸들러
@@ -320,6 +257,7 @@ export default function ProductList() {
     setStartDate("");
     setEndDate("");
     setKeyword("");
+    setPage(1);
   };
 
   const handleRegisterClick = () => {
@@ -331,6 +269,14 @@ export default function ProductList() {
     setSelectedProduct(product);
     setIsEditOpen(true);
     console.log("제품 수정 호출:", product.product_code);
+  };
+
+  const handleDeleteProduct = (product) => {
+    if (!window.confirm(`${product.product_name} 제품을 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    setProducts((prev) => prev.filter((item) => item.id !== product.id));
   };
 
   // 필터링 로직 (조회 버튼을 클릭하여 State가 세팅되었을 때 렌더링되게 설계됨)
@@ -370,7 +316,7 @@ export default function ProductList() {
     { key: "unit", label: "단위", align: "center", width: 90 },
     { key: "created_at", label: "등록일", align: "left", width: 150 },
     { key: "updated_at", label: "수정일", align: "left", width: 150 },
-    { key: "management", label: "관리", align: "center", width: 100 },
+    { key: "management", label: "관리", align: "center", width: 90 },
   ];
 
   // 데이터 가공 및 컴포넌트 데이터셀 인젝션
@@ -381,15 +327,31 @@ export default function ProductList() {
     voltage_styled: `${row.voltage}V`,
     capacity_styled: `${row.capacity_ah}Ah`,
     management: (
-      <EditTextBtn
-        onClick={(e) => {
-          e.stopPropagation();
-          handleEditClick(row);
-        }}
-        type="button"
-      >
-        편집
-      </EditTextBtn>
+      <Management>
+        <IconButton
+          type="button"
+          title="수정"
+          aria-label={`${row.product_name} 수정`}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleEditClick(row);
+          }}
+        >
+          <FiEdit2 />
+        </IconButton>
+
+        <DeleteButton
+          type="button"
+          title="삭제"
+          aria-label={`${row.product_name} 삭제`}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleDeleteProduct(row);
+          }}
+        >
+          <FiTrash2 />
+        </DeleteButton>
+      </Management>
     ),
   }));
 
@@ -401,16 +363,14 @@ export default function ProductList() {
           <h2>제품 관리</h2>
           <p>생산 제품의 기본 규격과 마스터 데이터를 관리하는 시스템입니다.</p>
         </div>
-        <Button
+        <HeaderActionButton
+          type="button"
           variant="primary"
           onClick={handleRegisterClick}
-          style={{
-            padding: "10px 20px",
-            fontWeight: "var(--font-weight-medium)",
-          }}
         >
-          + 제품 등록
-        </Button>
+          <FiPlus size={16} />
+          제품 등록
+        </HeaderActionButton>
       </Header>
 
       {/* 공용 SearchFilterBar 적용 영역 */}
@@ -441,73 +401,38 @@ export default function ProductList() {
       <TablePanel>
         <TableTop>
           <TableTitle>제품 목록</TableTitle>
+
           <TableSummary>
-            조회 제품 <strong>{filteredRows.length}</strong>건
+            조회 결과 <strong>{tableRows.length}</strong>건
           </TableSummary>
         </TableTop>
 
-        {tableRows.length > 0 ? (
-          <TableScroll>
-            <StyledTable>
-              <colgroup>
-                {columns.map((col) => (
-                  <col key={col.key} style={{ width: col.width }} />
-                ))}
-              </colgroup>
-              <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th key={col.key} style={{ textAlign: col.align }}>
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {tableRows.map((row) => (
-                  <tr
-                    key={row.id}
-                    onClick={() => {
-                      setSelectedProduct(row.originalProduct);
-                      setIsDetailOpen(true);
-                    }}
-                  >
-                    <td style={{ textAlign: "center" }}>{row.id}</td>
-                    <td style={{ textAlign: "left" }}>{row.product_code}</td>
-                    <td style={{ textAlign: "left" }}>{row.product_name}</td>
-                    <td style={{ textAlign: "center" }}>
-                      {row.voltage_styled}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {row.capacity_styled}
-                    </td>
-                    <td style={{ textAlign: "center" }}>{row.unit}</td>
-                    <td style={{ textAlign: "left" }}>{row.created_at}</td>
-                    <td style={{ textAlign: "left" }}>{row.updated_at}</td>
-                    <td style={{ textAlign: "center" }}>{row.management}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </StyledTable>
-          </TableScroll>
-        ) : (
-          <EmptyMessage>
-            조건에 부합하는 제품 마스터 내역이 존재하지 않습니다.
-          </EmptyMessage>
-        )}
-
-        {/* 페이지네이션 Area */}
-        <PaginationContainer>
-          <div>
-            전체 {filteredRows.length}개 항목 중 1에서 {filteredRows.length}까지
-            표시
-          </div>
-          <div className="page-buttons">
-            <PageBtn disabled>&lt;</PageBtn>
-            <PageBtn $active>1</PageBtn>
-            <PageBtn>&gt;</PageBtn>
-          </div>
-        </PaginationContainer>
+        <Pagination
+          columns={columns}
+          rows={tableRows}
+          currentPage={page}
+          totalItems={tableRows.length}
+          itemsPerPage={8}
+          visiblePages={5}
+          height={66}
+          background="#f5f6f8"
+          borderTop="1px solid #e2e6ed"
+          onPageChange={setPage}
+          onRowClick={(row) => {
+            setSelectedProduct(row.originalProduct);
+            setIsDetailOpen(true);
+          }}
+          tableProps={{
+            minWidth: 1080,
+            tableLayout: "fixed",
+            headerHeight: 46,
+            rowHeight: 48,
+            cellPadding: "0 14px",
+            fontSize: 13,
+            headerBackground: "#f1f3f6",
+            emptyText: "조건에 맞는 제품이 없습니다.",
+          }}
+        />
       </TablePanel>
 
       <ProductNew

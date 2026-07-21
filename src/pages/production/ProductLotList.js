@@ -300,27 +300,48 @@ export default function ProductLotList() {
 
         <SummaryGrid>
           <StatusSummaryCard
+            height={116}
+            padding={18}
+            gap={14}
             icon={<FiCheckCircle />}
-            title="생산완료"
-            value={counts.생산완료}
+            iconBoxSize={50}
+            iconSize={24}
             iconBackground="#e5f8ec"
             iconColor="#16a765"
+            title="생산완료"
+            titleFontSize={13}
+            value={counts.생산완료}
+            valueFontSize={25}
           />
 
           <StatusSummaryCard
+            height={116}
+            padding={18}
+            gap={14}
             icon={<FiRefreshCw />}
-            title="생산중"
-            value={counts.생산중}
+            iconBoxSize={50}
+            iconSize={24}
             iconBackground="#e7f0ff"
             iconColor="#2563eb"
+            title="생산중"
+            titleFontSize={13}
+            value={counts.생산중}
+            valueFontSize={25}
           />
 
           <StatusSummaryCard
+            height={116}
+            padding={18}
+            gap={14}
             icon={<FiClock />}
-            title="생산대기"
-            value={counts["생산 대기"]}
+            iconBoxSize={50}
+            iconSize={24}
             iconBackground="#fff4d8"
             iconColor="#d98a00"
+            title="생산대기"
+            titleFontSize={13}
+            value={counts["생산 대기"]}
+            valueFontSize={25}
           />
         </SummaryGrid>
 
@@ -458,34 +479,9 @@ const SummaryGrid = styled.section`
   }
 `;
 
-const StatusSummaryCard = styled(SummaryCard).attrs({
-  padding: 18,
-  gap: 18,
-  iconBoxSize: 50,
-  iconSize: 24,
-  iconBorderRadius: 16,
-  titleFontSize: 12,
-  titleFontWeight: 500,
-  titleColor: "#172033",
-  valueFontSize: 26,
-  valueFontWeight: 700,
-  valueColor: "#020817",
-  borderRadius: 16,
-  boxShadow: "0 2px 6px rgba(15, 23, 42, 0.04)",
-})`
-  && {
-    min-height: 116px;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  > div:last-child {
-    justify-content: center;
-  }
-
-  > div:last-child > span {
-    margin-bottom: 6px;
-  }
+const StatusSummaryCard = styled(SummaryCard)`
+  flex-direction: row;
+  align-items: center;
 `;
 
 const FilterPanel = styled.section`
