@@ -95,6 +95,13 @@ const EmptyCell = styled.td`
   text-align: center;
 `;
 
+const SpacerCell = styled.td`
+  height: ${({ $height }) => toCssSize($height, "48px")};
+  padding: 0;
+  border: 0;
+  visibility: hidden;
+`;
+
 const PageButton = styled.button`
   width: ${({ $size }) => toCssSize($size, "38px")};
   height: ${({ $size }) => toCssSize($size, "38px")};
@@ -247,6 +254,11 @@ function Pagination({
         safeCurrentPage * safeItemsPerPage
       )
     : rows;
+
+  const renderedRowCount = Math.max(visibleRows.length, 1);
+  const spacerRowCount = columns && paginateRows
+    ? Math.max(safeItemsPerPage - renderedRowCount, 0)
+    : 0;
 
   const {
     minWidth = 1050,
@@ -446,6 +458,13 @@ function Pagination({
                 </TableRow>
               ))
             )}
+            {Array.from({ length: spacerRowCount }, (_, index) => (
+              <tr key={`pagination-spacer-${index}`} aria-hidden="true">
+                <SpacerCell colSpan={columns.length} $height={rowHeight}>
+                  &nbsp;
+                </SpacerCell>
+              </tr>
+            ))}
           </tbody>
         </DataTable>
       </TableScroll>
