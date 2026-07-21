@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiUser, FiX } from "react-icons/fi";
 import CommonPagination from "../../components/ui/Pagination";
+import Button from "../../components/ui/Button";
 
 const HISTORY_PAGE_SIZE = 5;
 
@@ -134,12 +135,13 @@ export default function WorkerDetail({ worker, onClose, onEdit }) {
         </Body>
 
         <Footer>
-          <Secondary type="button" onClick={onClose}>
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             닫기
-          </Secondary>
-          <Primary type="button" onClick={() => onEdit(worker)}>
+          </ActionButton>
+
+          <ActionButton type="button" $primary onClick={() => onEdit(worker)}>
             수정
-          </Primary>
+          </ActionButton>
         </Footer>
       </Drawer>
     </>
@@ -344,43 +346,42 @@ const TableWrap = styled.div`
 
 // 하단 버튼 영역, 드로어 아래쪽에 고정된 느낌으로 배치
 const Footer = styled.footer`
-  min-height: 78px;
-  padding: 16px 18px;
+  flex-shrink: 0;
+  padding: 16px 24px;
+
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #d9deea;
+
+  border-top: 1px solid #dfe3eb;
   background: #fff;
 `;
 
-// 하단 버튼의 공통 크기
-const FooterButton = styled.button`
-  min-width: 64px;
-  height: 36px;
-  padding: 0 18px;
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
   border-radius: 7px;
-  font-size: 14px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
   font-weight: 600;
-`;
-
-// 닫기 버튼 스타일
-const Secondary = styled(FooterButton)`
-  border: 1px solid #d1d7e3;
-  background: #fff;
-  color: #111827;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
 
   &:hover {
-    background: #dfe1eb;
-  }
-`;
-
-// 수정 버튼 스타일
-const Primary = styled(FooterButton)`
-  border: 1px solid #0b57d0;
-  background: #0b57d0;
-  color: #fff;
-
-  &:hover {
-    background: #0848ad;
+    opacity: 0.9;
   }
 `;

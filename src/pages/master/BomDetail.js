@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
+import Button from "../../components/ui/Button";
 
 // 목록에서 선택한 제품과 BOM 자재의 값을 읽기 전용으로 보여주는 상세 드로어
 function BomDetail({ isOpen, product, bomItem, onClose, onEdit }) {
@@ -119,14 +120,15 @@ function BomDetail({ isOpen, product, bomItem, onClose, onEdit }) {
         </DrawerBody>
 
         {/* 상세 화면을 닫거나 바로 BOM 수정 화면으로 이동 */}
-        <DrawerFooter>
-          <CloseFooterButton type="button" onClick={onClose}>
+        <Footer>
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             닫기
-          </CloseFooterButton>
-          <EditFooterButton type="button" onClick={onEdit}>
+          </ActionButton>
+
+          <ActionButton type="button" $primary onClick={onEdit}>
             수정
-          </EditFooterButton>
-        </DrawerFooter>
+          </ActionButton>
+        </Footer>
       </DrawerContainer>
     </DrawerBackdrop>
   );
@@ -319,50 +321,43 @@ const ProcessBadge = styled.span`
 `;
 
 // 닫기와 수정 버튼을 담는 드로어 하단 고정 영역
-const DrawerFooter = styled.div`
+const Footer = styled.footer`
   flex-shrink: 0;
-  padding: 16px 18px;
+  padding: 16px 24px;
+
   display: flex;
-  gap: 8px;
+  align-items: center;
   justify-content: flex-end;
-  border-top: 1px solid #cbd3e0;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
   background: #fff;
 `;
 
-// 상세 드로어를 닫는 하단 버튼
-const CloseFooterButton = styled.button`
-  min-width: 64px;
-  height: 36px;
-  padding: 0 18px;
-  border: 1px solid #d1d7e3;
-  border-radius: 7px;
-  background: #fff;
-  color: #111827;
-  font-family: "Pretendard", sans-serif;
-  font-size: 14px;
-  cursor: pointer;
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
 
-  &:hover {
-    background: #f5f7fa;
-  }
-`;
-
-const EditFooterButton = styled.button`
   display: inline-flex;
-  min-width: 64px;
-  height: 36px;
   align-items: center;
   justify-content: center;
-  padding: 0 18px;
-  border: 1px solid #0b57d0;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
   border-radius: 7px;
-  background: #0b57d0;
-  color: #fff;
-  font-family: "Pretendard", sans-serif;
-  font-size: 14px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
 
   &:hover {
-    background: #0848ad;
+    opacity: 0.9;
   }
 `;

@@ -173,15 +173,15 @@ export default function MaterialNewEdit({
             </FormGroup>
           </DrawerBody>
 
-          <DrawerFooter>
-            <CancelButton type="button" onClick={onClose}>
+          <Footer>
+            <ActionButton type="button" variant="outline" onClick={onClose}>
               취소
-            </CancelButton>
+            </ActionButton>
 
-            <SubmitButton type="submit">
-              {mode === "edit" ? "수정하기" : "등록하기"}
-            </SubmitButton>
-          </DrawerFooter>
+            <ActionButton type="submit" $primary>
+              {mode === "edit" ? "저장" : "등록"}
+            </ActionButton>
+          </Footer>
         </Form>
       </Drawer>
     </>
@@ -353,81 +353,43 @@ const Select = styled.select`
   }
 `;
 
-const DrawerFooter = styled.footer`
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+const Footer = styled.footer`
   flex-shrink: 0;
-  padding: 16px 18px;
-  border-top: 1px solid #cbd3e0;
+  padding: 16px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
   background: #fff;
 `;
 
-const FooterButton = styled(Button)`
-  && {
-    display: inline-flex;
-    min-width: 84px;
-    height: 38px;
-    align-items: center;
-    justify-content: center;
-    padding: 0 16px;
-    border-radius: 7px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
-    appearance: none;
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease,
-      box-shadow 0.15s ease;
-  }
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
 
-  &&:focus-visible {
-    outline: 2px solid #0b57d0;
-    outline-offset: 2px;
-  }
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
 
-  &&:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-`;
+  flex-shrink: 0;
 
-const CancelButton = styled(FooterButton)`
-  && {
-    border: 1px solid #d1d7e3;
-    background: #ffffff;
-    color: #202530;
-    box-shadow: none;
-  }
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
 
-  &&:hover:not(:disabled) {
-    border-color: #bbc4d2;
-    background: #f5f7fb;
-  }
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
 
-  &&:active:not(:disabled) {
-    background: #eef1f6;
-  }
-`;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
 
-const SubmitButton = styled(FooterButton)`
-  && {
-    border: 1px solid #0b57d0;
-    background: #0b57d0;
-    color: #ffffff;
-    box-shadow: none;
-  }
-
-  &&:hover:not(:disabled) {
-    border-color: #0848b1;
-    background: #0848b1;
-  }
-
-  &&:active:not(:disabled) {
-    border-color: #073b91;
-    background: #073b91;
+  &:hover {
+    opacity: 0.9;
   }
 `;

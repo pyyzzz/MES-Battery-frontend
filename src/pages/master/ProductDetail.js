@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
+import Button from "../../components/ui/Button";
 
 export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
   useEffect(() => {
@@ -94,13 +95,13 @@ export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
         </Body>
 
         <Footer>
-          <Secondary type="button" onClick={onClose}>
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             닫기
-          </Secondary>
+          </ActionButton>
 
-          <Primary type="button" onClick={onEdit}>
+          <ActionButton type="button" $primary onClick={onEdit}>
             수정
-          </Primary>
+          </ActionButton>
         </Footer>
       </Drawer>
     </>
@@ -259,39 +260,42 @@ const TableWrap = styled.div`
 `;
 
 const Footer = styled.footer`
-  min-height: 92px;
-  padding: 20px 30px;
+  flex-shrink: 0;
+  padding: 16px 24px;
+
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
+  background: #fff;
+`;
+
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
-  border-top: 1px solid #d9deea;
-`;
+  gap: 7px;
 
-const FooterButton = styled.button`
-  width: 140px; /* 버튼 가로 폭을 기존 160px에서 140px로 축소 */
-  height: 44px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  border: none;
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
-`;
-
-const Secondary = styled(FooterButton)`
-  background: #eaebf3;
-  color: #61697a;
 
   &:hover {
-    background: #dfe1eb;
-  }
-`;
-
-const Primary = styled(FooterButton)`
-  background: #084693;
-  color: #fff;
-  box-shadow: 0 5px 12px rgba(8, 70, 147, 0.2);
-
-  &:hover {
-    background: #063b7d;
+    opacity: 0.9;
   }
 `;

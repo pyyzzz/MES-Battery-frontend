@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
+import Button from "../../components/ui/Button";
 
 // 등록 폼의 기본값, 수정 모드에서는 선택한 작업자 값으로 덮어씀
 const emptyForm = { workerCode: "", workerName: "", hiredAt: "", role: "" };
@@ -123,10 +124,13 @@ export default function WorkerNewEdit({ open, worker, onClose, onSubmit }) {
           </Body>
 
           <Footer>
-            <Secondary type="button" onClick={onClose}>
+            <ActionButton type="button" variant="outline" onClick={onClose}>
               취소
-            </Secondary>
-            <Primary type="submit">{editing ? "수정하기" : "등록하기"}</Primary>
+            </ActionButton>
+
+            <ActionButton type="submit" $primary>
+              {editing ? "저장" : "등록"}
+            </ActionButton>
           </Footer>
         </Form>
       </Drawer>
@@ -295,42 +299,42 @@ const Select = styled.select`
 
 // 하단 취소/저장 버튼 영역
 const Footer = styled.footer`
-  padding: 16px 18px;
+  flex-shrink: 0;
+  padding: 16px 24px;
+
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  border-top: 1px solid #d9deea;
-`;
+  gap: 10px;
 
-// 하단 버튼의 공통 높이와 글자 크기
-const FooterButton = styled.button`
-  min-width: 84px;
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 7px;
-  font-size: 14px;
-  cursor: pointer;
-`;
-
-// 취소 버튼 스타일
-const Secondary = styled(FooterButton)`
-  border: 1px solid #d1d7e3;
+  border-top: 1px solid #dfe3eb;
   background: #fff;
-  color: #111827;
-
-  &:hover {
-    background: #f7f8fa;
-  }
 `;
 
-// 등록/수정 제출 버튼 스타일
-const Primary = styled(FooterButton)`
-  border: 1px solid #0b57d0;
-  background: #0b57d0;
-  color: #fff;
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
 
   &:hover {
-    background: #0848ad;
+    opacity: 0.9;
   }
 `;

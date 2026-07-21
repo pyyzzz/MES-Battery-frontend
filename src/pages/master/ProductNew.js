@@ -146,15 +146,45 @@ const InputWithSuffix = styled.div`
   }
 `;
 
-const Footer = styled.div`
-  padding: 16px 18px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+const Footer = styled.footer`
   flex-shrink: 0;
-  border-top: 1px solid #cbd3e0;
-  background-color: #fff;
-  box-sizing: border-box;
+  padding: 16px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
+  background: #fff;
+`;
+
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
+  border-radius: 7px;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 export default function ProductNew({ isOpen, onClose, onRegister }) {
@@ -184,6 +214,8 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
       process: "조립공정",
     },
   ]);
+
+  if (!isOpen) return null;
 
   // 마스터 최종 등록 전송
   const handleSubmit = () => {
@@ -317,38 +349,17 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
         </FormBody>
 
         <Footer>
-          <Button
+          <ActionButton
+            type="button"
             variant="outline"
             onClick={handleDrawerClose}
-            style={{
-              minWidth: "84px",
-              height: "38px",
-              borderRadius: "7px",
-              fontSize: "14px",
-              fontWeight: "400",
-              border: "1px solid #d1d7e3",
-              background: "#fff",
-              color: "#111827",
-            }}
           >
             취소
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            style={{
-              minWidth: "84px",
-              height: "38px",
-              borderRadius: "7px",
-              fontSize: "14px",
-              fontWeight: "700",
-              border: "none",
-              background: "#0b57d0",
-              color: "#fff",
-            }}
-          >
+          </ActionButton>
+
+          <ActionButton type="button" $primary onClick={handleSubmit}>
             등록
-          </Button>
+          </ActionButton>
         </Footer>
       </DrawerContainer>
     </>

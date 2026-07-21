@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 import BomMaterialEditor from "../../components/ui/BomMaterialEditor";
+import Button from "../../components/ui/Button";
 
 export default function BomEdit({ isOpen, product, bomRows, onClose, onSave }) {
   const [editingRows, setEditingRows] = useState([]);
@@ -66,12 +67,13 @@ export default function BomEdit({ isOpen, product, bomRows, onClose, onSave }) {
           />
         </Body>
         <Footer>
-          <CancelButton type="button" onClick={onClose}>
+          <ActionButton type="button" variant="outline" onClick={onClose}>
             취소
-          </CancelButton>
-          <SaveButton type="button" onClick={handleSave}>
-            수정하기
-          </SaveButton>
+          </ActionButton>
+
+          <ActionButton type="button" $primary onClick={handleSave}>
+            저장
+          </ActionButton>
         </Footer>
       </Drawer>
     </Backdrop>
@@ -171,29 +173,42 @@ const Field = styled.div`
   }
 `;
 const Footer = styled.footer`
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
   flex-shrink: 0;
-  padding: 16px 18px;
-  border-top: 1px solid #cbd3e0;
+  padding: 16px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  border-top: 1px solid #dfe3eb;
   background: #fff;
 `;
-const CancelButton = styled.button`
-  min-width: 84px;
-  height: 38px;
-  border: 1px solid #d1d7e3;
+
+const ActionButton = styled(Button)`
+  height: 40px;
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+
+  border: ${({ $primary }) => ($primary ? "0" : "1px solid #d2d8e1")};
   border-radius: 7px;
-  background: #fff;
-  cursor: pointer;
-`;
-const SaveButton = styled.button`
-  min-width: 84px;
-  height: 38px;
-  border: 1px solid #0b57d0;
-  border-radius: 7px;
-  background: #0b57d0;
-  color: #fff;
+
+  background: ${({ $primary }) => ($primary ? "#0755d9" : "#fff")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#4b5563")};
+
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
