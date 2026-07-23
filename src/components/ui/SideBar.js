@@ -69,7 +69,7 @@ const LogoSection = styled.div`
   flex-direction: column;
   /* justify-content: center; */
   padding: 0 ${({ $collapsed }) => ($collapsed ? "12px" : "24px")};
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   align-items: center;
   filter: drop-shadow(0 0 4px rgba(255,255,255,.2));
 
@@ -99,7 +99,7 @@ const SidebarDivider = styled.div`
   width: ${({ $collapsed }) =>
     $collapsed ? "44px" : "calc(100% - 48px)"};
   height: 1px;
-  margin: 0 auto 27px;
+  margin: 0 auto 17px;
   background: linear-gradient(
     to right,
     transparent,
@@ -345,7 +345,7 @@ const ToggleSection = styled.div`
   justify-content: ${({ $collapsed }) =>
     $collapsed ? "center" : "space-between"};
   gap: ${({ $collapsed }) => ($collapsed ? "4px" : "12px")};
-  padding: 14px ${({ $collapsed }) => ($collapsed ? "10px" : "18px")} 0;
+  padding: 5px ${({ $collapsed }) => ($collapsed ? "10px" : "18px")} 0;
   transform: translateY(6px);
 `;
 

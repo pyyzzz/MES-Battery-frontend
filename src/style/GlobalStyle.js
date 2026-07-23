@@ -70,6 +70,23 @@ const GlobalStyle = createGlobalStyle`
     --font-weight-semibold : 600;
     --font-weight-bold : 700;
 
+    /* 모든 업무 페이지 상단 헤더에 사용하는 공통 타이포그래피 */
+    --page-title-size : 30px;
+    --page-title-line-height : 1.2;
+    --page-title-weight : 600;
+    --page-title-color : #17191d;
+    --page-title-letter-spacing : -0.8px;
+    --page-subtitle-size : 14px;
+    --page-subtitle-weight : 400;
+    --page-subtitle-color : #818896;
+    --page-subtitle-line-height : 1.5;
+    --page-container-padding : 28px 32px 44px;
+    --page-title-subtitle-gap : 6px;
+    --page-header-content-gap : 22px;
+    --page-section-gap : 20px;
+    --page-box-gap : 16px;
+    --page-panel-padding : 20px 22px;
+
     /* 모서리 */
     --radius-sm : 0.25rem;
     --radius-md : 0.5rem;
@@ -87,6 +104,11 @@ const GlobalStyle = createGlobalStyle`
     /* 그림자 */
     --shadow-card : 0px 1px 3px rgba(0, 0, 0, 0.05);
     --shadow-elevated : 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  @media (max-width: 720px) {
+    :root {
+      --page-container-padding : 24px 16px 40px;
+    }
   }
   button {
     background: none;

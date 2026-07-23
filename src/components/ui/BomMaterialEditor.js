@@ -31,7 +31,7 @@ export default function BomMaterialEditor({
   materialOptions = DEFAULT_MATERIAL_OPTIONS,
   processOptions = DEFAULT_PROCESS_OPTIONS,
   editableRows = false,
-  itemsPerPage = 5,
+  itemsPerPage = 8,
   variant = "default",
 }) {
   const [materialCode, setMaterialCode] = useState("");

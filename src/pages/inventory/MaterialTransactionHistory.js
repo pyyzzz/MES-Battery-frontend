@@ -53,20 +53,20 @@ const formatNumber = (value) => Number(value).toLocaleString();
 
 const Page = styled.div`
   min-height: 100%;
-  padding: 28px 32px 44px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   background: #f7f8fa;
 `;
 
-const Header = styled.header`margin-bottom: 22px;`;
-const Title = styled.h1`margin: 0; color: #17191d; font-size: 30px; font-weight: 650; letter-spacing: -0.8px;`;
-const Description = styled.p`margin: 7px 0 0; color: #818896; font-size: 14px;`;
+const Header = styled.header`margin-bottom: var(--page-header-content-gap);`;
+const Title = styled.h1`margin: 0; color: var(--page-title-color); font-size: var(--page-title-size); line-height: var(--page-title-line-height); font-weight: var(--page-title-weight); letter-spacing: var(--page-title-letter-spacing);`;
+const Description = styled.p`margin: var(--page-title-subtitle-gap) 0 0; color: var(--page-subtitle-color); font-size: var(--page-subtitle-size); font-weight: var(--page-subtitle-weight); line-height: var(--page-subtitle-line-height);`;
 
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
   @media (max-width: 900px) { grid-template-columns: 1fr; }
 `;
 
@@ -76,14 +76,14 @@ const TransactionSummaryCard = styled(SummaryCard)`
 `;
 
 const Panel = styled.section`
-  padding: 20px 22px;
+  padding: var(--page-panel-padding);
   background: #fff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
 `;
 
 const PanelTitle = styled.h2`margin: 0 0 14px; color: #292d35; font-size: 16px; font-weight: 600;`;
-const FilterPanel = styled(Panel)`margin-bottom: 20px;`;
+const FilterPanel = styled(Panel)`margin-bottom: var(--page-section-gap);`;
 
 const TablePanel = styled.section`
   overflow: hidden;
@@ -210,7 +210,7 @@ function MaterialTransactionHistory() {
   const [filters, setFilters] = useState({ startDate: "", endDate: "", type: "", keyword: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const itemsPerPage = 10;
+  const itemsPerPage = 8;
 
   const enrichedTransactions = useMemo(() => transactions.map((transaction) => {
     const [materialCode, materialName, unit] = MATERIALS[transaction.materialIndex];
@@ -242,11 +242,11 @@ function MaterialTransactionHistory() {
   const typeLabel = (type) => type === "INBOUND" ? "자재입고" : "생산투입";
 
   const transactionColumns = [
-    { key: "occurredAt", label: "일시", width: 145, align: "center" },
+    { key: "occurredAt", label: "일시", width: 170, align: "center" },
     {
       key: "type",
       label: "구분",
-      width: 110,
+      width: 120,
       align: "center",
       render: (type) => (
         <TypeBadge $type={type}>
@@ -255,11 +255,11 @@ function MaterialTransactionHistory() {
         </TypeBadge>
       ),
     },
-    { key: "materialName", label: "자재명", width: 160, align: "center" },
+    { key: "materialName", label: "자재명", width: 100, align: "center" },
     {
       key: "productLotNo",
       label: "제품 LOT",
-      width: 160,
+      width: 165,
       align: "center",
       render: (lotNo) => lotNo === "-" ? "-" : <LotNumber>{lotNo}</LotNumber>,
     },
@@ -311,7 +311,7 @@ function MaterialTransactionHistory() {
           ] }]}
           keywordLabel="통합 검색"
           keywordPlaceholder="자재명 / 자재 LOT / 제품 LOT 검색"
-          keywordWidth="calc(100% - 570px)"
+          keywordWidth={220}
           flexWrap="nowrap"
           inputHeight={38}
           padding={0}
@@ -330,18 +330,12 @@ function MaterialTransactionHistory() {
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
           visiblePages={7}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setCurrentPage}
           onRowClick={setSelectedTransaction}
           tableProps={{
-            minWidth: 1050,
             tableLayout: "fixed",
-            headerHeight: 40,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
             headerBackground: "#f1f3f6",
           }}
         />

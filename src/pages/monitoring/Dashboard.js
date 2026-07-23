@@ -33,55 +33,50 @@ const HOURLY_PRODUCTION_DATA = [
 ];
 
 const DASHBOARD_TABLE_PROPS = {
-  minWidth: 0,
   tableLayout: "fixed",
-  headerHeight: 42,
-  rowHeight: 48,
-  cellPadding: "0 10px",
-  fontSize: 12,
   headerBackground: "#f5f7fa",
 };
 
 const DASHBOARD_PAGINATION_PROPS = {
   visiblePages: 3,
   showFirstLast: false,
-  height: 50,
-  padding: 8,
-  gap: 4,
-  buttonSize: 30,
-  fontSize: 12,
-  background: "#f8f9fb",
+  background: "#ffffff",
   borderTop: "1px solid var(--color-border)",
 };
 
 // 레이아웃 스타일링
 const DashboardWrapper = styled.div`
   background-color: var(--color-bg-canvas);
-  padding: 30px 32px 44px;
+  padding: var(--page-container-padding);
   font-family: var(--font-family-base);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--page-section-gap);
 `;
 
 const Header = styled.div`
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   h1 {
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--color-text);
+    margin: 0;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-line-height);
+    font-weight: var(--page-title-weight);
+    letter-spacing: var(--page-title-letter-spacing);
+    color: var(--page-title-color);
   }
   p {
-    font-size: 14px;
-    color: var(--color-neutral);
-    margin-top: 6px;
+    font-size: var(--page-subtitle-size);
+    font-weight: var(--page-subtitle-weight);
+    line-height: var(--page-subtitle-line-height);
+    color: var(--page-subtitle-color);
+    margin-top: var(--page-title-subtitle-gap);
   }
 `;
 
 const KpiGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--page-box-gap);
 
   @media (max-width: 850px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -102,7 +97,7 @@ const getDescriptionColor = (type) => {
 const SectionGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 24px;
+  gap: var(--page-box-gap);
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
   }
@@ -111,7 +106,7 @@ const SectionGrid = styled.div`
 const BoardCard = styled.div`
   background-color: var(--color-bg);
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: var(--page-panel-padding);
   box-shadow: var(--shadow-card);
   border: 1px solid var(--color-border);
 `;
@@ -150,20 +145,35 @@ const StateBadge = styled.span`
       : "var(--color-text-inverse)"};
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  font-size: 12px;
+  font-weight: 600;
 `;
 
 const MachineNameWrapper = styled.div`
   display: flex;
   flex-direction: column;
   div:first-child {
-    font-weight: var(--font-weight-bold);
+    color: #252a32;
+    font-size: 13px;
+    font-weight: 600;
   }
   div:last-child {
-    font-size: 11px;
-    color: var(--color-neutral);
+    color: #737b88;
+    font-size: 13px;
+    font-weight: 400;
   }
+`;
+
+const MaterialCode = styled.strong`
+  color: #174b9c;
+  font-size: 13px;
+  font-weight: 600;
+`;
+
+const StockText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
 `;
 
 const ChartBox = styled.div`
@@ -439,50 +449,32 @@ function DashBoard() {
 
   // 자재 현황
   const materialColumns = [
-    { key: "code", label: "자재 코드" },
-    { key: "name", label: "자재명" },
+    { key: "code", label: "자재 코드", width: 135 },
+    { key: "name", label: "자재명", width: 110 },
     { key: "stock", label: "현재 재고" },
-    { key: "unit", label: "단위" },
+    { key: "unit", label: "단위", width: 80 },
   ];
 
   const [materialRows] = useState([
     {
       id: 1,
-      code: (
-        <span style={{ fontFamily: "var(--font-family-mono)" }}>
-          MAT-V12-001
-        </span>
-      ),
+      code: <MaterialCode>MAT-V12-001</MaterialCode>,
       name: "Lithium-ion Cell",
-      stock: (
-        <strong style={{ fontWeight: "var(--font-weight-bold)" }}>4,250</strong>
-      ),
+      stock: <StockText>4,250</StockText>,
       unit: "EA",
     },
     {
       id: 2,
-      code: (
-        <span style={{ fontFamily: "var(--font-family-mono)" }}>
-          MAT-V12-042
-        </span>
-      ),
+      code: <MaterialCode>MAT-V12-042</MaterialCode>,
       name: "Copper Plate",
-      stock: (
-        <strong style={{ fontWeight: "var(--font-weight-bold)" }}>120</strong>
-      ),
+      stock: <StockText>120</StockText>,
       unit: "KG",
     },
     {
       id: 3,
-      code: (
-        <span style={{ fontFamily: "var(--font-family-mono)" }}>
-          MAT-V12-089
-        </span>
-      ),
+      code: <MaterialCode>MAT-V12-089</MaterialCode>,
       name: "Separator",
-      stock: (
-        <strong style={{ fontWeight: "var(--font-weight-bold)" }}>850</strong>
-      ),
+      stock: <StockText>850</StockText>,
       unit: "M",
     },
   ]);

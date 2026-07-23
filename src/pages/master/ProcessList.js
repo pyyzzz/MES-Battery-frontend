@@ -24,34 +24,39 @@ import ProcessDetail from "./ProcessDetail";
 /* Styled Components */
 const Container = styled.div`
   min-height: 100%;
-  padding: 24px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--page-section-gap);
+  background: #f7f8fa;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 2px;
 
   .title-group {
     h2 {
-      margin: 0 0 6px;
-      font-size: 30px;
-      font-weight: 600;
-      letter-spacing: -0.8px;
-      color: #17191d;
+      margin: 0;
+      font-size: var(--page-title-size);
+      line-height: var(--page-title-line-height);
+      font-weight: var(--page-title-weight);
+      letter-spacing: var(--page-title-letter-spacing);
+      color: var(--page-title-color);
       display: flex;
       align-items: center;
       gap: 8px;
     }
     p {
-      margin: 0;
-      font-size: 14px;
-      color: #888f9c;
+      margin: var(--page-title-subtitle-gap) 0 0;
+      font-size: var(--page-subtitle-size);
+      font-weight: var(--page-subtitle-weight);
+      line-height: var(--page-subtitle-line-height);
+      color: var(--page-subtitle-color);
     }
   }
 `;
@@ -78,7 +83,7 @@ const HeaderActionButton = styled(Button)`
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: var(--page-box-gap);
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -91,15 +96,17 @@ const ProcessSummaryCard = styled(SummaryCard)`
 `;
 
 const StyledFilterPanel = styled.section`
-  padding: 22px;
+  padding: var(--page-panel-padding);
   background: #ffffff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const PanelTitle = styled.h2`
-  margin: 0 0 18px;
-  font-size: 17px;
+  margin: 0 0 14px;
+  color: #292d35;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -128,6 +135,7 @@ const TablePanel = styled.section`
   background: #ffffff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const TableTop = styled.div`
@@ -141,7 +149,7 @@ const TableTop = styled.div`
 
 const TableTitle = styled.h2`
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -157,15 +165,22 @@ const TableSummary = styled.span`
 
 const CodeText = styled.strong`
   color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
+`;
+
+const ProcessNameText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
 `;
 
 const StatusBadge = styled.span`
   display: inline-block;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  font-weight: 600;
   text-align: center;
   min-width: 60px;
 
@@ -360,15 +375,16 @@ export default function ProcessList() {
 
   const columns = [
     { key: "seq", label: "순서", align: "center", width: 80 },
-    { key: "step_code_badge", label: "공정코드", align: "center", width: 180 },
-    { key: "step_name", label: "공정명", align: "left", width: 320 },
+    { key: "step_code_badge", label: "공정코드", align: "center", width: 170 },
+    { key: "step_name", label: "공정명", align: "center", width: 170 },
     { key: "status_badge", label: "상태", align: "center", width: 140 },
-    { key: "management", label: "관리", align: "center", width: 90 },
+    { key: "management", label: "관리", align: "center", width: 120 },
   ];
 
   const tableRows = filteredRows.map((row) => ({
     ...row,
     step_code_badge: <CodeText>{row.step_code}</CodeText>,
+    step_name: <ProcessNameText>{row.step_name}</ProcessNameText>,
     status_badge: (
       <StatusBadge $isActive={row.is_active}>
         {row.is_active ? "사용" : "미사용"}
@@ -514,7 +530,6 @@ export default function ProcessList() {
             inputHeight={38}
             border="none"
             padding={0}
-            gap={16}
             width="100%"
           />
         </FilterBarWrapper>
@@ -536,18 +551,12 @@ export default function ProcessList() {
           totalItems={tableRows.length}
           itemsPerPage={8}
           visiblePages={5}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setPage}
           onRowClick={handleRowClick}
           tableProps={{
-            minWidth: 900,
             tableLayout: "fixed",
-            headerHeight: 46,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
             headerBackground: "#f1f3f6",
             emptyText: "조건에 맞는 공정이 존재하지 않습니다.",
           }}
