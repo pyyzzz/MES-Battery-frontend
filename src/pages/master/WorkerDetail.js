@@ -87,10 +87,10 @@ export default function WorkerDetail({ worker, onClose, onEdit }) {
               <Value>{worker.role}</Value>
             </Field>
             <Field>
-              <Label>재직 상태</Label>
+              <Label>출퇴근 상태</Label>
               <Status $active={active}>
                 <FiUser />
-                {active ? "재직" : "퇴사"}
+                {active ? "출근" : "퇴근"}
               </Status>
             </Field>
             <Field>
@@ -264,7 +264,7 @@ const Value = styled.div`
   font-weight: 700;
 `;
 
-// isActive 값에 따라 재직/퇴사 색상이 바뀌는 상태 박스
+// isActive 값에 따라 출근/퇴근 색상이 바뀌는 상태 박스
 const Status = styled(Value)`
   min-height: 24px;
   width: fit-content;
