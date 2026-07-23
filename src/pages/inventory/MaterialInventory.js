@@ -485,10 +485,10 @@ function MaterialInventory() {
           </ChartPanel>
 
           <SummaryGrid>
-            <InventorySummaryCard height={128} padding={18} gap={14} icon={<FiPackage />} iconBoxSize={50} iconSize={24} title="전체 자재" titleFontSize={13} value={summary.total} valueFontSize={25} />
-            <InventorySummaryCard height={128} padding={18} gap={14} icon={<FiShield />} iconBoxSize={50} iconSize={24} iconBackground="#e7f8ee" iconColor="#16a461" title="안전" titleFontSize={13} value={summary.safe} valueFontSize={25} />
-            <InventorySummaryCard height={128} padding={18} gap={14} icon={<FiAlertTriangle />} iconBoxSize={50} iconSize={24} iconBackground="#fff5df" iconColor="#e39400" title="주의" titleFontSize={13} value={summary.warning} valueFontSize={25} />
-            <InventorySummaryCard height={128} padding={18} gap={14} icon={<FiXCircle />} iconBoxSize={50} iconSize={24} iconBackground="#fdebec" iconColor="#d92d34" title="경고(품절)" titleFontSize={13} value={summary.danger} valueFontSize={25} />
+            <InventorySummaryCard height={128} gap={14} icon={<FiPackage />} iconBoxSize={50} iconSize={24} title="전체 자재" titleFontSize={13} value={summary.total} valueFontSize={25} />
+            <InventorySummaryCard height={128} gap={14} icon={<FiShield />} iconBoxSize={50} iconSize={24} iconBackground="#e7f8ee" iconColor="#16a461" title="안전" titleFontSize={13} value={summary.safe} valueFontSize={25} />
+            <InventorySummaryCard height={128} gap={14} icon={<FiAlertTriangle />} iconBoxSize={50} iconSize={24} iconBackground="#fff5df" iconColor="#e39400" title="주의" titleFontSize={13} value={summary.warning} valueFontSize={25} />
+            <InventorySummaryCard height={128} gap={14} icon={<FiXCircle />} iconBoxSize={50} iconSize={24} iconBackground="#fdebec" iconColor="#d92d34" title="경고(품절)" titleFontSize={13} value={summary.danger} valueFontSize={25} />
           </SummaryGrid>
         </OverviewGrid>
 

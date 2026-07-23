@@ -513,7 +513,6 @@ export default function MachineList() {
       <SummaryGrid>
         <MachineSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiArchive />}
           iconBoxSize={50}
@@ -529,7 +528,6 @@ export default function MachineList() {
 
         <MachineSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiSettings />}
           iconBoxSize={50}
@@ -545,7 +543,6 @@ export default function MachineList() {
 
         <MachineSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiAlertTriangle />}
           iconBoxSize={50}
@@ -564,7 +561,6 @@ export default function MachineList() {
 
         <MachineSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiCheckCircle />}
           iconBoxSize={50}

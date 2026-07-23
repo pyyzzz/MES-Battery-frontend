@@ -1122,8 +1122,7 @@ function ProductionReport() {
 
         <SummaryGrid>
           <ReportSummaryCard
-            height={110}
-            padding={16}
+            height={116}
             gap={12}
             icon={<FiTrendingUp />}
             iconBoxSize={48}
@@ -1137,8 +1136,7 @@ function ProductionReport() {
           />
 
           <ReportSummaryCard
-            height={110}
-            padding={16}
+            height={116}
             gap={12}
             icon={<FiPackage />}
             iconBoxSize={48}
@@ -1152,8 +1150,7 @@ function ProductionReport() {
           />
 
           <ReportSummaryCard
-            height={110}
-            padding={16}
+            height={116}
             gap={12}
             icon={<FiCheckCircle />}
             iconBoxSize={48}
@@ -1167,8 +1164,7 @@ function ProductionReport() {
           />
 
           <ReportSummaryCard
-            height={110}
-            padding={16}
+            height={116}
             gap={12}
             icon={<FiXCircle />}
             iconBoxSize={48}
@@ -1182,8 +1178,7 @@ function ProductionReport() {
           />
 
           <ReportSummaryCard
-            height={110}
-            padding={16}
+            height={116}
             gap={12}
             icon={<FiActivity />}
             iconBoxSize={48}

@@ -255,7 +255,6 @@ export default function WorkerList() {
       <SummaryGrid>
         <StatusSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiUsers />}
           iconBoxSize={50}
@@ -270,7 +269,6 @@ export default function WorkerList() {
 
         <StatusSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiUserCheck />}
           iconBoxSize={50}
@@ -285,7 +283,6 @@ export default function WorkerList() {
 
         <StatusSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiUserX />}
           iconBoxSize={50}

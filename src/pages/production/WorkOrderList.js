@@ -522,7 +522,6 @@ export default function WorkOrderList() {
         <SummaryGrid>
           <StatusSummaryCard
             height={116}
-            padding={18}
             gap={14}
             icon={<FiCheckCircle />}
             iconBoxSize={50}
@@ -537,7 +536,6 @@ export default function WorkOrderList() {
 
           <StatusSummaryCard
             height={116}
-            padding={18}
             gap={14}
             icon={<FiPlayCircle />}
             iconBoxSize={50}
@@ -552,7 +550,6 @@ export default function WorkOrderList() {
 
           <StatusSummaryCard
             height={116}
-            padding={18}
             gap={14}
             icon={<FiClock />}
             iconBoxSize={50}

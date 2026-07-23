@@ -466,7 +466,6 @@ export default function ProcessList() {
       <SummaryGrid>
         <ProcessSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiCpu />}
           iconBoxSize={50}
@@ -482,7 +481,6 @@ export default function ProcessList() {
 
         <ProcessSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiActivity />}
           iconBoxSize={50}
@@ -498,7 +496,6 @@ export default function ProcessList() {
 
         <ProcessSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiSlash />}
           iconBoxSize={50}

@@ -531,7 +531,6 @@ function DashBoard() {
             description={kpi.subText}
             descriptionColor={getDescriptionColor(kpi.subType)}
             height={120}
-            padding={18}
             gap={14}
             iconBoxSize={50}
             iconSize={24}
