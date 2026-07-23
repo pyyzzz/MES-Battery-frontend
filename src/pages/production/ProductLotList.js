@@ -144,15 +144,15 @@ const LOTS = [
   },
 ];
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 8;
 
 const TABLE_COLUMNS = [
   { key: "no", label: "NO" },
   { key: "lotNoCell", label: "LOT ID" },
   { key: "productNameCell", label: "제품명" },
   { key: "workOrderCell", label: "작업지시 번호" },
-  { key: "inspectionQtyCell", label: "검사 수량", align: "right" },
-  { key: "resultCell", label: "합격 / 불합격", align: "right" },
+  { key: "inspectionQtyCell", label: "검사 수량" },
+  { key: "resultCell", label: "합격 / 불합격" },
   { key: "createdCell", label: "LOT 생성일" },
   { key: "statusCell", label: "LOT 상태" },
 ];
@@ -168,6 +168,19 @@ const getStatusTone = (status) => {
 // 숫자를 한국식 천 단위 콤마로 표시하기 위한 formatter
 // 예: 5000 -> "5,000"
 const formatNumber = new Intl.NumberFormat("ko-KR");
+
+const formatCreatedAt = (date, time) => {
+  const match = time.match(/(오전|오후)\s*(\d{1,2}):(\d{2})/);
+  if (!match) return `${date} ${time}`;
+
+  const [, period, hourText, minute] = match;
+  const hour = Number(hourText);
+  const normalizedHour = period === "오후"
+    ? (hour % 12) + 12
+    : hour % 12;
+
+  return `${date} ${String(normalizedHour).padStart(2, "0")}:${minute}`;
+};
 
 // 검색 조건의 초기값
 // 초기화 버튼을 누르거나 화면이 처음 열릴 때 이 값으로 시작
@@ -261,10 +274,7 @@ export default function ProductLotList() {
       </>
     ),
     createdCell: (
-      <>
-        <CreatedDate>{lot.createdDate.replaceAll("-", ". ")}</CreatedDate>
-        <SubText>{lot.createdTime}</SubText>
-      </>
+      <DateTimeText>{formatCreatedAt(lot.createdDate, lot.createdTime)}</DateTimeText>
     ),
     statusCell: (
       <Status tone={getStatusTone(lot.status)} $status={lot.status}>
@@ -410,7 +420,7 @@ export default function ProductLotList() {
               itemsPerPage={PAGE_SIZE}
               onPageChange={setPage}
               onRowClick={(row) => openLotDetail(row.originalLot)}
-              tableProps={{ minWidth: 1050 }}
+              tableProps={{ minWidth: 1170 }}
             />
           </TableArea>
         </TablePanel>
@@ -428,26 +438,21 @@ export default function ProductLotList() {
 // 완제품 LOT 목록 화면 전체 영역
 const Page = styled.main`
   min-height: 100vh;
-  padding: 34px 30px 48px;
+  padding: var(--page-container-padding);
   background: #f8f8fe;
   color: #172033;
-  @media (max-width: 720px) {
-    padding: 24px 16px 40px;
-  }
 `;
 // 화면 내용을 가운데 정렬하고 최대 너비를 제한하는 컨테이너
 const Content = styled.div`
   width: 100%;
-  max-width: 1240px;
-  margin: 0 auto;
 `;
 // 페이지 제목/설명을 배치하는 상단 영역
 const Header = styled.header`
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 28px;
+  gap: var(--page-section-gap);
+  margin-bottom: var(--page-header-content-gap);
   @media (max-width: 760px) {
     align-items: flex-start;
     flex-direction: column;
@@ -455,24 +460,27 @@ const Header = styled.header`
 `;
 // "완제품 LOT 목록" 같은 페이지 메인 제목에 사용
 const Title = styled.h1`
-  font-size: 27px;
-  line-height: 1.2;
-  font-weight: 650;
-  letter-spacing: -0.035em;
+  margin: 0;
+  color: var(--page-title-color);
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
 `;
 // 제목 아래 안내 문구에 사용
 const Description = styled.p`
-  margin-top: 8px;
-  color: #687184;
-  font-size: 13px;
-  line-height: 1.5;
+  margin-top: var(--page-title-subtitle-gap);
+  color: var(--page-subtitle-color);
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
 `;
 
 const SummaryGrid = styled.section`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 22px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 760px) {
     grid-template-columns: 1fr;
@@ -485,17 +493,17 @@ const StatusSummaryCard = styled(SummaryCard)`
 `;
 
 const FilterPanel = styled.section`
-  padding: 18px 20px;
+  padding: var(--page-panel-padding);
   border: 1px solid #d7dde8;
   border-radius: 12px;
   background: #fff;
 `;
 
 const FilterTitle = styled.h2`
-  margin: 0 0 12px;
-  color: #172033;
-  font-size: 15px;
-  font-weight: 700;
+  margin: 0 0 14px;
+  color: #292d35;
+  font-size: 16px;
+  font-weight: 600;
 `;
 
 // 테이블 전체를 감싸는 카드형 영역
@@ -536,19 +544,12 @@ const TableArea = styled.div`
     border-radius: 0;
   }
 
-  table {
-    min-width: 1050px;
-  }
-
   th {
-    padding: 12px 14px;
     border-bottom: 1px solid #e3e7ed;
     vertical-align: middle;
     background: #f1f3f6;
     color: #535b68;
-    font-size: 13px;
     font-weight: 600;
-    line-height: 1.2;
     text-align: center !important;
   }
 
@@ -557,35 +558,32 @@ const TableArea = styled.div`
   }
 
   th:first-child {
-    width: 5%;
+    width: 6%;
   }
   th:nth-child(2) {
     width: 16%;
   }
   th:nth-child(3) {
-    width: 20%;
+    width: 17%;
   }
   th:nth-child(4) {
     width: 16%;
   }
   th:nth-child(5) {
-    width: 10%;
+    width: 9%;
   }
   th:nth-child(6) {
-    width: 14%;
+    width: 12%;
   }
   th:nth-child(7) {
-    width: 11%;
+    width: 14%;
   }
   th:last-child {
-    width: 8%;
+    width: 11%;
   }
 
   td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #e3e7ed;
     color: #252a32;
-    font-size: 13px;
     text-align: center !important;
     vertical-align: middle;
     white-space: nowrap;
@@ -603,37 +601,34 @@ const TableArea = styled.div`
 const LotLink = styled.button`
   color: #174b9c;
   font-family: var(--font-family-base);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  text-align: left;
+  text-align: center;
 `;
 // 테이블의 제품명 텍스트
 const ProductName = styled.div`
-  color: #2c3548;
-  font-weight: 600;
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
 `;
 // 독립된 작업지시 번호 열의 텍스트
 const WorkOrderText = styled.div`
-  color: #536174;
-  font-size: 11px;
-  font-weight: 500;
-`;
-// 생성 시간처럼 날짜 아래 보조 정보를 작게 표시할 때 사용
-const SubText = styled.div`
-  margin-top: 4px;
-  color: #586376;
-  font-family: var(--font-family-base);
-  font-size: 10px;
-`;
-// LOT 생성일 날짜 텍스트
-const CreatedDate = styled.div`
-  font-size: 11px;
+  color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
+`;
+// inventory 테이블과 동일한 한 줄 날짜·시간 형식
+const DateTimeText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
 `;
 // 합격 수량을 강조해서 보여주는 숫자
 const Good = styled.span`
   color: #00499c;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 `;
 // 합격 수량과 불합격 수량 사이의 '/'
 const Divider = styled.span`
@@ -643,14 +638,16 @@ const Divider = styled.span`
 // 불합격 수량을 표시하는 숫자 스타일
 const Defect = styled.span`
   color: #697286;
+  font-size: 13px;
+  font-weight: 600;
 `;
 // 공용 Badge를 기반으로 만든 LOT 상태 배지
 // 공용 컴포넌트를 쓰되, 기존 LOT 화면의 색상/크기/점 표시는 유지
 const Status = styled(Badge)`
   gap: 5px;
-  padding: 4px 10px;
-  font-size: 10px;
-  font-weight: 650;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
   color: ${({ $status }) =>
     $status === "생산완료"
       ? "#168853"

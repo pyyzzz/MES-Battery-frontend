@@ -26,18 +26,20 @@ import MachineDetail from "./MachineDetail";
 /* ================= Styled Components ================= */
 const Container = styled.div`
   min-height: 100%;
-  padding: 24px; /* 💡 화면 테두리에 붙지 않도록 여백 복원 */
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--page-section-gap);
+  background: #f7f8fa;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 2px;
 `;
 
 const HeaderActionButton = styled(Button)`
@@ -62,20 +64,23 @@ const HeaderActionButton = styled(Button)`
 const TitleSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--page-title-subtitle-gap);
 
   h2 {
     margin: 0;
-    font-size: 30px;
-    font-weight: 600;
-    letter-spacing: -0.8px;
-    color: #17191d;
+    font-size: var(--page-title-size);
+    line-height: var(--page-title-line-height);
+    font-weight: var(--page-title-weight);
+    letter-spacing: var(--page-title-letter-spacing);
+    color: var(--page-title-color);
   }
 
   p {
     margin: 0;
-    font-size: 14px;
-    color: #888f9c;
+    font-size: var(--page-subtitle-size);
+    font-weight: var(--page-subtitle-weight);
+    line-height: var(--page-subtitle-line-height);
+    color: var(--page-subtitle-color);
     font-weight: var(--font-weight-normal);
   }
 `;
@@ -83,7 +88,7 @@ const TitleSection = styled.div`
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--page-box-gap);
 
   @media (max-width: 1024px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -99,15 +104,17 @@ const MachineSummaryCard = styled(SummaryCard)`
 `;
 
 const StyledFilterPanel = styled.section`
-  padding: 22px;
+  padding: var(--page-panel-padding);
   background: #ffffff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const PanelTitle = styled.h2`
-  margin: 0 0 18px;
-  font-size: 17px;
+  margin: 0 0 14px;
+  color: #292d35;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -137,6 +144,7 @@ const TablePanel = styled.section`
   background: #ffffff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const TableTop = styled.div`
@@ -414,18 +422,18 @@ export default function MachineList() {
 
   const columns = [
     { key: "machine_id", label: "ID", align: "center", width: 70 },
-    { key: "process_id_cell", label: "공정코드", align: "center", width: 130 },
+    { key: "process_id_cell", label: "공정코드", align: "center", width: 110 },
     {
       key: "machine_code_cell",
       label: "설비코드",
       align: "center",
-      width: 130,
+      width: 110,
     },
-    { key: "machine_name", label: "설비명", align: "left", width: 130 },
-    { key: "status_badge", label: "설비상태", align: "center", width: 120 },
-    { key: "use_yn_badge", label: "사용 여부", align: "center", width: 120 },
-    { key: "message_el", label: "메시지", align: "left", width: 200 },
-    { key: "management", label: "관리", align: "center", width: 90 },
+    { key: "machine_name", label: "설비명", align: "center", width: 130 },
+    { key: "status_badge", label: "설비상태", align: "center", width: 100 },
+    { key: "use_yn_badge", label: "사용 여부", align: "center", width: 100 },
+    { key: "message_el", label: "메시지", align: "center", width: 200 },
+    { key: "management", label: "관리", align: "center", width: 120 },
   ];
 
   const rows = filteredRows.map((mac) => {
@@ -585,7 +593,6 @@ export default function MachineList() {
             inputHeight={38}
             border="none"
             padding={0}
-            gap={16}
             width="100%"
             filters={[
               {
@@ -645,18 +652,12 @@ export default function MachineList() {
           totalItems={rows.length}
           itemsPerPage={8}
           visiblePages={5}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setPage}
           onRowClick={handleRowClick}
           tableProps={{
-            minWidth: 1000,
             tableLayout: "fixed",
-            headerHeight: 46,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
             headerBackground: "#f1f3f6",
             emptyText: "조회된 설비 내역이 존재하지 않습니다.",
           }}

@@ -164,7 +164,7 @@ const INITIAL_ORDERS = [
 ];
 
 // 한 페이지에 표시할 개수
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 
 // 등록/수정 드로어 기본값
 // 백엔드 등록/수정 DTO와 연결하기 쉬운 이름으로 맞춤
@@ -272,23 +272,13 @@ export default function WorkOrderList() {
       </StatusBadge>
     ),
 
-    startCell: order.startedAt ? (
-      <>
-        <div>{order.startedAt.split(" ")[0]}</div>
-        <Small>{order.startedAt.split(" ")[1]}</Small>
-      </>
-    ) : (
-      "-"
-    ),
+    startCell: order.startedAt
+      ? <DateTimeText>{order.startedAt}</DateTimeText>
+      : "-",
 
-    completedCell: order.completedAt ? (
-      <>
-        <div>{order.completedAt.split(" ")[0]}</div>
-        <Small>{order.completedAt.split(" ")[1]}</Small>
-      </>
-    ) : (
-      "-"
-    ),
+    completedCell: order.completedAt
+      ? <DateTimeText>{order.completedAt}</DateTimeText>
+      : "-",
 
     // 수정/삭제 버튼
     actionCell: (
@@ -620,7 +610,6 @@ export default function WorkOrderList() {
             keywordPlaceholder="WO-..."
             keywordWidth={190}
             dateWidth={120}
-            gap={10}
             startDateName="dueStartAt"
             endDateName="dueEndAt"
             startDateLabel={`${dateFilterLabel} 시작`}
@@ -657,7 +646,7 @@ export default function WorkOrderList() {
               itemsPerPage={PAGE_SIZE}
               onPageChange={setPage}
               onRowClick={(row) => openOrderDetail(row.originalOrder)}
-              tableProps={{ minWidth: 1050 }}
+              tableProps={{ minWidth: 1260 }}
             />
           </TableWrap>
         </TableCard>
@@ -687,20 +676,15 @@ export default function WorkOrderList() {
 // 페이지 전체 영역
 const Page = styled.main`
   min-height: calc(100vh - 98px);
-  padding: 30px;
+  padding: var(--page-container-padding);
   background: #f6f8fc;
   color: #172033;
 
-  @media (max-width: 720px) {
-    padding: 20px 14px;
-  }
 `;
 
 // 페이지 최대 너비
 const Content = styled.div`
   width: 100%;
-  max-width: 1240px;
-  margin: 0 auto;
 `;
 
 // 제목과 등록 버튼 영역
@@ -708,8 +692,8 @@ const PageHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 22px;
+  gap: var(--page-section-gap);
+  margin-bottom: var(--page-header-content-gap);
 
   @media (max-width: 560px) {
     align-items: flex-start;
@@ -719,16 +703,21 @@ const PageHeader = styled.header`
 
 // 페이지 제목
 const Title = styled.h1`
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  margin: 0;
+  color: var(--page-title-color);
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
 `;
 
 // 제목 아래 설명
 const Description = styled.p`
-  margin-top: 7px;
-  color: #738095;
-  font-size: 13px;
+  margin-top: var(--page-title-subtitle-gap);
+  color: var(--page-subtitle-color);
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
 `;
 
 // 목록 상단 주요 액션 버튼 공통 규격
@@ -747,8 +736,8 @@ const HeaderActionButton = styled(Button)`
 const SummaryGrid = styled.section`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 22px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 650px) {
     grid-template-columns: 1fr;
@@ -761,18 +750,18 @@ const StatusSummaryCard = styled(SummaryCard)`
 `;
 
 const FilterBlock = styled.div`
-  padding: 18px 20px;
+  padding: var(--page-panel-padding);
   border: 1px solid #d7dde8;
   border-radius: 12px;
   background: #fff;
-  margin-bottom: 28px;
+  margin-bottom: var(--page-section-gap);
 `;
 
 const FilterTitle = styled.h2`
-  margin: 0 0 12px;
-  color: #172033;
-  font-size: 15px;
-  font-weight: 700;
+  margin: 0 0 14px;
+  color: #292d35;
+  font-size: 16px;
+  font-weight: 600;
 `;
 
 // 표 전체 카드
@@ -817,19 +806,15 @@ const TableWrap = styled.div`
 
   table {
     width: 100%;
-    min-width: 1150px;
     table-layout: fixed;
   }
 
   th {
-    padding: 12px 14px;
     border-bottom: 1px solid #e3e7ed;
     vertical-align: middle;
     background: #f1f3f6;
     color: #535b68;
-    font-size: 13px;
     font-weight: 600;
-    line-height: 1.2;
     text-align: center !important;
     white-space: nowrap;
   }
@@ -840,13 +825,12 @@ const TableWrap = styled.div`
   }
 
   th:first-child {
-    width: 5%;
-    padding-left: 14px;
+    width: 7%;
     text-align: center !important;
   }
 
   th:nth-child(2) {
-    width: 17%;
+    width: 18%;
     text-align: center !important;
   }
 
@@ -855,45 +839,38 @@ const TableWrap = styled.div`
   }
 
   th:nth-child(4) {
-    width: 8%;
+    width: 10%;
   }
 
   th:nth-child(5) {
-    width: 7%;
+    width: 9%;
   }
 
   th:nth-child(6) {
-    width: 9%;
+    width: 13%;
   }
 
   th:nth-child(7) {
-    width: 8%;
+    width: 10%;
   }
 
   th:nth-child(8) {
-    width: 11%;
+    width: 16%;
   }
 
   th:nth-child(9) {
-    width: 11%;
+    width: 16%;
   }
 
   th:nth-child(10) {
-    width: 9%;
+    width: 11%;
   }
 
   td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #e3e7ed;
     color: #252a32;
-    font-size: 13px;
     text-align: center !important;
     vertical-align: middle;
     white-space: nowrap;
-  }
-
-  td:first-child {
-    padding-left: 14px;
   }
 
   /* 작업지시 번호와 제품명 줄바꿈 */
@@ -917,41 +894,30 @@ const TableWrap = styled.div`
     border-bottom: 0;
   }
 
-  @media (max-width: 1000px) {
-    th,
-    td {
-      padding-left: 14px;
-      padding-right: 14px;
-    }
-
-    th:first-child,
-    td:first-child {
-      padding-left: 14px;
-    }
-  }
 `;
 
 // 작업지시 번호
 const OrderNo = styled.span`
-  display: -webkit-box;
-  overflow: hidden;
   color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
 `;
 
-// 시작 시간의 시간 부분
-const Small = styled.div`
-  margin-top: 3px;
-  color: #697589;
-  font-size: 10px;
+// inventory 테이블과 동일한 한 줄 날짜·시간 형식
+const DateTimeText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
 `;
 
 // 상태 배지
 const StatusBadge = styled(Badge)`
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+
   background: ${(props) =>
     props.$status === "진행중"
       ? "#e7f0ff"

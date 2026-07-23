@@ -17,15 +17,15 @@ import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
 
 const TABLE_COLUMNS = [
-  { key: "number", label: "No", width: 48, align: "center" },
+  { key: "number", label: "No", width: 70, align: "center" },
   { key: "code", label: "자재 코드", width: 190, align: "center" },
   { key: "name", label: "자재명" },
   { key: "stock", label: "재고", align: "center" },
   { key: "safetyStock", label: "안전재고", align: "center" },
-  { key: "unit", label: "단위", width: 65, align: "center" },
+  { key: "unit", label: "단위", width: 70, align: "center" },
   { key: "status", label: "재고 상태", align: "center" },
-  { key: "lastInboundAt", label: "최근 입고일자", width: 150, align: "center" },
-  { key: "registeredAt", label: "자재등록일자", width: 120, align: "center" },
+  { key: "lastInboundAt", label: "최근 입고일자", width: 170, align: "center" },
+  { key: "registeredAt", label: "자재등록일자", width: 130, align: "center" },
 ];
 
 const INITIAL_MATERIALS = [
@@ -52,34 +52,37 @@ const formatNumber = (value) => Number(value).toLocaleString();
 
 const Page = styled.div`
   min-height: 100%;
-  padding: 28px 32px 44px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   background: #f7f8fa;
 `;
 
 const PageHeader = styled.header`
-  margin-bottom: 22px;
+  margin-bottom: var(--page-header-content-gap);
 `;
 
 const PageTitle = styled.h1`
   margin: 0;
-  color: #17191d;
-  font-size: 30px;
-  font-weight: 650;
-  letter-spacing: -0.8px;
+  color: var(--page-title-color);
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
 `;
 
 const PageDescription = styled.p`
-  margin: 7px 0 0;
-  color: #818896;
-  font-size: 14px;
+  margin: var(--page-title-subtitle-gap) 0 0;
+  color: var(--page-subtitle-color);
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
 `;
 
 const OverviewGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(360px, 1.35fr) minmax(460px, 1fr);
-  gap: 18px;
-  margin-bottom: 20px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
@@ -87,7 +90,7 @@ const OverviewGrid = styled.div`
 `;
 
 const Panel = styled.section`
-  padding: 20px 22px;
+  padding: var(--page-panel-padding);
   background: #fff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
@@ -95,7 +98,7 @@ const Panel = styled.section`
 `;
 
 const PanelTitle = styled.h2`
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   color: #292d35;
   font-size: 16px;
   font-weight: 600;
@@ -108,7 +111,7 @@ const ChartPanel = styled(Panel)`
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--page-box-gap);
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -121,7 +124,7 @@ const InventorySummaryCard = styled(SummaryCard)`
 `;
 
 const FilterPanel = styled(Panel)`
-  margin-bottom: 20px;
+  margin-bottom: var(--page-section-gap);
 `;
 
 const TablePanel = styled.section`
@@ -503,7 +506,7 @@ function MaterialInventory() {
             ] }]}
             keywordLabel="통합 검색"
             keywordPlaceholder="자재명 / 자재코드 검색"
-            keywordWidth="calc(100% - 570px)"
+            keywordWidth={220}
             flexWrap="nowrap"
             inputHeight={38}
             padding={0}
@@ -525,18 +528,12 @@ function MaterialInventory() {
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             visiblePages={5}
-            height={66}
-            background="#f5f6f8"
+            background="#ffffff"
             borderTop="1px solid #e2e6ed"
             onPageChange={setCurrentPage}
             onRowClick={(row) => setSelectedMaterial(row.material)}
             tableProps={{
-              minWidth: 1050,
               tableLayout: "fixed",
-              headerHeight: 46,
-              rowHeight: 46,
-              cellPadding: "0 14px",
-              fontSize: 13,
               headerBackground: "#f1f3f6",
             }}
           />

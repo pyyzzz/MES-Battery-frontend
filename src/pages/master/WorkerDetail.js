@@ -4,7 +4,7 @@ import { FiUser, FiX } from "react-icons/fi";
 import CommonPagination from "../../components/ui/Pagination";
 import Button from "../../components/ui/Button";
 
-const HISTORY_PAGE_SIZE = 5;
+const HISTORY_PAGE_SIZE = 8;
 
 // 작업 이력 API가 붙기 전까지 상세 화면 표를 확인하기 위한 임시 데이터
 const dummyHistory = [
@@ -119,16 +119,6 @@ export default function WorkerDetail({ worker, onClose, onEdit }) {
                 totalItems={history.length}
                 itemsPerPage={HISTORY_PAGE_SIZE}
                 onPageChange={setHistoryPage}
-                height={58}
-                padding={10}
-                buttonSize={34}
-                tableProps={{
-                  minWidth: 500,
-                  headerHeight: 44,
-                  rowHeight: 44,
-                  cellPadding: "0 16px",
-                  fontSize: 12,
-                }}
               />
             </TableWrap>
           </History>
@@ -300,18 +290,13 @@ const TableWrap = styled.div`
 
   table {
     width: 100%;
-    min-width: 500px;
     border-collapse: collapse;
     table-layout: fixed;
   }
 
   th,
   td {
-    height: 44px;
-    padding: 0 16px;
-    border-bottom: 1px solid #e3e7ed;
     color: #303748;
-    font-size: 12px;
     text-align: center;
     vertical-align: middle;
     white-space: nowrap;

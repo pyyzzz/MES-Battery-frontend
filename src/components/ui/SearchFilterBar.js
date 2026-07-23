@@ -30,7 +30,16 @@ const Field = styled.div`
   flex-direction: column;
   gap: 6px;
 
-  width: ${({ $width }) => toCssSize($width, "auto")};
+  width: ${({ $fill, $grow, $width }) =>
+    $fill || $grow ? "auto" : toCssSize($width, "auto")};
+  min-width: ${({ $fill, $width }) =>
+    $fill ? "0" : toCssSize($width, "auto")};
+  flex: ${({ $fill, $grow, $width }) =>
+    $fill
+      ? "1 1 0"
+      : $grow
+        ? `1 1 ${toCssSize($width, "220px")}`
+        : "0 0 auto"};
 `;
 
 const Label = styled.label`
@@ -129,27 +138,17 @@ const Select = styled.select`
   }
 `;
 
-const DateRange = styled.div`
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-`;
-
-const DateSeparator = styled.span`
-  height: ${({ $height }) => toCssSize($height, "36px")};
-
-  display: flex;
-  align-items: center;
-
-  font-size: 13px;
-  color: #64748b;
-`;
-
 const ButtonGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+`;
+
+const FlexBreak = styled.div`
+  flex-basis: 100%;
+  width: 0;
+  height: 0;
 `;
 
 const SearchButton = styled.button`
@@ -201,20 +200,22 @@ const ResetButton = styled.button`
 `;
 
 function SearchFilterBar({
+  className,
   filters = [],
 
   showKeyword = true,
   keywordName = "keyword",
   keywordLabel = "키워드",
   keywordPlaceholder = "검색어를 입력하세요",
-  keywordWidth = 220,
+  keywordWidth = 354,
+  breakBeforeKeyword = false,
 
   showDateRange = true,
   startDateName = "startDate",
   endDateName = "endDate",
   startDateLabel = "시작일",
   endDateLabel = "종료일",
-  dateWidth = 150,
+  filterWidth = 170,
 
   defaultValues = {},
 
@@ -252,6 +253,12 @@ function SearchFilterBar({
   onSearch,
   onReset,
 }) {
+  const nonKeywordFieldCount = filters.length + (showDateRange ? 2 : 0);
+  const shouldFillFilters = showKeyword && nonKeywordFieldCount >= 5;
+  const shouldBreakBeforeKeyword =
+    showKeyword && (breakBeforeKeyword || nonKeywordFieldCount >= 4);
+  const resolvedKeywordWidth = shouldFillFilters ? 354 : keywordWidth;
+
   const createInitialValues = () => {
     const values = { ...defaultValues };
 
@@ -312,8 +319,9 @@ function SearchFilterBar({
 
   return (
     <Container
+      className={className}
       $width={width}
-      $flexWrap={flexWrap}
+      $flexWrap={shouldBreakBeforeKeyword ? "wrap" : flexWrap}
       $padding={padding}
       $gap={gap}
       $background={background}
@@ -321,8 +329,11 @@ function SearchFilterBar({
       $borderRadius={borderRadius}
     >
       {showDateRange && (
-        <DateRange>
-          <Field $width={dateWidth}>
+        <>
+          <Field
+            $width={filterWidth}
+            $fill={shouldFillFilters}
+          >
             <Label
               $color={labelColor}
               $fontSize={labelFontSize}
@@ -347,11 +358,10 @@ function SearchFilterBar({
             />
           </Field>
 
-          <DateSeparator $height={inputHeight}>
-            ~
-          </DateSeparator>
-
-          <Field $width={dateWidth}>
+          <Field
+            $width={filterWidth}
+            $fill={shouldFillFilters}
+          >
             <Label
               $color={labelColor}
               $fontSize={labelFontSize}
@@ -376,13 +386,14 @@ function SearchFilterBar({
               $focusShadow={focusShadow}
             />
           </Field>
-        </DateRange>
+        </>
       )}
 
       {filters.map((filter) => (
         <Field
           key={filter.name}
-          $width={filter.width || 150}
+          $width={filterWidth}
+          $fill={shouldFillFilters}
         >
           <Label
             htmlFor={filter.name}
@@ -423,8 +434,13 @@ function SearchFilterBar({
         </Field>
       ))}
 
+      {shouldBreakBeforeKeyword && <FlexBreak aria-hidden="true" />}
+
       {showKeyword && (
-        <Field $width={keywordWidth}>
+        <Field
+          $width={resolvedKeywordWidth}
+          $grow={!shouldBreakBeforeKeyword}
+        >
           <Label
             htmlFor={keywordName}
             $color={labelColor}

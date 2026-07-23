@@ -209,7 +209,7 @@ const BAR_COLORS = [
 
 const Page = styled.div`
   min-height: 100%;
-  padding: 30px 32px 44px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   background: #f7f8fa;
 `;
@@ -218,34 +218,37 @@ const PageHeader = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 26px;
+  margin-bottom: var(--page-header-content-gap);
 `;
 
 const TitleArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--page-title-subtitle-gap);
 `;
 
 const PageTitle = styled.h1`
   margin: 0;
-  font-size: 30px;
-  font-weight: 600;
-  letter-spacing: -0.8px;
-  color: #17191d;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
+  color: var(--page-title-color);
 `;
 
 const PageDescription = styled.p`
   margin: 0;
-  font-size: 14px;
-  color: #8a909c;
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
+  color: var(--page-subtitle-color);
 `;
 
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 22px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   > div {
     flex-direction: row;
@@ -263,8 +266,8 @@ const SummaryGrid = styled.div`
 const ChartGrid = styled.div`
   display: grid;
   grid-template-columns: 1.05fr 1fr;
-  gap: 20px;
-  margin-bottom: 22px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
@@ -272,7 +275,7 @@ const ChartGrid = styled.div`
 `;
 
 const Panel = styled.section`
-  padding: 22px;
+  padding: var(--page-panel-padding);
   background: #ffffff;
   border: 1px solid #d9deea;
   border-radius: 10px;
@@ -280,10 +283,10 @@ const Panel = styled.section`
 `;
 
 const PanelTitle = styled.h2`
-  margin: 0 0 18px;
-  font-size: 18px;
+  margin: 0 0 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: #282c34;
+  color: #292d35;
 `;
 
 const ChartBox = styled.div`
@@ -292,7 +295,7 @@ const ChartBox = styled.div`
 `;
 
 const FilterPanel = styled(Panel)`
-  margin-bottom: 22px;
+  margin-bottom: var(--page-section-gap);
 `;
 
 const TablePanel = styled(Panel)`
@@ -301,12 +304,12 @@ const TablePanel = styled(Panel)`
 `;
 
 const TableHeader = styled.div`
-  padding: 20px 20px 14px;
+  padding: 20px;
 `;
 
 const TableTitle = styled.h2`
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #282c34;
 `;
@@ -335,7 +338,22 @@ const ResultBadge = styled.span`
 
 const DefectText = styled.span`
   color: #d92d34;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
+`;
+
+const IdentifierText = styled.strong`
+  color: #174b9c;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+`;
+
+const TableText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
 `;
 
 /* Drawer */
@@ -493,7 +511,7 @@ function QualityPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
   const summary = useMemo(() => {
     const total = rows.length;
@@ -568,11 +586,11 @@ function QualityPage() {
   }, [rows, filters]);
 
   const qualityColumns = [
-    { key: "inspectedAt", label: "검사일시", width: 150 },
+    { key: "inspectedAt", label: "검사일시", width: 170, render: (date) => <TableText>{date}</TableText> },
     {
       key: "result",
       label: "판정",
-      width: 90,
+      width: 100,
       render: (result) => (
         <ResultBadge $result={result}>
           {result === "OK" ? <FiCheckCircle /> : <FiXCircle />}
@@ -583,16 +601,16 @@ function QualityPage() {
     {
       key: "defectType",
       label: "불량 유형",
-      width: 120,
+      width: 100,
       render: (defectType, row) => row.result === "NG" ? <DefectText>{defectType}</DefectText> : "-",
     },
-    { key: "lotNo", label: "LOT", width: 200 },
+    { key: "lotNo", label: "LOT", width: 200, render: (lotNo) => <IdentifierText>{lotNo}</IdentifierText> },
     { key: "productName", label: "제품명", width: 140 },
-    { key: "workOrderNo", label: "작업지시", width: 160 },
-    { key: "processName", label: "공정", width: 90 },
-    { key: "machineName", label: "설비", width: 140 },
-    { key: "voltage", label: "전압", width: 80, render: (voltage) => `${voltage}V` },
-    { key: "humidity", label: "습도", width: 80, render: (humidity) => `${humidity}%` },
+    { key: "workOrderNo", label: "작업지시", width: 160, render: (workOrderNo) => <IdentifierText>{workOrderNo}</IdentifierText> },
+    { key: "processName", label: "공정", width: 100 },
+    { key: "machineName", label: "설비", width: 150 },
+    { key: "voltage", label: "전압", width: 100, render: (voltage) => <TableText>{voltage}V</TableText> },
+    { key: "humidity", label: "습도", width: 90, render: (humidity) => <TableText>{humidity}%</TableText> },
   ];
 
   const handleFilterChange = (nextFilters) => {
@@ -813,13 +831,11 @@ function QualityPage() {
             }}
             startDateLabel="시작일"
             endDateLabel="종료일"
-            dateWidth={130}
             filters={[
               {
                 name: "result",
                 label: "판정",
                 placeholder: "전체 판정",
-                width: 130,
                 options: [
                   { value: "OK", label: "OK" },
                   { value: "NG", label: "NG" },
@@ -829,7 +845,6 @@ function QualityPage() {
                 name: "defectType",
                 label: "불량 유형",
                 placeholder: "불량 유형 전체",
-                width: 160,
                 options: [
                   { value: "스크래치", label: "스크래치" },
                   { value: "오염", label: "오염" },
@@ -840,10 +855,8 @@ function QualityPage() {
             ]}
             keywordLabel="통합 검색"
             keywordPlaceholder="LOT / 작업지시 / 제품 / 공정 / 설비 / 작업자"
-            keywordWidth={220}
             flexWrap="nowrap"
             padding={0}
-            gap={10}
             border="none"
             borderRadius={0}
             inputHeight={38}
@@ -866,18 +879,12 @@ function QualityPage() {
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             visiblePages={5}
-            height={66}
             borderTop="1px solid #e2e6ee"
-            background="#f5f6f8"
+            background="#ffffff"
             onPageChange={setCurrentPage}
             onRowClick={openDetail}
             tableProps={{
-              minWidth: 1180,
               tableLayout: "fixed",
-              headerHeight: 58,
-              rowHeight: 58,
-              cellPadding: "0 14px",
-              fontSize: 13,
               headerBackground: "#f1f3f6",
               headerColor: "#555d6c",
               cellColor: "#22262d",

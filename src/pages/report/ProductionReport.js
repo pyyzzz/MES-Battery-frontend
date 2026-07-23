@@ -446,7 +446,7 @@ const PROCESS_CHART_DATA = [
 
 const Page = styled.div`
   min-height: 100%;
-  padding: 28px 32px 44px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   background: #f7f8fa;
 `;
@@ -455,34 +455,37 @@ const PageHeader = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: var(--page-header-content-gap);
 `;
 
 const TitleArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--page-title-subtitle-gap);
 `;
 
 const PageTitle = styled.h1`
   margin: 0;
-  font-size: 30px;
-  font-weight: 600;
-  letter-spacing: -0.8px;
-  color: #17191d;
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
+  color: var(--page-title-color);
 `;
 
 const PageDescription = styled.p`
   margin: 0;
-  font-size: 14px;
-  color: #888f9c;
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
+  color: var(--page-subtitle-color);
 `;
 
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 1280px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -501,8 +504,8 @@ const ReportSummaryCard = styled(SummaryCard)`
 const ChartGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1.1fr;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
@@ -510,7 +513,7 @@ const ChartGrid = styled.div`
 `;
 
 const Panel = styled.section`
-  padding: 22px;
+  padding: var(--page-panel-padding);
 
   background: #ffffff;
   border: 1px solid #dce1ea;
@@ -518,9 +521,9 @@ const Panel = styled.section`
 `;
 
 const PanelTitle = styled.h2`
-  margin: 0 0 18px;
+  margin: 0 0 14px;
 
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -531,7 +534,7 @@ const ChartBox = styled.div`
 `;
 
 const FilterPanel = styled(Panel)`
-  margin-bottom: 20px;
+  margin-bottom: var(--page-section-gap);
 `;
 
 const TablePanel = styled.section`
@@ -556,7 +559,7 @@ const TableTop = styled.div`
 const TableTitle = styled.h2`
   margin: 0;
 
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -573,7 +576,15 @@ const TableSummary = styled.span`
 const LotNumber = styled.strong`
   display: inline-block;
   color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+`;
+
+const TableText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
   white-space: nowrap;
 `;
 
@@ -590,12 +601,14 @@ const StatusBadge = styled.span`
   background: #eaf2ff;
   color: #0755d9;
 
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 `;
 
-const QuantityNg = styled.strong`
+const QuantityNg = styled.span`
   color: ${({ $hasDefect }) => ($hasDefect ? "#d92d34" : "#3b424d")};
+  font-size: 13px;
+  font-weight: ${({ $hasDefect }) => ($hasDefect ? 600 : 400)};
 `;
 
 const EmptyMessage = styled.div`
@@ -957,7 +970,7 @@ function ProductionReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLot, setSelectedLot] = useState(null);
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
   const filteredRows = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
@@ -1064,20 +1077,20 @@ function ProductionReport() {
   }, [filteredRows]);
 
   const productionColumns = [
-    { key: "productionDate", label: "생산일", width: 120 },
-    { key: "lotNo", label: "LOT 번호", width: 190, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
-    { key: "productName", label: "제품명", width: 140 },
-    { key: "planQty", label: "계획", width: 80, render: (quantity) => quantity.toLocaleString() },
-    { key: "actualQty", label: "실적", width: 80, render: (quantity) => quantity.toLocaleString() },
-    { key: "goodQty", label: "양품", width: 80, render: (quantity) => quantity.toLocaleString() },
+    { key: "productionDate", label: "생산일", width: 120, render: (date) => <TableText>{date}</TableText> },
+    { key: "lotNo", label: "LOT 번호", width: 180, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
+    { key: "productName", label: "제품명", width: 135 },
+    { key: "planQty", label: "계획", width: 80, render: (quantity) => <TableText>{quantity.toLocaleString()}</TableText> },
+    { key: "actualQty", label: "실적", width: 80, render: (quantity) => <TableText>{quantity.toLocaleString()}</TableText> },
+    { key: "goodQty", label: "양품", width: 80, render: (quantity) => <TableText>{quantity.toLocaleString()}</TableText> },
     {
       key: "defectQty",
       label: "불량",
       width: 80,
       render: (quantity) => <QuantityNg $hasDefect={quantity > 0}>{quantity.toLocaleString()}</QuantityNg>,
     },
-    { key: "yieldRate", label: "수율", width: 80, render: (rate) => `${rate}%` },
-    { key: "status", label: "상태", width: 130, render: () => <StatusBadge>생산 완료</StatusBadge> },
+    { key: "yieldRate", label: "수율", width: 80, render: (rate) => <TableText>{rate}%</TableText> },
+    { key: "status", label: "상태", width: 110, render: () => <StatusBadge>생산 완료</StatusBadge> },
   ];
 
   const handleFilterChange = (nextFilters) => {
@@ -1300,7 +1313,7 @@ function ProductionReport() {
             defaultValues={filters}
             startDateLabel="시작일"
             endDateLabel="종료일"
-            dateWidth={150}
+            dateWidth={170}
             filters={[
               {
                 name: "product",
@@ -1317,7 +1330,7 @@ function ProductionReport() {
                 name: "equipment",
                 label: "설비",
                 placeholder: "전체 설비",
-                width: 160,
+                width: 170,
                 options: [
                   "Electrode Line #1",
                   "Assembly Line #1",
@@ -1344,7 +1357,7 @@ function ProductionReport() {
             ]}
             keywordLabel="통합 검색"
             keywordPlaceholder="LOT / 작업지시 / 자재 LOT / 제품명"
-            keywordWidth={260}
+            keywordWidth={358}
             inputHeight={38}
             padding={0}
             border="none"
@@ -1374,18 +1387,12 @@ function ProductionReport() {
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             visiblePages={5}
-            height={66}
-            background="#f5f6f8"
+            background="#ffffff"
             borderTop="1px solid #e2e6ed"
             onPageChange={setCurrentPage}
             onRowClick={handleOpenDetail}
             tableProps={{
-              minWidth: 1080,
               tableLayout: "fixed",
-              headerHeight: 48,
-              rowHeight: 48,
-              cellPadding: "0 14px",
-              fontSize: 13,
               headerBackground: "#f1f3f6",
               headerColor: "#555d6b",
               cellColor: "#23272e",

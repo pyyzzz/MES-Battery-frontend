@@ -138,7 +138,7 @@ const INITIAL_BOM = {
   ],
 };
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 
 // 완제품 선택, BOM 데이터 변경, 수정/상세 드로어 상태를 관리하는 목록 화면
 function Bom() {
@@ -231,38 +231,38 @@ function Bom() {
   const bomColumns = [
     {
       key: "no",
-      width: "72px",
+      width: "70px",
       label: "NO",
     },
     {
       key: "materialCode",
-      width: "24%",
+      width: 190,
       label: "자재코드",
     },
     {
       key: "materialName",
-      width: "24%",
+      width: 120,
       label: "자재명",
     },
     {
       key: "requiredQty",
-      width: "15%",
+      width: 120,
       label: "소요수량",
-      align: "right",
+      align: "center",
     },
     {
       key: "unit",
-      width: "12%",
+      width: 100,
       label: "단위",
     },
     {
       key: "process",
-      width: "20%",
+      width: 120,
       label: "투입공정",
     },
     {
       key: "management",
-      width: "90px",
+      width: "120px",
       label: "관리",
     },
   ];
@@ -277,9 +277,9 @@ function Bom() {
 
     materialName: row.materialName,
 
-    requiredQty: Number(row.requiredQty).toFixed(2),
+    requiredQty: <QuantityText>{Number(row.requiredQty).toFixed(2)}</QuantityText>,
 
-    unit: <UnitBadge>{row.unit}</UnitBadge>,
+    unit: row.unit,
 
     process: <ProcessBadge>{row.process}</ProcessBadge>,
 
@@ -388,18 +388,12 @@ function Bom() {
             totalItems={selectedBomRows.length}
             itemsPerPage={PAGE_SIZE}
             visiblePages={5}
-            height={66}
-            background="#f5f6f8"
+            background="#ffffff"
             borderTop="1px solid #e2e6ed"
             onPageChange={setPage}
             onRowClick={handleOpenDetail}
             tableProps={{
-              minWidth: 760,
               tableLayout: "fixed",
-              headerHeight: 46,
-              rowHeight: 48,
-              cellPadding: "0 14px",
-              fontSize: 13,
               headerBackground: "#f1f3f6",
               emptyText: "등록된 BOM 자재가 없습니다.",
             }}
@@ -434,8 +428,8 @@ export default Bom;
 // 페이지 전체 배경과 기본 여백을 담당하는 최상위 레이아웃
 const PageContainer = styled.div`
   min-height: 100%;
-  padding: 24px;
-  background: #f5f7fb;
+  padding: var(--page-container-padding);
+  background: #f7f8fa;
   color: #202530;
 `;
 
@@ -449,30 +443,23 @@ const BomTableArea = styled.div`
   }
 
   table {
-    min-width: 760px;
     table-layout: fixed;
   }
 
   /* 공용 Table 내부 헤더 */
   th {
-    padding: 12px 14px;
     border-bottom: 1px solid #e3e7ed;
     background: #f1f3f6;
     color: #535b68;
-    font-size: 13px;
     font-weight: 600;
     text-align: center !important;
     vertical-align: middle !important;
     font-family: "Pretendard", sans-serif;
-    line-height: normal;
   }
 
   /* 표 본문도 좌우·위아래 중앙 정렬 */
   td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #e3e7ed;
     color: #252a32;
-    font-size: 13px;
     text-align: center !important;
     vertical-align: middle !important;
     font-family: "Pretendard", sans-serif;
@@ -494,32 +481,37 @@ const BomTableArea = styled.div`
 // 화면 제목 영역과 BOM 수정 버튼을 양 끝에 배치
 const PageHeader = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: var(--page-header-content-gap);
 `;
 
 // BOM 목록 화면의 주 제목
 const PageTitle = styled.h1`
   margin: 0;
-  font-size: 30px;
-  font-weight: 700;
+  color: var(--page-title-color);
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
 `;
 
 // 제목 아래에 표시되는 화면 설명 문구
 const PageDescription = styled.p`
-  margin: 7px 0 0;
-  color: #697386;
-  font-size: 13px;
+  margin: var(--page-title-subtitle-gap) 0 0;
+  color: var(--page-subtitle-color);
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
 `;
 
 // 완제품 선택 카드들을 감싸는 흰색 패널
 const ProductSection = styled.section`
-  padding: 18px 20px;
+  padding: var(--page-panel-padding);
   border: 1px solid #d7dde8;
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(32, 37, 48, 0.04);
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 // 각 콘텐츠 영역의 소제목
@@ -534,7 +526,7 @@ const SectionTitle = styled.h2`
 const ProductList = styled.div`
   display: grid;
   grid-template-columns: repeat(5, minmax(160px, 1fr));
-  gap: 12px;
+  gap: var(--page-box-gap);
 `;
 
 // 완제품 선택 버튼, $active가 true이면 선택 상태의 파란색으로 표시
@@ -572,12 +564,12 @@ const ProductCard = styled(SummaryCard)`
 
 // 선택 제품의 BOM 테이블 전체를 감싸는 패널
 const TablePanel = styled.section`
-  margin-top: 22px;
+  margin-top: var(--page-section-gap);
   overflow: hidden;
   border: 1px solid #dce1ea;
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(32, 37, 48, 0.04);
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 // BOM 테이블 상단에 현재 선택된 제품을 표시하는 제목
@@ -643,7 +635,14 @@ const TableResultText = styled.span`
 
 const CodeText = styled.strong`
   color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
+`;
+
+const QuantityText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
 `;
 
 const QuantityGuide = styled.p`
@@ -660,29 +659,16 @@ const QuantityGuide = styled.p`
   }
 `;
 
-// KG, EA 같은 자재 단위를 태그 형태로 표시
-const UnitBadge = styled.span`
-  display: inline-flex;
-  min-width: 32px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-  border-radius: 6px;
-  background: #eef1f7;
-  color: #5a6373;
-`;
-
 // 자재가 투입되는 공정을 둥근 태그 형태로 표시
 const ProcessBadge = styled.span`
   display: inline-flex;
-  min-height: 25px;
   align-items: center;
-  padding: 0 12px;
-  border-radius: 20px;
+  padding: 5px 10px;
+  border-radius: 999px;
   background: #eaf2ff;
   color: #3166ac;
   font-size: 12px;
+  font-weight: 600;
 `;
 
 const Management = styled.div`

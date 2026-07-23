@@ -187,13 +187,13 @@ export default function WorkerList() {
   };
 
   const columns = [
-    { key: "no", label: "NO" },
-    { key: "workerCode", label: "사원 번호" },
-    { key: "workerName", label: "사원명" },
-    { key: "role", label: "직급/권한" },
-    { key: "statusView", label: "재직 상태" },
-    { key: "hiredAt", label: "입사일" },
-    { key: "management", label: "관리" },
+    { key: "no", label: "NO", width: 70, align: "center" },
+    { key: "workerCode", label: "사원 번호", width: 170, align: "center" },
+    { key: "workerName", label: "사원명", width: 120, align: "center" },
+    { key: "role", label: "직급/권한", width: 130, align: "center" },
+    { key: "statusView", label: "재직 상태", width: 120, align: "center" },
+    { key: "hiredAt", label: "입사일", width: 150, align: "center" },
+    { key: "management", label: "관리", width: 120, align: "center" },
   ];
 
   // 공용 Table에 넘기기 전에 배지와 버튼 UI까지 가공
@@ -201,7 +201,9 @@ export default function WorkerList() {
     ...worker,
     no: index + 1,
     workerCode: <WorkerCode>{worker.workerCode}</WorkerCode>,
-    hiredAt: worker.hiredAt || worker.createdAt?.split(" ")[0] || "-",
+    workerName: <WorkerText>{worker.workerName}</WorkerText>,
+    role: <WorkerText>{worker.role}</WorkerText>,
+    hiredAt: <DateText>{worker.hiredAt || worker.createdAt?.split(" ")[0] || "-"}</DateText>,
     statusView: (
       <StatusBadge $active={worker.isActive}>
         <StatusDot />
@@ -326,12 +328,10 @@ export default function WorkerList() {
           defaultValues={emptyFilters}
           keywordLabel="사원번호/사원명"
           keywordPlaceholder="사원번호 / 사원명 검색"
-          keywordWidth={220}
           startDateLabel="입사일 시작"
           endDateLabel="입사일 종료"
           dateWidth={145}
           inputHeight={38}
-          gap={16}
           showSearchButton={false}
           padding={0}
           border="none"
@@ -361,20 +361,14 @@ export default function WorkerList() {
           totalItems={filteredWorkers.length}
           itemsPerPage={PAGE_SIZE}
           visiblePages={5}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setPage}
           onRowClick={(worker) =>
             setSelectedWorker(workers.find(({ id }) => id === worker.id))
           }
           tableProps={{
-            minWidth: 820,
             tableLayout: "fixed",
-            headerHeight: 40,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
             headerBackground: "#f1f3f6",
             emptyText: "조건에 맞는 작업자가 없습니다.",
           }}
@@ -401,40 +395,43 @@ export default function WorkerList() {
 const Page = styled.div`
   width: 100%;
   min-height: 100%;
-  padding: 28px 32px 44px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   background: #f7f8fa;
 `;
 
 // 제목 영역과 등록 버튼을 양쪽 끝으로 배치
 const Header = styled.div`
-  margin-bottom: 22px;
+  margin-bottom: var(--page-header-content-gap);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--page-section-gap);
 `;
 
 // 목록 화면의 메인 제목
 const Title = styled.h1`
   margin: 0;
-  color: #17191d;
-  font-size: 30px;
-  font-weight: 650;
-  letter-spacing: -0.8px;
+  color: var(--page-title-color);
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
 `;
 
 const Description = styled.p`
-  margin: 7px 0 0;
-  color: #818896;
-  font-size: 14px;
+  margin: var(--page-title-subtitle-gap) 0 0;
+  color: var(--page-subtitle-color);
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
 `;
 
 const SummaryGrid = styled.section`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
@@ -447,11 +444,12 @@ const StatusSummaryCard = styled(SummaryCard)`
 `;
 
 const FilterPanel = styled.section`
-  margin-bottom: 20px;
-  padding: 18px 20px;
-  border: 1px solid #d7dde8;
+  margin-bottom: var(--page-section-gap);
+  padding: var(--page-panel-padding);
+  border: 1px solid #dce1ea;
   border-radius: 12px;
   background: #fff;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const FilterTitle = styled.h2`
@@ -467,6 +465,7 @@ const TablePanel = styled.section`
   border: 1px solid #dce1ea;
   border-radius: 12px;
   background: #fff;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const HeaderActionButton = styled(Button)`
@@ -515,7 +514,21 @@ const TopResultText = styled.span`
 // 사원 번호를 강조하기 위한 텍스트 스타일
 const WorkerCode = styled.span`
   color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
+`;
+
+const WorkerText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
+`;
+
+const DateText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
 `;
 
 // 재직/퇴사 상태를 배지 형태로 보여주는 스타일
@@ -523,13 +536,12 @@ const StatusBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 22px;
-  padding: 0 9px;
+  padding: 5px 10px;
   border: 1px solid ${({ $active }) => ($active ? "#c8e8d2" : "#d6d9e4")};
   border-radius: 999px;
   background: ${({ $active }) => ($active ? "#e8f7ed" : "#eceef5")};
   color: ${({ $active }) => ($active ? "#278a49" : "#616879")};
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 `;
 

@@ -12,32 +12,37 @@ import ProductDetail from "./ProductDetail";
 /* Styled Components */
 const Container = styled.div`
   min-height: 100%;
-  padding: 24px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--page-section-gap);
+  background: #f7f8fa;
 `;
 
 // 페이지 헤더
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 2px;
 
   .title-group {
     h2 {
-      margin: 0 0 6px;
-      font-size: 30px;
-      font-weight: 600;
-      letter-spacing: -0.8px;
-      color: #17191d;
+      margin: 0;
+      font-size: var(--page-title-size);
+      line-height: var(--page-title-line-height);
+      font-weight: var(--page-title-weight);
+      letter-spacing: var(--page-title-letter-spacing);
+      color: var(--page-title-color);
     }
     p {
-      margin: 0;
-      font-size: 14px;
-      color: #888f9c;
+      margin: var(--page-title-subtitle-gap) 0 0;
+      font-size: var(--page-subtitle-size);
+      font-weight: var(--page-subtitle-weight);
+      line-height: var(--page-subtitle-line-height);
+      color: var(--page-subtitle-color);
     }
   }
 `;
@@ -63,15 +68,17 @@ const HeaderActionButton = styled(Button)`
 
 // Filter 영역을 감싸는 패널 스타일
 const StyledFilterPanel = styled.section`
-  padding: 22px;
+  padding: var(--page-panel-padding);
   background: #ffffff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const PanelTitle = styled.h2`
-  margin: 0 0 18px;
-  font-size: 17px;
+  margin: 0 0 14px;
+  color: #292d35;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -102,6 +109,7 @@ const TablePanel = styled.section`
   background: #ffffff;
   border: 1px solid #dce1ea;
   border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04);
 `;
 
 const TableTop = styled.div`
@@ -115,7 +123,7 @@ const TableTop = styled.div`
 
 const TableTitle = styled.h2`
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   color: #292d35;
 `;
@@ -132,7 +140,21 @@ const TableSummary = styled.span`
 // 제품 코드 스타일 블루 계열 볼드 텍스트 적용
 const ProductCodeText = styled.strong`
   color: #174b9c;
+  font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+`;
+
+const ProductNameText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
+`;
+
+const DateTimeText = styled.span`
+  color: #252a32;
+  font-size: 13px;
+  font-weight: 400;
   white-space: nowrap;
 `;
 
@@ -302,15 +324,15 @@ export default function ProductList() {
 
   // Table 컴포넌트에 넘겨줄 컬럼 구조
   const columns = [
-    { key: "id", label: "ID", align: "center", width: 80 },
-    { key: "product_code", label: "제품 코드", align: "left", width: 180 },
-    { key: "product_name", label: "제품명", align: "left", width: 220 },
-    { key: "voltage_styled", label: "전압", align: "center", width: 100 },
-    { key: "capacity_styled", label: "용량", align: "center", width: 100 },
-    { key: "unit", label: "단위", align: "center", width: 90 },
-    { key: "created_at", label: "등록일", align: "left", width: 150 },
-    { key: "updated_at", label: "수정일", align: "left", width: 150 },
-    { key: "management", label: "관리", align: "center", width: 90 },
+    { key: "id", label: "ID", align: "center", width: 70 },
+    { key: "product_code", label: "제품 코드", align: "center", width: 150 },
+    { key: "product_name", label: "제품명", align: "center", width: 140 },
+    { key: "voltage_styled", label: "전압", align: "center", width: 90 },
+    { key: "capacity_styled", label: "용량", align: "center", width: 90 },
+    { key: "unit", label: "단위", align: "center", width: 80 },
+    { key: "created_at", label: "등록일", align: "center", width: 170 },
+    { key: "updated_at", label: "수정일", align: "center", width: 170 },
+    { key: "management", label: "관리", align: "center", width: 120 },
   ];
 
   // 데이터 가공 및 컴포넌트 데이터셀 인젝션
@@ -318,8 +340,11 @@ export default function ProductList() {
     ...row,
     originalProduct: row,
     product_code: <ProductCodeText>{row.product_code}</ProductCodeText>,
+    product_name: <ProductNameText>{row.product_name}</ProductNameText>,
     voltage_styled: `${row.voltage}V`,
     capacity_styled: `${row.capacity_ah}Ah`,
+    created_at: <DateTimeText>{row.created_at}</DateTimeText>,
+    updated_at: <DateTimeText>{row.updated_at}</DateTimeText>,
     management: (
       <Management>
         <IconButton
@@ -386,7 +411,6 @@ export default function ProductList() {
             inputHeight={38}
             border="none"
             padding={0}
-            gap={16}
             width="100%"
           />
         </FilterBarWrapper>
@@ -409,8 +433,7 @@ export default function ProductList() {
           totalItems={tableRows.length}
           itemsPerPage={8}
           visiblePages={5}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setPage}
           onRowClick={(row) => {
@@ -418,12 +441,7 @@ export default function ProductList() {
             setIsDetailOpen(true);
           }}
           tableProps={{
-            minWidth: 1080,
             tableLayout: "fixed",
-            headerHeight: 46,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
             headerBackground: "#f1f3f6",
             emptyText: "조건에 맞는 제품이 없습니다.",
           }}

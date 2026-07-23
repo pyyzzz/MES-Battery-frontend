@@ -101,10 +101,10 @@ const INITIAL_MATERIALS = [
 const PAGE_SIZE = 8;
 
 const columns = [
-  { key: "no", label: "No", width: 70 },
-  { key: "codeCell", label: "자재코드", width: 200 },
-  { key: "lot", label: "LOT 번호", width: 160 },
-  { key: "name", label: "자재명", width: 160 },
+  { key: "no", label: "No", width: 60 },
+  { key: "codeCell", label: "자재코드", width: 160 },
+  { key: "lot", label: "LOT 번호", width: 100 },
+  { key: "name", label: "자재명", width: 100 },
   { key: "registeredAt", label: "등록일", width: 140 },
   { key: "management", label: "관리", width: 90 },
 ];
@@ -270,7 +270,7 @@ export default function MaterialList() {
           variant="primary"
           onClick={handleOpenNew}
         >
-          <FiPlus size={17} />
+          <FiPlus size={16} />
           신규 자재 등록
         </HeaderActionButton>
       </PageHeader>
@@ -287,7 +287,6 @@ export default function MaterialList() {
           keywordPlaceholder="자재명, 자재코드 또는 LOT 번호 검색"
           keywordWidth={320}
           padding={0}
-          gap={16}
           border="none"
           inputHeight={38}
           showSearchButton={false}
@@ -312,18 +311,10 @@ export default function MaterialList() {
           totalItems={filteredMaterials.length}
           itemsPerPage={8}
           visiblePages={5}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setPage}
           tableProps={{
-            minWidth: 900,
-            tableLayout: "fixed",
-            headerHeight: 46,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
-            headerBackground: "#f1f3f6",
             emptyText: "조건에 맞는 자재가 없습니다.",
           }}
         />
@@ -344,31 +335,34 @@ export default function MaterialList() {
 
 const Page = styled.main`
   min-height: 100%;
-  padding: 28px 32px 44px;
+  padding: var(--page-container-padding);
   box-sizing: border-box;
   background: #f7f8fa;
 `;
 
 const PageHeader = styled.header`
-  margin-bottom: 22px;
+  margin-bottom: var(--page-header-content-gap);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--page-section-gap);
 `;
 
 const Title = styled.h1`
   margin: 0;
-  color: #17191d;
-  font-size: 30px;
-  font-weight: 650;
-  letter-spacing: -0.8px;
+  color: var(--page-title-color);
+  font-size: var(--page-title-size);
+  line-height: var(--page-title-line-height);
+  font-weight: var(--page-title-weight);
+  letter-spacing: var(--page-title-letter-spacing);
 `;
 
 const Description = styled.p`
-  margin: 7px 0 0;
-  color: #818896;
-  font-size: 14px;
+  margin: var(--page-title-subtitle-gap) 0 0;
+  color: var(--page-subtitle-color);
+  font-size: var(--page-subtitle-size);
+  font-weight: var(--page-subtitle-weight);
+  line-height: var(--page-subtitle-line-height);
 `;
 
 const HeaderActionButton = styled(Button)`
@@ -398,8 +392,8 @@ const Panel = styled.section`
 `;
 
 const FilterPanel = styled(Panel)`
-  margin-bottom: 20px;
-  padding: 20px 22px;
+  margin-bottom: var(--page-section-gap);
+  padding: var(--page-panel-padding);
 `;
 
 const PanelTitle = styled.h2`

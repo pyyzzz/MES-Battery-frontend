@@ -35,25 +35,25 @@ const STATUS_META = {
 
 const formatNumber = (value) => Number(value).toLocaleString();
 
-const Page = styled.div`min-height: 100%; padding: 28px 32px 44px; box-sizing: border-box; background: #f7f8fa;`;
-const Header = styled.header`margin-bottom: 22px;`;
-const Title = styled.h1`margin: 0; color: #17191d; font-size: 30px; font-weight: 650; letter-spacing: -0.8px;`;
-const Description = styled.p`margin: 7px 0 0; color: #818896; font-size: 14px;`;
+const Page = styled.div`min-height: 100%; padding: var(--page-container-padding); box-sizing: border-box; background: #f7f8fa;`;
+const Header = styled.header`margin-bottom: var(--page-header-content-gap);`;
+const Title = styled.h1`margin: 0; color: var(--page-title-color); font-size: var(--page-title-size); line-height: var(--page-title-line-height); font-weight: var(--page-title-weight); letter-spacing: var(--page-title-letter-spacing);`;
+const Description = styled.p`margin: var(--page-title-subtitle-gap) 0 0; color: var(--page-subtitle-color); font-size: var(--page-subtitle-size); font-weight: var(--page-subtitle-weight); line-height: var(--page-subtitle-line-height);`;
 
 const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--page-box-gap);
+  margin-bottom: var(--page-section-gap);
   @media (max-width: 1050px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (max-width: 620px) { grid-template-columns: 1fr; }
 `;
 
 const LotSummaryCard = styled(SummaryCard)`flex-direction: row; align-items: center;`;
 
-const Panel = styled.section`padding: 20px 22px; background: #fff; border: 1px solid #dce1ea; border-radius: 12px;`;
+const Panel = styled.section`padding: var(--page-panel-padding); background: #fff; border: 1px solid #dce1ea; border-radius: 12px;`;
 const PanelTitle = styled.h2`margin: 0 0 14px; color: #292d35; font-size: 16px; font-weight: 600;`;
-const FilterPanel = styled(Panel)`margin-bottom: 20px;`;
+const FilterPanel = styled(Panel)`margin-bottom: var(--page-section-gap);`;
 const TablePanel = styled.section`overflow: hidden; background: #fff; border: 1px solid #dce1ea; border-radius: 12px;`;
 const TableTop = styled.div`min-height: 62px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e6ed;`;
 const ResultText = styled.span`color: #737b88; font-size: 13px; strong { color: #0755d9; }`;
@@ -65,10 +65,10 @@ const StatusBadge = styled.span`
 
 const LotNumber = styled.strong`color: #174b9c; font-weight: 600;`;
 
-const RateCell = styled.div`display: flex; align-items: center; justify-content: center; gap: 10px;`;
+const RateCell = styled.div`width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;`;
 const RateTrack = styled.span`width: 70px; height: 7px; overflow: hidden; flex-shrink: 0; background: #e7e9ed; border-radius: 999px;`;
 const RateFill = styled.span`display: block; width: ${({ $rate }) => `${Math.min(100, $rate)}%`}; height: 100%; background: ${({ $rate }) => $rate >= 95 ? "#ef4444" : "#0755d9"}; border-radius: inherit;`;
-const RateText = styled.span`min-width: 42px; color: #535b68; font-size: 12px;`;
+const RateText = styled.span`color: #535b68; font-size: 12px; text-align: center; white-space: nowrap; min-width: 30px;`;
 const Overlay = styled.div`position: fixed; inset: 0; z-index: 900; background: rgba(17, 24, 39, 0.46);`;
 const Drawer = styled.aside`
   position: fixed; top: 0; right: ${({ $open }) => $open ? "0" : "-600px"}; z-index: 901; width: 600px; max-width: 100%; height: 100vh;
@@ -123,23 +123,24 @@ function MaterialLotManagement() {
   const getRemaining = (lot) => Math.max(0, lot.totalStock - lot.consumed);
 
   const lotColumns = [
-    { key: "id", label: "No", width: 48 },
-    { key: "inboundAt", label: "입고일자", width: 145 },
+    { key: "id", label: "No", width: 70 },
+    { key: "inboundAt", label: "입고일자", width: 170 },
     {
       key: "status",
       label: "LOT 상태",
-      width: 115,
+      width: 140,
       render: (status) => <StatusBadge $status={status}><span>⌛</span>{STATUS_META[status].label}</StatusBadge>,
     },
     { key: "lotNo", label: "LOT번호", width: 190, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
     { key: "materialCode", label: "자재코드", width: 190 },
-    { key: "materialName", label: "자재명" },
+    { key: "materialName", label: "자재명", width: 110 },
     { key: "totalStock", label: "총 재고", width: 90, render: formatNumber },
     { key: "consumed", label: "생산투입", width: 90, render: formatNumber },
     {
       key: "consumptionRate",
       label: "자재 소진율",
-      width: 150,
+      width: 170,
+      align: "center",
       render: (_, lot) => {
         const rate = getRate(lot);
         return <RateCell><RateTrack><RateFill $rate={rate} /></RateTrack><RateText>{rate}%</RateText></RateCell>;
@@ -170,7 +171,7 @@ function MaterialLotManagement() {
           ] }]}
           keywordLabel="통합 검색"
           keywordPlaceholder="LOT번호 / 자재명 / 자재코드 검색"
-          keywordWidth={320}
+          keywordWidth={220}
           flexWrap="nowrap"
           inputHeight={38}
           padding={0}
@@ -189,18 +190,12 @@ function MaterialLotManagement() {
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
           visiblePages={5}
-          height={66}
-          background="#f5f6f8"
+          background="#ffffff"
           borderTop="1px solid #e2e6ed"
           onPageChange={setCurrentPage}
           onRowClick={setSelectedLot}
           tableProps={{
-            minWidth: 1120,
             tableLayout: "fixed",
-            headerHeight: 46,
-            rowHeight: 48,
-            cellPadding: "0 14px",
-            fontSize: 13,
             headerBackground: "#f1f3f6",
           }}
         />

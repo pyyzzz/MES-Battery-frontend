@@ -45,7 +45,10 @@ const TableScroll = styled.div`
 
 const DataTable = styled.table`
   width: 100%;
-  min-width: ${({ $minWidth }) => toCssSize($minWidth, "1050px")};
+  min-width: ${({ $minWidth }) =>
+    $minWidth === undefined || $minWidth === null
+      ? "0"
+      : toCssSize($minWidth, "0")};
   border-collapse: collapse;
   table-layout: ${({ $tableLayout }) => $tableLayout};
   font-size: ${({ $fontSize }) => toCssSize($fontSize, "13px")};
@@ -155,7 +158,7 @@ function Pagination({
   currentPage = 1,
 
   totalItems,
-  itemsPerPage = 10,
+  itemsPerPage = 8,
 
   onPageChange,
 
@@ -170,7 +173,7 @@ function Pagination({
   gap = 6,
   justifyContent = "center",
 
-  background = "#f8fafc",
+  background = "#ffffff",
   borderTop = "1px solid #e5e7eb",
 
   buttonSize = 38,
@@ -261,11 +264,15 @@ function Pagination({
     : 0;
 
   const {
-    minWidth = 1050,
+    minWidth,
     tableLayout = "fixed",
     headerHeight = 46,
     rowHeight = 48,
-    cellPadding = "0 14px",
+    cellPadding = "0 20px",
+    theadPadding = cellPadding,
+    tbodyPadding = cellPadding,
+    firstCellPadding = "0 20px 0 25px",
+    lastCellPadding = "0 25px 0 20px",
     fontSize: tableFontSize = 13,
     headerBackground = "#f1f3f6",
     headerColor = "#535b68",
@@ -412,12 +419,21 @@ function Pagination({
         >
           <thead>
             <tr>
-              {columns.map((column) => (
+              {columns.map((column, columnIndex) => (
                 <TableHead
                   key={column.key}
                   $width={column.width}
                   $height={headerHeight}
-                  $padding={column.padding ?? cellPadding}
+                  $padding={
+                    column.theadPadding ??
+                    column.padding ??
+                    (columnIndex === 0
+                      ? firstCellPadding
+                      : columnIndex === columns.length - 1
+                        ? lastCellPadding
+                        : undefined) ??
+                    theadPadding
+                  }
                   $background={headerBackground}
                   $color={headerColor}
                   $align={column.align ?? "center"}
@@ -442,11 +458,20 @@ function Pagination({
                   $clickable={Boolean(onRowClick)}
                   $hoverBackground={tableHoverBackground}
                 >
-                  {columns.map((column) => (
+                  {columns.map((column, columnIndex) => (
                     <TableCell
                       key={column.key}
                       $height={rowHeight}
-                      $padding={column.padding ?? cellPadding}
+                      $padding={
+                        column.tbodyPadding ??
+                        column.padding ??
+                        (columnIndex === 0
+                          ? firstCellPadding
+                          : columnIndex === columns.length - 1
+                            ? lastCellPadding
+                            : undefined) ??
+                        tbodyPadding
+                      }
                       $color={cellColor}
                       $align={column.align ?? "center"}
                     >
