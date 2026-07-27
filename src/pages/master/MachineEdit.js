@@ -8,11 +8,13 @@ export default function MachineEdit({
   onClose,
   selectedMachine,
   onUpdate,
+  processes = [],
 }) {
   // 수정 대상을 바인딩할 local state
   const [formData, setFormData] = useState({
     machine_id: "",
     process_id: "",
+    processId: "",
     machine_code: "",
     machine_name: "",
     status: "가동",
@@ -25,6 +27,7 @@ export default function MachineEdit({
       setFormData({
         machine_id: selectedMachine.machine_id,
         process_id: selectedMachine.process_id || "",
+        processId: selectedMachine.processId || "",
         machine_code: selectedMachine.machine_code || "",
         machine_name: selectedMachine.machine_name || "",
         status: selectedMachine.status || "가동",
@@ -46,7 +49,7 @@ export default function MachineEdit({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (
-      !formData.process_id ||
+      !formData.processId ||
       !formData.machine_code ||
       !formData.machine_name
     ) {
@@ -75,17 +78,22 @@ export default function MachineEdit({
         </Header>
 
         <Form id="machine-edit-form" onSubmit={handleSubmit}>
-          {/* 1. 공정코드 */}
+          {/* 1. 공정 */}
           <FormGroup>
-            <Label>공정코드</Label>
-            <Input
-              type="text"
-              name="process_id"
-              placeholder="예: PC-001"
-              value={formData.process_id}
+            <Label>공정</Label>
+            <Select
+              name="processId"
+              value={formData.processId}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="">공정을 선택하세요</option>
+              {processes.map((process) => (
+                <option key={process.id} value={process.id}>
+                  {process.processCode} / {process.processName}
+                </option>
+              ))}
+            </Select>
           </FormGroup>
 
           {/* 2. 설비코드 */}

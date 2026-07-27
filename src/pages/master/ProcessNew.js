@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi"; // MachineNew와 동일한 닫기 아이콘 사용
 import Button from "../../components/ui/Button";
@@ -216,19 +216,36 @@ const ActionButton = styled(Button)`
 `;
 
 /* Component Logic */
-export default function ProcessNew({ isOpen, onClose, onRegister }) {
+export default function ProcessNew({
+  isOpen,
+  onClose,
+  onRegister,
+  nextProcessCode = "PROC-001",
+  nextSequence = 1,
+  workers = [],
+  defaultManagerEmployeeId,
+}) {
   // 컴포넌트 초기 상태 정의
-  const initialFormState = {
-    step_code: "PROC-006",
-    seq: "6",
-    is_active: "사용",
-    step_name: "",
-    machine: "설비 선택 (없음)",
-    description: "",
-    worker: "",
-  };
+  const initialFormState = useMemo(
+    () => ({
+      step_code: nextProcessCode,
+      seq: String(nextSequence),
+      is_active: "사용",
+      step_name: "",
+      machine: "설비 선택 (없음)",
+      description: "",
+      managerEmployeeId: defaultManagerEmployeeId ?? "",
+    }),
+    [defaultManagerEmployeeId, nextProcessCode, nextSequence],
+  );
 
   const [formData, setFormData] = useState(initialFormState);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initialFormState);
+    }
+  }, [isOpen, initialFormState]);
 
   // 열려있지 않으면 아무것도 반환하지 않음
   if (!isOpen) return null;
@@ -252,7 +269,9 @@ export default function ProcessNew({ isOpen, onClose, onRegister }) {
       is_active: formData.is_active === "사용",
       machine: formData.machine,
       description: formData.description,
-      worker: formData.worker,
+      managerEmployeeId: formData.managerEmployeeId
+        ? Number(formData.managerEmployeeId)
+        : defaultManagerEmployeeId,
     });
 
     setFormData(initialFormState);
@@ -349,13 +368,21 @@ export default function ProcessNew({ isOpen, onClose, onRegister }) {
 
           <FormGroup>
             <label>담당자</label>
-            <Input
-              type="text"
-              name="worker"
-              placeholder="작업자 성명"
-              value={formData.worker}
+            <Select
+              name="managerEmployeeId"
+              value={formData.managerEmployeeId}
               onChange={handleChange}
-            />
+            >
+              {workers.length === 0 ? (
+                <option value="">기본 담당자</option>
+              ) : (
+                workers.map((worker) => (
+                  <option key={worker.id} value={worker.id}>
+                    {worker.employeeName}
+                  </option>
+                ))
+              )}
+            </Select>
           </FormGroup>
         </Form>
 

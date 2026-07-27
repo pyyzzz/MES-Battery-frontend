@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
@@ -8,6 +8,42 @@ import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 import ProductNew from "./ProductNew";
 import ProductEdit from "./ProductEdit";
 import ProductDetail from "./ProductDetail";
+import masterApi from "../../api/master";
+import AuthContext from "../../context/AuthContext";
+import NoPermissionText from "../../components/ui/NoPermissionText";
+import { hasMasterWritePermission } from "../../utils/masterPermissions";
+
+const formatDateTime = (value) => {
+  if (!value) return "";
+  return String(value).replace("T", " ").slice(0, 16);
+};
+
+const toProductRow = (product) => ({
+  id: product.id,
+  product_code: product.productCode ?? "",
+  product_name: product.productName ?? "",
+  voltage: Number(product.voltage ?? 0),
+  capacity_ah: Number(product.capacity ?? 0),
+  unit: product.unit ?? "",
+  created_at: formatDateTime(product.createdAt),
+  updated_at: formatDateTime(product.updatedAt),
+  active: product.active,
+});
+
+const toProductCreatePayload = (product) => ({
+  productCode: product.product_code,
+  productName: product.product_name,
+  voltage: product.voltage,
+  capacity: product.capacity_ah,
+  unit: product.unit,
+});
+
+const toProductUpdatePayload = (product) => ({
+  productName: product.product_name,
+  voltage: product.voltage,
+  capacity: product.capacity_ah,
+  unit: product.unit,
+});
 
 /* Styled Components */
 const Container = styled.div`
@@ -193,59 +229,9 @@ const DeleteButton = styled(IconButton)`
 
 /* Component Logic */
 export default function ProductList() {
-  // 1. Mock 데이터 선언
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      product_code: "BAT-12V-45AH",
-      product_name: "12V 소형 배터리",
-      voltage: 12,
-      capacity_ah: 45,
-      unit: "EA",
-      created_at: "2026-02-09 15:57",
-      updated_at: "2026-02-09 15:57",
-    },
-    {
-      id: 2,
-      product_code: "BAT-12V-65AH",
-      product_name: "12V 중형 배터리",
-      voltage: 12,
-      capacity_ah: 69,
-      unit: "EA",
-      created_at: "2026-02-09 15:57",
-      updated_at: "2026-02-09 17:02",
-    },
-    {
-      id: 3,
-      product_code: "BAT-12V-90AH",
-      product_name: "12V 대형 배터리",
-      voltage: 12,
-      capacity_ah: 90,
-      unit: "EA",
-      created_at: "2026-02-09 15:57",
-      updated_at: "2026-02-09 15:57",
-    },
-    {
-      id: 4,
-      product_code: "BAT-12V-100AH",
-      product_name: "12V 지존 배터리",
-      voltage: 12,
-      capacity_ah: 100,
-      unit: "EA",
-      created_at: "2026-02-09 16:01",
-      updated_at: "2026-02-09 16:01",
-    },
-    {
-      id: 5,
-      product_code: "BAT-12V-30AH",
-      product_name: "12V 초소형 배터리",
-      voltage: 12,
-      capacity_ah: 30,
-      unit: "EA",
-      created_at: "2026-02-09 17:02",
-      updated_at: "2026-02-09 17:02",
-    },
-  ]);
+  const { user } = useContext(AuthContext);
+  const canManage = hasMasterWritePermission(user);
+  const [products, setProducts] = useState([]);
 
   // 검색 필터 State
   const [startDate, setStartDate] = useState("");
@@ -259,6 +245,24 @@ export default function ProductList() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadProducts = async () => {
+    setIsLoading(true);
+    try {
+      const response = await masterApi.getProducts();
+      setProducts(response.data.map(toProductRow));
+    } catch (error) {
+      console.error("제품 목록 조회 실패:", error);
+      window.alert("제품 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   // SearchFilterBar 연동 조회 핸들러
   const handleSearch = (filterValues) => {
@@ -277,22 +281,31 @@ export default function ProductList() {
   };
 
   const handleRegisterClick = () => {
+    if (!canManage) return;
     setIsNewOpen(true);
     console.log("제품 등록 모달/드로어 오픈");
   };
 
   const handleEditClick = (product) => {
+    if (!canManage) return;
     setSelectedProduct(product);
     setIsEditOpen(true);
     console.log("제품 수정 호출:", product.product_code);
   };
 
-  const handleDeleteProduct = (product) => {
+  const handleDeleteProduct = async (product) => {
+    if (!canManage) return;
     if (!window.confirm(`${product.product_name} 제품을 삭제하시겠습니까?`)) {
       return;
     }
 
-    setProducts((prev) => prev.filter((item) => item.id !== product.id));
+    try {
+      await masterApi.deleteProduct(product.id);
+      await loadProducts();
+    } catch (error) {
+      console.error("제품 삭제 실패:", error);
+      window.alert("제품 삭제에 실패했습니다.");
+    }
   };
 
   // 필터링 로직 (조회 버튼을 클릭하여 State가 세팅되었을 때 렌더링되게 설계됨)
@@ -313,13 +326,31 @@ export default function ProductList() {
     return matchKeyword && matchStart && matchEnd;
   });
 
-  const handleUpdateProduct = (updatedProduct) => {
-    setProducts((prev) =>
-      prev.map((item) =>
-        item.id === updatedProduct.id ? updatedProduct : item,
-      ),
-    );
-    setIsEditOpen(false);
+  const handleCreateProduct = async (payload) => {
+    if (!canManage) return;
+    try {
+      await masterApi.createProduct(toProductCreatePayload(payload));
+      await loadProducts();
+      setIsNewOpen(false);
+    } catch (error) {
+      console.error("제품 등록 실패:", error);
+      window.alert("제품 등록에 실패했습니다.");
+    }
+  };
+
+  const handleUpdateProduct = async (updatedProduct) => {
+    if (!canManage) return;
+    try {
+      await masterApi.updateProduct(
+        updatedProduct.id,
+        toProductUpdatePayload(updatedProduct),
+      );
+      await loadProducts();
+      setIsEditOpen(false);
+    } catch (error) {
+      console.error("제품 수정 실패:", error);
+      window.alert("제품 수정에 실패했습니다.");
+    }
   };
 
   // Table 컴포넌트에 넘겨줄 컬럼 구조
@@ -345,7 +376,7 @@ export default function ProductList() {
     capacity_styled: `${row.capacity_ah}Ah`,
     created_at: <DateTimeText>{row.created_at}</DateTimeText>,
     updated_at: <DateTimeText>{row.updated_at}</DateTimeText>,
-    management: (
+    management: canManage ? (
       <Management>
         <IconButton
           type="button"
@@ -371,6 +402,8 @@ export default function ProductList() {
           <FiTrash2 />
         </DeleteButton>
       </Management>
+    ) : (
+      <NoPermissionText>권한 없음</NoPermissionText>
     ),
   }));
 
@@ -382,14 +415,16 @@ export default function ProductList() {
           <h2>제품 관리</h2>
           <p>생산 제품의 기본 규격과 마스터 데이터를 관리하는 시스템입니다.</p>
         </div>
-        <HeaderActionButton
-          type="button"
-          variant="primary"
-          onClick={handleRegisterClick}
-        >
-          <FiPlus size={16} />
-          제품 등록
-        </HeaderActionButton>
+        {canManage && (
+          <HeaderActionButton
+            type="button"
+            variant="primary"
+            onClick={handleRegisterClick}
+          >
+            <FiPlus size={16} />
+            제품 등록
+          </HeaderActionButton>
+        )}
       </Header>
 
       {/* 공용 SearchFilterBar 적용 영역 */}
@@ -423,6 +458,7 @@ export default function ProductList() {
 
           <TableSummary>
             조회 결과 <strong>{tableRows.length}</strong>건
+            {isLoading ? " 불러오는 중" : ""}
           </TableSummary>
         </TableTop>
 
@@ -451,16 +487,15 @@ export default function ProductList() {
       <ProductNew
         isOpen={isNewOpen}
         onClose={() => setIsNewOpen(false)}
-        onRegister={(payload) => {
-          console.log("등록할 데이터:", payload);
-          setIsNewOpen(false);
-        }}
+        onRegister={handleCreateProduct}
       />
       <ProductDetail
         isOpen={isDetailOpen}
         product={selectedProduct}
         onClose={() => setIsDetailOpen(false)}
+        canEdit={canManage}
         onEdit={() => {
+          if (!canManage) return;
           setIsDetailOpen(false);
           setIsEditOpen(true);
         }}

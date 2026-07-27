@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 
@@ -6,105 +6,18 @@ import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import Button from "../../components/ui/Button";
 import MaterialNewEdit from "./MaterialNewEdit";
-
-const INITIAL_MATERIALS = [
-  {
-    id: 1,
-    code: "MAT-20260209-0001",
-    lot: "LOT-001",
-    name: "납(Pb)",
-    unit: "KG",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 2,
-    code: "MAT-20260209-0002",
-    lot: "LOT-002",
-    name: "양극판",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 3,
-    code: "MAT-20260209-0003",
-    lot: "LOT-003",
-    name: "음극판",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 4,
-    code: "MAT-20260209-0004",
-    lot: "LOT-004",
-    name: "분리판",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 5,
-    code: "MAT-20260209-0005",
-    lot: "LOT-005",
-    name: "전해액",
-    unit: "L",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 6,
-    code: "MAT-20260209-0006",
-    lot: "LOT-006",
-    name: "케이스",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 7,
-    code: "MAT-20260209-0007",
-    lot: "LOT-007",
-    name: "커버",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 8,
-    code: "MAT-20260209-0008",
-    lot: "LOT-008",
-    name: "단자",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 9,
-    code: "MAT-20260209-0009",
-    lot: "LOT-009",
-    name: "라벨",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 10,
-    code: "MAT-20260209-0010",
-    lot: "LOT-010",
-    name: "포장지",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-  {
-    id: 11,
-    code: "MAT-20260209-0011",
-    lot: "LOT-011",
-    name: "하드케이스",
-    unit: "EA",
-    registeredAt: "2026-02-09",
-  },
-];
+import masterApi from "../../api/master";
+import AuthContext from "../../context/AuthContext";
+import NoPermissionText from "../../components/ui/NoPermissionText";
+import { hasMasterWritePermission } from "../../utils/masterPermissions";
 
 const PAGE_SIZE = 8;
 
 const columns = [
   { key: "no", label: "No", width: 60 },
   { key: "codeCell", label: "자재코드", width: 160 },
-  { key: "lot", label: "LOT 번호", width: 100 },
   { key: "name", label: "자재명", width: 100 },
+  { key: "unit", label: "단위", width: 80 },
   { key: "registeredAt", label: "등록일", width: 140 },
   { key: "management", label: "관리", width: 90 },
 ];
@@ -122,17 +35,27 @@ const createMaterialCode = (materials) => {
   ).padStart(4, "0")}`;
 };
 
-const createLotNumber = (materials) => {
-  const maxNumber = materials.reduce((max, material) => {
-    const number = Number(material.lot?.replace("LOT-", "")) || 0;
-    return Math.max(max, number);
-  }, 0);
+const formatDate = (value) => {
+  if (!value) return "";
+  return String(value).slice(0, 10);
+};
 
-  return `LOT-${String(maxNumber + 1).padStart(3, "0")}`;
+const toMaterialRow = (material) => {
+  return {
+    id: material.id,
+    code: material.materialCode ?? material.code ?? "",
+    name: material.materialName ?? material.name ?? "",
+    unit: material.unit ?? "",
+    safetyStock: material.safetyStock ?? 0,
+    registeredAt: formatDate(material.registeredAt),
+    active: material.active,
+  };
 };
 
 export default function MaterialList() {
-  const [materials, setMaterials] = useState(INITIAL_MATERIALS);
+  const { user } = useContext(AuthContext);
+  const canManage = hasMasterWritePermission(user);
+  const [materials, setMaterials] = useState([]);
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -142,6 +65,24 @@ export default function MaterialList() {
   const [isNewEditOpen, setIsNewEditOpen] = useState(false);
   const [editMode, setEditMode] = useState("new");
   const [editingMaterial, setEditingMaterial] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadMaterials = async () => {
+    setIsLoading(true);
+    try {
+      const response = await masterApi.getMaterials();
+      setMaterials(response.data.map(toMaterialRow));
+    } catch (error) {
+      console.error("자재 목록 조회 실패:", error);
+      window.alert("자재 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMaterials();
+  }, []);
 
   const filteredMaterials = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
@@ -152,7 +93,6 @@ export default function MaterialList() {
         (!filters.endDate || material.registeredAt <= filters.endDate) &&
         (!keyword ||
           material.code.toLowerCase().includes(keyword) ||
-          material.lot.toLowerCase().includes(keyword) ||
           material.name.toLowerCase().includes(keyword)),
     );
   }, [filters, materials]);
@@ -163,12 +103,14 @@ export default function MaterialList() {
   };
 
   const handleOpenNew = () => {
+    if (!canManage) return;
     setEditMode("new");
     setEditingMaterial(null);
     setIsNewEditOpen(true);
   };
 
   const handleOpenEdit = (material) => {
+    if (!canManage) return;
     setEditMode("edit");
     setEditingMaterial(material);
     setIsNewEditOpen(true);
@@ -179,46 +121,50 @@ export default function MaterialList() {
     setEditingMaterial(null);
   };
 
-  const handleSaveMaterial = (form) => {
-    if (editMode === "edit" && editingMaterial) {
-      setMaterials((prev) =>
-        prev.map((item) =>
-          item.id === editingMaterial.id
-            ? {
-                ...item,
-                name: form.name,
-                unit: form.unit,
-              }
-            : item,
-        ),
-      );
-    } else {
-      const newMaterial = {
-        id: Date.now(),
-        code: createMaterialCode(materials),
-        lot: createLotNumber(materials),
-        name: form.name,
-        unit: form.unit,
-        registeredAt: getToday(),
-      };
+  const handleSaveMaterial = async (form) => {
+    if (!canManage) return;
+    const payload = {
+      materialName: form.name,
+      unit: form.unit,
+      safetyStock: form.safetyStock ?? 0,
+    };
 
-      setMaterials((prev) => [...prev, newMaterial]);
+    try {
+      if (editMode === "edit" && editingMaterial) {
+        await masterApi.updateMaterial(editingMaterial.id, payload);
+      } else {
+        await masterApi.createMaterial({
+          materialCode: form.code || createMaterialCode(materials),
+          ...payload,
+        });
+      }
+
+      await loadMaterials();
+      handleCloseDrawer();
+    } catch (error) {
+      console.error("자재 저장 실패:", error);
+      window.alert("자재 저장에 실패했습니다.");
     }
-
-    handleCloseDrawer();
   };
 
-  const handleDeleteMaterial = (material) => {
+  const handleDeleteMaterial = async (material) => {
+    if (!canManage) return;
     const confirmed = window.confirm(
       `${material.name} 자재를 삭제하시겠습니까?`,
     );
 
     if (!confirmed) return;
 
-    setMaterials((prev) => prev.filter((item) => item.id !== material.id));
+    try {
+      await masterApi.deleteMaterial(material.id);
+      await loadMaterials();
 
-    if (filteredMaterials.length % PAGE_SIZE === 1 && page > 1) {
-      setPage((prev) => prev - 1);
+      if (filteredMaterials.length % PAGE_SIZE === 1 && page > 1) {
+        setPage((prev) => prev - 1);
+      }
+    } catch (error) {
+      console.error("자재 삭제 실패:", error);
+      window.alert("자재 삭제에 실패했습니다.");
     }
   };
 
@@ -226,7 +172,7 @@ export default function MaterialList() {
     ...material,
     no: index + 1,
     codeCell: <Code>{material.code}</Code>,
-    management: (
+    management: canManage ? (
       <Management>
         <IconButton
           type="button"
@@ -252,6 +198,8 @@ export default function MaterialList() {
           <FiTrash2 />
         </DeleteButton>
       </Management>
+    ) : (
+      <NoPermissionText>권한 없음</NoPermissionText>
     ),
   }));
 
@@ -265,14 +213,16 @@ export default function MaterialList() {
           </Description>
         </div>
 
-        <HeaderActionButton
-          type="button"
-          variant="primary"
-          onClick={handleOpenNew}
-        >
-          <FiPlus size={16} />
-          신규 자재 등록
-        </HeaderActionButton>
+        {canManage && (
+          <HeaderActionButton
+            type="button"
+            variant="primary"
+            onClick={handleOpenNew}
+          >
+            <FiPlus size={16} />
+            신규 자재 등록
+          </HeaderActionButton>
+        )}
       </PageHeader>
 
       <FilterPanel>
@@ -284,7 +234,7 @@ export default function MaterialList() {
           endDateLabel="종료일"
           dateWidth={160}
           keywordLabel="자재명 / 코드"
-          keywordPlaceholder="자재명, 자재코드 또는 LOT 번호 검색"
+          keywordPlaceholder="자재명 또는 자재코드 검색"
           keywordWidth={320}
           padding={0}
           border="none"
@@ -301,6 +251,7 @@ export default function MaterialList() {
 
           <Result>
             조회 결과 <strong>{filteredMaterials.length}</strong>건
+            {isLoading ? " 불러오는 중" : ""}
           </Result>
         </TableHeader>
 
@@ -325,7 +276,6 @@ export default function MaterialList() {
         mode={editMode}
         material={editingMaterial}
         previewCode={createMaterialCode(materials)}
-        previewLot={createLotNumber(materials)}
         onClose={handleCloseDrawer}
         onSave={handleSaveMaterial}
       />

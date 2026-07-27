@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
 import { FiX } from "react-icons/fi";
-import BomMaterialEditor from "../../components/ui/BomMaterialEditor";
 
 /* ProductDetail 기반 통일된 디자인 시스템 적용 */
 const DrawerOverlay = styled.div`
@@ -195,26 +194,6 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
   const [capacity, setCapacity] = useState("0");
   const [unit, setUnit] = useState("EA");
 
-  // BOM 리스트 State
-  const [bomList, setBomList] = useState([
-    {
-      id: 1,
-      materialCode: "MAT-CELL-01",
-      materialName: "Lithium Cell Unit",
-      requiredQty: 4,
-      unit: "EA",
-      process: "조립공정",
-    },
-    {
-      id: 2,
-      materialCode: "MAT-BMS-03",
-      materialName: "BMS Module v2",
-      requiredQty: 1,
-      unit: "EA",
-      process: "조립공정",
-    },
-  ]);
-
   if (!isOpen) return null;
 
   // 마스터 최종 등록 전송
@@ -230,10 +209,6 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
       voltage: Number(voltage),
       capacity_ah: Number(capacity),
       unit: unit,
-      bom: bomList.map(({ requiredQty, ...item }) => ({
-        ...item,
-        qty: Number(requiredQty).toFixed(2),
-      })),
     };
 
     // 상위 부모 컴포넌트로 데이터 emit 후 드로어 닫기
@@ -248,24 +223,6 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
     setVoltage("12");
     setCapacity("0");
     setUnit("EA");
-    setBomList([
-      {
-        id: 1,
-        materialCode: "MAT-CELL-01",
-        materialName: "Lithium Cell Unit",
-        requiredQty: 4,
-        unit: "EA",
-        process: "조립공정",
-      },
-      {
-        id: 2,
-        materialCode: "MAT-BMS-03",
-        materialName: "BMS Module v2",
-        requiredQty: 1,
-        unit: "EA",
-        process: "조립공정",
-      },
-    ]);
     onClose();
   };
 
@@ -341,11 +298,6 @@ export default function ProductNew({ isOpen, onClose, onRegister }) {
             </RowFields>
           </Section>
 
-          <BomMaterialEditor
-            rows={bomList}
-            onChange={setBomList}
-            variant="compact"
-          />
         </FormBody>
 
         <Footer>

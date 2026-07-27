@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import BomEdit from "./BomEdit";
@@ -6,161 +6,119 @@ import BomDetail from "./BomDetail";
 import Pagination from "../../components/ui/Pagination";
 import SummaryCard from "../../components/ui/SummaryCard";
 import Button from "../../components/ui/Button";
+import masterApi from "../../api/master";
+import AuthContext from "../../context/AuthContext";
+import NoPermissionText from "../../components/ui/NoPermissionText";
+import { hasMasterWritePermission } from "../../utils/masterPermissions";
 
-// 화면에서 선택할 수 있는 완제품의 임시 데이터
-// 실제 API 연동 시 서버에서 받은 제품 목록으로 대체
-const PRODUCT_LIST = [
-  {
-    id: 1,
-    productCode: "BAT-12V-45AH",
-    productName: "12V 소형 배터리",
-    voltage: "12V",
-    capacity: "45Ah",
-  },
-  {
-    id: 2,
-    productCode: "BAT-12V-65AH",
-    productName: "12V 중형 배터리",
-    voltage: "12V",
-    capacity: "65Ah",
-  },
-  {
-    id: 3,
-    productCode: "BAT-12V-90AH",
-    productName: "12V 대형 배터리",
-    voltage: "12V",
-    capacity: "90Ah",
-  },
-  {
-    id: 4,
-    productCode: "BAT-12V-100AH",
-    productName: "12V 지존 배터리",
-    voltage: "12V",
-    capacity: "100Ah",
-  },
-  {
-    id: 5,
-    productCode: "BAT-12V-30AH",
-    productName: "12V 초소형 배터리",
-    voltage: "12V",
-    capacity: "30Ah",
-  },
-];
+const toProductCard = (product) => ({
+  id: product.id,
+  productCode: product.productCode ?? "",
+  productName: product.productName ?? "",
+  voltage: `${Number(product.voltage ?? 0)}V`,
+  capacity: `${Number(product.capacity ?? 0)}Ah`,
+});
 
-// 제품 id를 key로 사용하고, 각 제품에 포함된 BOM 자재 배열을 value
-// 예: INITIAL_BOM[1]은 id가 1인 제품의 BOM 자재 목록
-const INITIAL_BOM = {
-  1: [
-    {
-      id: 1,
-      materialCode: "MAT-20260209-0001",
-      materialName: "납(Pb)",
-      requiredQty: 6,
-      unit: "KG",
-      process: "전극공정",
-    },
-    {
-      id: 2,
-      materialCode: "MAT-20260209-0002",
-      materialName: "양극판",
-      requiredQty: 5,
-      unit: "EA",
-      process: "전극공정",
-    },
-    {
-      id: 3,
-      materialCode: "MAT-20260209-0003",
-      materialName: "음극판",
-      requiredQty: 5,
-      unit: "EA",
-      process: "전극공정",
-    },
-  ],
+const toBomRow = (item) => ({
+  id: item.id,
+  materialId: item.materialId,
+  materialCode: item.materialCode,
+  materialName: item.materialName,
+  requiredQty: Number(item.requiredQuantity ?? 0),
+  unit: item.unit,
+  inputProcessId: item.inputProcessId,
+  process: item.inputProcessName,
+});
 
-  2: [
-    {
-      id: 4,
-      materialCode: "MAT-20260209-0001",
-      materialName: "납(Pb)",
-      requiredQty: 8,
-      unit: "KG",
-      process: "전극공정",
-    },
-    {
-      id: 5,
-      materialCode: "MAT-20260209-0002",
-      materialName: "양극판",
-      requiredQty: 6,
-      unit: "EA",
-      process: "전극공정",
-    },
-  ],
+const toMaterialOption = (material) => ({
+  materialId: material.id,
+  materialCode: material.materialCode,
+  materialName: material.materialName,
+  unit: material.unit,
+});
 
-  3: [
-    {
-      id: 6,
-      materialCode: "MAT-20260209-0001",
-      materialName: "납(Pb)",
-      requiredQty: 10,
-      unit: "KG",
-      process: "전극공정",
-    },
-    {
-      id: 7,
-      materialCode: "MAT-20260209-0004",
-      materialName: "전해액",
-      requiredQty: 7,
-      unit: "L",
-      process: "주액공정",
-    },
-  ],
+const toProcessOption = (process) => ({
+  id: process.id,
+  processCode: process.processCode,
+  processName: process.processName,
+});
 
-  4: [
-    {
-      id: 8,
-      materialCode: "MAT-20260209-0001",
-      materialName: "납(Pb)",
-      requiredQty: 12,
-      unit: "KG",
-      process: "전극공정",
-    },
-  ],
-
-  5: [
-    {
-      id: 9,
-      materialCode: "MAT-20260209-0001",
-      materialName: "납(Pb)",
-      requiredQty: 4,
-      unit: "KG",
-      process: "전극공정",
-    },
-  ],
-};
+const toBomSavePayload = (rows) =>
+  rows.map((row) => ({
+    id: row._isNew ? null : row.id,
+    materialId: row.materialId,
+    inputProcessId: row.inputProcessId,
+    requiredQuantity: Number(row.requiredQty),
+  }));
 
 const PAGE_SIZE = 8;
 
 // 완제품 선택, BOM 데이터 변경, 수정/상세 드로어 상태를 관리하는 목록 화면
 function Bom() {
-  // 제품 목록은 현재 고정 데이터이므로 setter 없이 읽기 전용 상태로 사용
-  const [products] = useState(PRODUCT_LIST);
-
-  // 현재 선택된 완제품과 제품별 BOM 데이터를 관리.
-  const [selectedProductId, setSelectedProductId] = useState(1);
-  const [bomData, setBomData] = useState(INITIAL_BOM);
+  const { user } = useContext(AuthContext);
+  const canManage = hasMasterWritePermission(user);
+  const [products, setProducts] = useState([]);
+  const [materials, setMaterials] = useState([]);
+  const [processes, setProcesses] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedBomRows, setSelectedBomRows] = useState([]);
   const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 수정/상세 드로어
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedBomItem, setSelectedBomItem] = useState(null);
 
-  // 선택된 id로 제품 기본 정보와 해당 제품의 BOM 목록 찾기
   const selectedProduct = products.find(
     (product) => product.id === selectedProductId,
   );
 
-  const selectedBomRows = bomData[selectedProductId] || [];
+  const loadMasterOptions = useCallback(async () => {
+    try {
+      const [productResponse, materialResponse, processResponse] =
+        await Promise.all([
+          masterApi.getProducts(),
+          masterApi.getMaterials(),
+          masterApi.getProcesses(),
+        ]);
+
+      const productRows = productResponse.data.map(toProductCard);
+      setProducts(productRows);
+      setMaterials(materialResponse.data.map(toMaterialOption));
+      setProcesses(processResponse.data.map(toProcessOption));
+      setSelectedProductId((current) => current ?? productRows[0]?.id ?? null);
+    } catch (error) {
+      console.error("BOM 기준정보 조회 실패:", error);
+      window.alert("BOM 기준정보를 불러오지 못했습니다.");
+    }
+  }, []);
+
+  const loadBomItems = async (productId) => {
+    if (!productId) {
+      setSelectedBomRows([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await masterApi.getBomItems(productId);
+      setSelectedBomRows(response.data.map(toBomRow));
+    } catch (error) {
+      console.error("BOM 목록 조회 실패:", error);
+      window.alert("BOM 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMasterOptions();
+  }, [loadMasterOptions]);
+
+  useEffect(() => {
+    loadBomItems(selectedProductId);
+  }, [selectedProductId]);
 
   // 다른 완제품을 선택하면 이전 자재의 상세 선택 상태도 함께 초기화
   const handleSelectProduct = (productId) => {
@@ -172,6 +130,7 @@ function Bom() {
 
   // 수정 버튼과 닫기 동작은 수정 드로어의 표시 상태만 변경
   const handleOpenEdit = () => {
+    if (!canManage) return;
     setIsEditOpen(true);
   };
 
@@ -180,13 +139,19 @@ function Bom() {
   };
 
   // 수정 드로어에서 받은 BOM 목록을 현재 선택 제품의 데이터로 교체
-  const handleBomSave = (savedRows) => {
-    setBomData((prev) => ({
-      ...prev,
-      [selectedProductId]: savedRows,
-    }));
-
-    setIsEditOpen(false);
+  const handleBomSave = async (savedRows) => {
+    if (!canManage) return;
+    try {
+      const response = await masterApi.saveBomItems(
+        selectedProductId,
+        toBomSavePayload(savedRows),
+      );
+      setSelectedBomRows(response.data.map(toBomRow));
+      setIsEditOpen(false);
+    } catch (error) {
+      console.error("BOM 저장 실패:", error);
+      window.alert("BOM 저장에 실패했습니다.");
+    }
   };
 
   // 공용 Table 행의 id로 원본 BOM 자재를 찾아 상세 드로어에 전달
@@ -209,22 +174,21 @@ function Bom() {
   };
 
   const handleEditFromDetail = () => {
+    if (!canManage) return;
     setIsDetailOpen(false);
     setSelectedBomItem(null);
     setIsEditOpen(true);
   };
 
-  const handleDeleteBomItem = (item) => {
+  const handleDeleteBomItem = async (item) => {
+    if (!canManage) return;
     if (
       !window.confirm(`${item.materialName} 자재를 BOM에서 삭제하시겠습니까?`)
     ) {
       return;
     }
 
-    setBomData((prev) => ({
-      ...prev,
-      [selectedProductId]: selectedBomRows.filter((row) => row.id !== item.id),
-    }));
+    await handleBomSave(selectedBomRows.filter((row) => row.id !== item.id));
   };
 
   // 공용 Table이 사용하는 열 정의, key는 아래 bomTableRows의 필드와 대응
@@ -283,7 +247,7 @@ function Bom() {
 
     process: <ProcessBadge>{row.process}</ProcessBadge>,
 
-    management: (
+    management: canManage ? (
       <Management>
         <IconButton
           type="button"
@@ -309,6 +273,8 @@ function Bom() {
           <FiTrash2 />
         </DeleteButton>
       </Management>
+    ) : (
+      <NoPermissionText>권한 없음</NoPermissionText>
     ),
   }));
 
@@ -324,14 +290,16 @@ function Bom() {
           </PageDescription>
         </div>
 
-        <HeaderActionButton
-          type="button"
-          variant="primary"
-          onClick={handleOpenEdit}
-        >
-          <FiEdit2 size={16} />
-          BOM 수정
-        </HeaderActionButton>
+        {canManage && (
+          <HeaderActionButton
+            type="button"
+            variant="primary"
+            onClick={handleOpenEdit}
+          >
+            <FiEdit2 size={16} />
+            BOM 수정
+          </HeaderActionButton>
+        )}
       </PageHeader>
 
       {/* 제품 카드를 클릭하면 아래 BOM 테이블의 데이터가 해당 제품 기준 */}
@@ -373,6 +341,7 @@ function Bom() {
           </div>
           <TableResultText>
             조회 결과 <strong>{selectedBomRows.length}</strong>건
+            {isLoading ? " 불러오는 중" : ""}
           </TableResultText>
         </SelectedProductTitle>
 
@@ -405,6 +374,8 @@ function Bom() {
         isOpen={isEditOpen}
         product={selectedProduct}
         bomRows={selectedBomRows}
+        materialOptions={materials}
+        processOptions={processes}
         onClose={handleCloseEdit}
         onSave={handleBomSave}
       />
@@ -416,6 +387,7 @@ function Bom() {
         bomItem={selectedBomItem}
         onClose={handleCloseDetail}
         onEdit={handleEditFromDetail}
+        canEdit={canManage}
       />
     </PageContainer>
   );

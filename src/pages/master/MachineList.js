@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   FiPlus,
@@ -22,6 +22,41 @@ import Pagination from "../../components/ui/Pagination";
 import MachineNew from "./MachineNew";
 import MachineEdit from "./MachineEdit";
 import MachineDetail from "./MachineDetail";
+import masterApi from "../../api/master";
+import AuthContext from "../../context/AuthContext";
+import NoPermissionText from "../../components/ui/NoPermissionText";
+import { hasMasterWritePermission } from "../../utils/masterPermissions";
+
+const toMachineRow = (machine) => {
+  const active = machine.active !== false;
+  const status = machine.equipmentStatus || (active ? "가동" : "비가동");
+
+  return {
+    machine_id: machine.id,
+    processId: machine.process?.id,
+    process_id: machine.process?.processCode ?? "",
+    machine_code: machine.equipmentCode ?? "",
+    machine_name: machine.equipmentName ?? "",
+    status,
+    use_yn: active ? "Y" : "N",
+    message: machine.statusMessage || "-",
+  };
+};
+
+const toEquipmentCreatePayload = (machine) => ({
+  equipmentCode: machine.machine_code,
+  equipmentName: machine.machine_name,
+  processId: Number(machine.processId || machine.process_id),
+  active: machine.use_yn === "Y",
+  statusMessage: machine.message === "-" ? "" : machine.message,
+});
+
+const toEquipmentUpdatePayload = (machine) => ({
+  equipmentName: machine.machine_name,
+  processId: Number(machine.processId || machine.process_id),
+  active: machine.use_yn === "Y",
+  statusMessage: machine.message === "-" ? "" : machine.message,
+});
 
 /* ================= Styled Components ================= */
 const Container = styled.div`
@@ -265,11 +300,15 @@ const DeleteButton = styled(IconButton)`
 
 /* ================= Component Logic ================= */
 export default function MachineList() {
+  const { user } = useContext(AuthContext);
+  const canManage = hasMasterWritePermission(user);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [page, setPage] = useState(1);
+  const [processes, setProcesses] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [filterValues, setFilterValues] = useState({
     processId: "",
@@ -278,53 +317,34 @@ export default function MachineList() {
     useYn: "",
   });
 
-  const [machines, setMachines] = useState([
-    {
-      machine_id: 1,
-      process_id: "PC-001",
-      machine_code: "MC-001",
-      machine_name: "믹싱기 A호기",
-      status: "가동",
-      use_yn: "Y",
-      message: "-",
-    },
-    {
-      machine_id: 2,
-      process_id: "PC-002",
-      machine_code: "MC-002",
-      machine_name: "코팅기 B호기",
-      status: "비가동",
-      use_yn: "Y",
-      message: "-",
-    },
-    {
-      machine_id: 3,
-      process_id: "PC-003",
-      machine_code: "MC-003",
-      machine_name: "압출 성형기",
-      status: "에러",
-      use_yn: "N",
-      message: "급유 장치 압력 저하 (E-042)",
-    },
-    {
-      machine_id: 4,
-      process_id: "PC-004",
-      machine_code: "MC-004",
-      machine_name: "패키징 마스터",
-      status: "가동",
-      use_yn: "Y",
-      message: "-",
-    },
-    {
-      machine_id: 5,
-      process_id: "PC-005",
-      machine_code: "MC-005",
-      machine_name: "고속 분쇄기",
-      status: "가동",
-      use_yn: "Y",
-      message: "-",
-    },
-  ]);
+  const [machines, setMachines] = useState([]);
+
+  const loadMachines = async () => {
+    setIsLoading(true);
+    try {
+      const response = await masterApi.getEquipment();
+      setMachines(response.data.map(toMachineRow));
+    } catch (error) {
+      console.error("설비 목록 조회 실패:", error);
+      window.alert("설비 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadProcesses = async () => {
+    try {
+      const response = await masterApi.getProcesses();
+      setProcesses(response.data);
+    } catch (error) {
+      console.error("공정 목록 조회 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadMachines();
+    loadProcesses();
+  }, []);
 
   const filteredRows = machines.filter((item) => {
     const keyword = filterValues.keyword.toLowerCase();
@@ -368,29 +388,29 @@ export default function MachineList() {
     setPage(1);
   };
 
-  const handleSaveMachine = (newMachine) => {
-    const nextId =
-      machines.length > 0
-        ? Math.max(...machines.map((m) => m.machine_id)) + 1
-        : 1;
-    setMachines((prev) => [
-      ...prev,
-      {
-        machine_id: nextId,
-        ...newMachine,
-        message: "-",
-      },
-    ]);
+  const handleSaveMachine = async (newMachine) => {
+    if (!canManage) return;
+    try {
+      await masterApi.createEquipment(toEquipmentCreatePayload(newMachine));
+      await loadMachines();
+    } catch (error) {
+      console.error("설비 등록 실패:", error);
+      window.alert("설비 등록에 실패했습니다.");
+    }
   };
 
-  const handleUpdateMachine = (updatedMachine) => {
-    setMachines((prev) =>
-      prev.map((m) =>
-        m.machine_id === updatedMachine.machine_id
-          ? { ...m, ...updatedMachine }
-          : m,
-      ),
-    );
+  const handleUpdateMachine = async (updatedMachine) => {
+    if (!canManage) return;
+    try {
+      await masterApi.updateEquipment(
+        updatedMachine.machine_id,
+        toEquipmentUpdatePayload(updatedMachine),
+      );
+      await loadMachines();
+    } catch (error) {
+      console.error("설비 수정 실패:", error);
+      window.alert("설비 수정에 실패했습니다.");
+    }
   };
 
   const handleRowClick = (row) => {
@@ -403,6 +423,7 @@ export default function MachineList() {
 
   const handleEditClick = (e, row) => {
     e.stopPropagation();
+    if (!canManage) return;
     const originMachine = machines.find((m) => m.machine_id === row.machine_id);
     if (originMachine) {
       setSelectedMachine(originMachine);
@@ -411,13 +432,12 @@ export default function MachineList() {
   };
 
   const handleDeleteMachine = (machine) => {
+    if (!canManage) return;
     if (!window.confirm(`${machine.machine_name} 설비를 삭제하시겠습니까?`)) {
       return;
     }
 
-    setMachines((prev) =>
-      prev.filter((item) => item.machine_id !== machine.machine_id),
-    );
+    window.alert("설비 삭제 API가 아직 없어 삭제할 수 없습니다.");
   };
 
   const columns = [
@@ -458,7 +478,7 @@ export default function MachineList() {
         ) : (
           mac.message
         ),
-      management: (
+      management: canManage ? (
         <Management>
           <IconButton
             type="button"
@@ -484,6 +504,8 @@ export default function MachineList() {
             <FiTrash2 />
           </DeleteButton>
         </Management>
+      ) : (
+        <NoPermissionText>권한 없음</NoPermissionText>
       ),
     };
   });
@@ -499,14 +521,16 @@ export default function MachineList() {
             관리합니다.
           </p>
         </TitleSection>
-        <HeaderActionButton
-          type="button"
-          variant="primary"
-          onClick={() => setIsNewModalOpen(true)}
-        >
-          <FiPlus size={16} />
-          설비 등록
-        </HeaderActionButton>
+        {canManage && (
+          <HeaderActionButton
+            type="button"
+            variant="primary"
+            onClick={() => setIsNewModalOpen(true)}
+          >
+            <FiPlus size={16} />
+            설비 등록
+          </HeaderActionButton>
+        )}
       </Header>
 
       {/* 상단 4개 요약 KPI 카드 */}
@@ -638,6 +662,7 @@ export default function MachineList() {
 
           <TableSummary>
             조회 결과 <strong>{rows.length}</strong>건
+            {isLoading ? " 불러오는 중" : ""}
           </TableSummary>
         </TableTop>
 
@@ -664,6 +689,7 @@ export default function MachineList() {
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onSave={handleSaveMachine}
+        processes={processes}
       />
 
       <MachineDetail
@@ -673,7 +699,9 @@ export default function MachineList() {
           setSelectedMachine(null);
         }}
         selectedMachine={selectedMachine}
+        canEdit={canManage}
         onEdit={() => {
+          if (!canManage) return;
           setIsDetailOpen(false);
           setIsEditModalOpen(true);
         }}
@@ -687,6 +715,7 @@ export default function MachineList() {
         }}
         selectedMachine={selectedMachine}
         onUpdate={handleUpdateMachine}
+        processes={processes}
       />
     </Container>
   );

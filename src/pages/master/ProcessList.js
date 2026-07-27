@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import Button from "../../components/ui/Button";
 import SummaryCard from "../../components/ui/SummaryCard";
@@ -20,6 +20,31 @@ import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import ProcessNew from "./ProcessNew";
 import ProcessEdit from "./ProcessEdit";
 import ProcessDetail from "./ProcessDetail";
+import masterApi from "../../api/master";
+import AuthContext from "../../context/AuthContext";
+import NoPermissionText from "../../components/ui/NoPermissionText";
+import { hasMasterWritePermission } from "../../utils/masterPermissions";
+
+const toProcessRow = (process) => ({
+  id: process.id,
+  seq: process.sequenceNo ?? 0,
+  step_code: process.processCode ?? "",
+  step_name: process.processName ?? "",
+  is_active: process.processStatus !== "미사용",
+  machine: process.equipment?.equipmentCode ?? "설비 선택 (없음)",
+  description: process.description ?? "",
+  worker: process.managerEmployee?.employeeName ?? "",
+  managerEmployeeId: process.managerEmployee?.id,
+  processStatus: process.processStatus,
+});
+
+const toProcessPayload = (process, fallbackManagerEmployeeId) => ({
+  processCode: process.step_code,
+  processName: process.step_name,
+  sequenceNo: Number(process.seq),
+  managerEmployeeId: process.managerEmployeeId ?? fallbackManagerEmployeeId,
+  description: process.description,
+});
 
 /* Styled Components */
 const Container = styled.div`
@@ -230,58 +255,11 @@ const DeleteButton = styled(IconButton)`
 `;
 
 export default function ProcessList() {
-  const [processes, setProcesses] = useState([
-    {
-      id: 1,
-      seq: 1,
-      step_code: "PROC-001",
-      step_name: "정밀 사출 공정",
-      is_active: true,
-      machine: "MCH-001",
-      description: "정밀 사출 세부 프로세스",
-      worker: "홍길동",
-    },
-    {
-      id: 2,
-      seq: 2,
-      step_code: "PROC-002",
-      step_name: "레이저 각인 공정",
-      is_active: true,
-      machine: "MCH-002",
-      description: "레이저 마킹 작업",
-      worker: "김철수",
-    },
-    {
-      id: 3,
-      seq: 3,
-      step_code: "PROC-003",
-      step_name: "표면 연마 공정",
-      is_active: false,
-      machine: "설비 선택 (없음)",
-      description: "표면 가공 및 수동 연마",
-      worker: "이영희",
-    },
-    {
-      id: 4,
-      seq: 4,
-      step_code: "PROC-004",
-      step_name: "전자파 차폐 도장",
-      is_active: true,
-      machine: "MCH-001",
-      description: "스프레이 도장 공정",
-      worker: "박민수",
-    },
-    {
-      id: 5,
-      seq: 5,
-      step_code: "PROC-005",
-      step_name: "초음파 세척 공정",
-      is_active: true,
-      machine: "MCH-002",
-      description: "최종 세척 및 건조",
-      worker: "최동현",
-    },
-  ]);
+  const { user } = useContext(AuthContext);
+  const canManage = hasMasterWritePermission(user);
+  const [processes, setProcesses] = useState([]);
+  const [workers, setWorkers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [searchCode, setSearchCode] = useState("");
   const [searchName, setSearchName] = useState("");
@@ -293,21 +271,72 @@ export default function ProcessList() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
 
+  const defaultManagerEmployeeId = useMemo(() => {
+    return (
+      workers[0]?.id ??
+      processes.find((process) => process.managerEmployeeId)?.managerEmployeeId
+    );
+  }, [processes, workers]);
+
+  const nextProcessCode = useMemo(() => {
+    const maxNumber = processes.reduce((max, process) => {
+      const number = Number(process.step_code?.split("-").pop()) || 0;
+      return Math.max(max, number);
+    }, 0);
+    return `PROC-${String(maxNumber + 10).padStart(3, "0")}`;
+  }, [processes]);
+
+  const nextSequence = useMemo(() => {
+    return (
+      processes.reduce(
+        (max, process) => Math.max(max, Number(process.seq) || 0),
+        0,
+      ) + 1
+    );
+  }, [processes]);
+
+  const loadProcesses = async () => {
+    setIsLoading(true);
+    try {
+      const response = await masterApi.getProcesses();
+      setProcesses(response.data.map(toProcessRow));
+    } catch (error) {
+      console.error("공정 목록 조회 실패:", error);
+      window.alert("공정 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadWorkers = async () => {
+    try {
+      const response = await masterApi.getWorkers();
+      setWorkers(response.data);
+    } catch (error) {
+      console.warn("작업자 목록 조회 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadProcesses();
+    loadWorkers();
+  }, []);
+
   const totalCount = processes.length;
   const activeCount = processes.filter((p) => p.is_active).length;
   const inactiveCount = totalCount - activeCount;
 
   const handleEdit = (e, process) => {
     e.stopPropagation();
+    if (!canManage) return;
     setSelectedProcess(process);
     setIsEditModalOpen(true);
   };
 
   const handleDelete = (e, id) => {
     e.stopPropagation();
-    if (window.confirm("선택한 공정을 삭제하시겠습니까?")) {
-      setProcesses((prev) => prev.filter((p) => p.id !== id));
-    }
+    if (!canManage) return;
+    window.alert("공정 삭제 API가 아직 없어 삭제할 수 없습니다.");
   };
 
   const handleRowClick = (row) => {
@@ -320,11 +349,13 @@ export default function ProcessList() {
 
   // 💡 상세 패널 내에서 수정 버튼을 눌렀을 때 작동할 핸들러 추가
   const handleDetailEdit = () => {
+    if (!canManage) return;
     setIsDetailOpen(false); // 상세 보기 닫기
     setIsEditModalOpen(true); // 수정 모달 열기 (기존에 선택된 selectedProcess가 주입됨)
   };
 
   const handleRegister = () => {
+    if (!canManage) return;
     setIsNewModalOpen(true);
   };
 
@@ -342,22 +373,34 @@ export default function ProcessList() {
     setPage(1);
   };
 
-  const handleRegisterProcess = (newProcess) => {
-    const nextId =
-      processes.length > 0 ? Math.max(...processes.map((p) => p.id)) + 1 : 1;
-    setProcesses((prev) => [
-      ...prev,
-      {
-        id: nextId,
-        ...newProcess,
-      },
-    ]);
+  const handleRegisterProcess = async (newProcess) => {
+    if (!canManage) return;
+    try {
+      await masterApi.createProcess(
+        toProcessPayload(newProcess, defaultManagerEmployeeId),
+      );
+      await loadProcesses();
+    } catch (error) {
+      console.error("공정 등록 실패:", error);
+      window.alert("공정 등록에 실패했습니다.");
+    }
   };
 
-  const handleUpdateProcess = (updatedProcess) => {
-    setProcesses((prev) =>
-      prev.map((p) => (p.id === updatedProcess.id ? updatedProcess : p)),
-    );
+  const handleUpdateProcess = async (updatedProcess) => {
+    if (!canManage) return;
+    try {
+      await masterApi.updateProcess(
+        updatedProcess.id,
+        toProcessPayload(
+          updatedProcess,
+          updatedProcess.managerEmployeeId ?? defaultManagerEmployeeId,
+        ),
+      );
+      await loadProcesses();
+    } catch (error) {
+      console.error("공정 수정 실패:", error);
+      window.alert("공정 수정에 실패했습니다.");
+    }
   };
 
   const filteredRows = processes.filter((item) => {
@@ -390,7 +433,7 @@ export default function ProcessList() {
         {row.is_active ? "사용" : "미사용"}
       </StatusBadge>
     ),
-    management: (
+    management: canManage ? (
       <Management>
         <IconButton
           type="button"
@@ -416,6 +459,8 @@ export default function ProcessList() {
           <FiTrash2 />
         </DeleteButton>
       </Management>
+    ) : (
+      <NoPermissionText>권한 없음</NoPermissionText>
     ),
   }));
 
@@ -453,14 +498,16 @@ export default function ProcessList() {
           <h2>공정 관리</h2>
           <p>실시간 공정 정의 및 시퀀스 관리 시스템</p>
         </div>
-        <HeaderActionButton
-          type="button"
-          variant="primary"
-          onClick={handleRegister}
-        >
-          <FiPlus size={16} />
-          공정 등록
-        </HeaderActionButton>
+        {canManage && (
+          <HeaderActionButton
+            type="button"
+            variant="primary"
+            onClick={handleRegister}
+          >
+            <FiPlus size={16} />
+            공정 등록
+          </HeaderActionButton>
+        )}
       </Header>
 
       <SummaryGrid>
@@ -538,6 +585,7 @@ export default function ProcessList() {
 
           <TableSummary>
             조회 결과 <strong>{tableRows.length}</strong>건
+            {isLoading ? " 불러오는 중" : ""}
           </TableSummary>
         </TableTop>
 
@@ -564,6 +612,10 @@ export default function ProcessList() {
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onRegister={handleRegisterProcess}
+        nextProcessCode={nextProcessCode}
+        nextSequence={nextSequence}
+        workers={workers}
+        defaultManagerEmployeeId={defaultManagerEmployeeId}
       />
 
       {/* 💡 변동 항목: 프로프 이름 수정 및 onEdit 핸들러 할당 */}
@@ -575,6 +627,7 @@ export default function ProcessList() {
         }}
         product={selectedProcess}
         onEdit={handleDetailEdit}
+        canEdit={canManage}
       />
 
       <ProcessEdit
@@ -585,6 +638,7 @@ export default function ProcessList() {
         }}
         processData={selectedProcess}
         onUpdate={handleUpdateProcess}
+        workers={workers}
       />
     </Container>
   );

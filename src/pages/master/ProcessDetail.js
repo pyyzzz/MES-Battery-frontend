@@ -4,7 +4,13 @@ import { FiX } from "react-icons/fi";
 import Button from "../../components/ui/Button";
 
 // product 프로퍼티로 공정 데이터를 받아오고, onEdit과 onClose를 처리합니다.
-export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
+export default function ProcessDetail({
+  isOpen,
+  product,
+  onClose,
+  onEdit,
+  canEdit = true,
+}) {
   useEffect(() => {
     if (!isOpen || !product) return undefined;
 
@@ -82,9 +88,11 @@ export default function ProcessDetail({ isOpen, product, onClose, onEdit }) {
             닫기
           </ActionButton>
 
-          <ActionButton type="button" $primary onClick={onEdit}>
-            수정
-          </ActionButton>
+          {canEdit && (
+            <ActionButton type="button" $primary onClick={onEdit}>
+              수정
+            </ActionButton>
+          )}
         </Footer>
       </Drawer>
     </>

@@ -3,9 +3,10 @@ import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 import Button from "../../components/ui/Button";
 
-export default function MachineNew({ isOpen, onClose, onSave }) {
+export default function MachineNew({ isOpen, onClose, onSave, processes = [] }) {
   const [formData, setFormData] = useState({
     process_id: "",
+    processId: "",
     machine_code: "",
     machine_name: "",
     status: "가동",
@@ -27,7 +28,7 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
 
     // 💡 .trim()을 사용하여 띄어쓰기 공백만 넣어서 우회하는 것을 완벽 차단!
     if (
-      !formData.process_id.trim() ||
+      !String(formData.processId).trim() ||
       !formData.machine_code.trim() ||
       !formData.machine_name.trim()
     ) {
@@ -40,6 +41,7 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
     // 저장 후 모달 닫기 및 폼 초기화
     setFormData({
       process_id: "",
+      processId: "",
       machine_code: "",
       machine_name: "",
       status: "가동",
@@ -65,17 +67,22 @@ export default function MachineNew({ isOpen, onClose, onSave }) {
 
         {/* 💡 onSubmit 핸들러가 연결되어 있어 form 내부에서 Enter를 눌러도 제출 가능합니다 */}
         <Form id="machine-new-form" onSubmit={handleSubmit}>
-          {/* 1. 공정코드 */}
+          {/* 1. 공정 */}
           <FormGroup>
-            <Label>공정코드</Label>
-            <Input
-              type="text"
-              name="process_id"
-              placeholder="예: PC-001"
-              value={formData.process_id}
+            <Label>공정</Label>
+            <Select
+              name="processId"
+              value={formData.processId}
               onChange={handleChange}
-              required // HTML5 브라우저 검증 활성화
-            />
+              required
+            >
+              <option value="">공정을 선택하세요</option>
+              {processes.map((process) => (
+                <option key={process.id} value={process.id}>
+                  {process.processCode} / {process.processName}
+                </option>
+              ))}
+            </Select>
           </FormGroup>
 
           {/* 2. 설비코드 */}

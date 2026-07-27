@@ -9,6 +9,7 @@ export default function MachineDetail({
   onClose,
   selectedMachine,
   onEdit,
+  canEdit = true,
 }) {
   useEffect(() => {
     if (!isOpen || !selectedMachine) return undefined;
@@ -85,9 +86,11 @@ export default function MachineDetail({
             닫기
           </ActionButton>
 
-          <ActionButton type="button" $primary onClick={onEdit}>
-            수정
-          </ActionButton>
+          {canEdit && (
+            <ActionButton type="button" $primary onClick={onEdit}>
+              수정
+            </ActionButton>
+          )}
         </Footer>
       </Drawer>
     </>

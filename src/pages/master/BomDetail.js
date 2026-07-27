@@ -3,7 +3,14 @@ import { FiX } from "react-icons/fi";
 import Button from "../../components/ui/Button";
 
 // 목록에서 선택한 제품과 BOM 자재의 값을 읽기 전용으로 보여주는 상세 드로어
-function BomDetail({ isOpen, product, bomItem, onClose, onEdit }) {
+function BomDetail({
+  isOpen,
+  product,
+  bomItem,
+  onClose,
+  onEdit,
+  canEdit = true,
+}) {
   // 열림 상태와 상세 데이터가 모두 준비된 경우에만 드로어를 렌더링
   if (!isOpen || !product || !bomItem) {
     return null;
@@ -125,9 +132,11 @@ function BomDetail({ isOpen, product, bomItem, onClose, onEdit }) {
             닫기
           </ActionButton>
 
-          <ActionButton type="button" $primary onClick={onEdit}>
-            수정
-          </ActionButton>
+          {canEdit && (
+            <ActionButton type="button" $primary onClick={onEdit}>
+              수정
+            </ActionButton>
+          )}
         </Footer>
       </DrawerContainer>
     </DrawerBackdrop>

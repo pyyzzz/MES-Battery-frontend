@@ -3,7 +3,13 @@ import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 import Button from "../../components/ui/Button";
 
-export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
+export default function ProductDetail({
+  isOpen,
+  product,
+  onClose,
+  onEdit,
+  canEdit = true,
+}) {
   useEffect(() => {
     if (!isOpen || !product) return undefined;
 
@@ -99,9 +105,11 @@ export default function ProductDetail({ isOpen, product, onClose, onEdit }) {
             닫기
           </ActionButton>
 
-          <ActionButton type="button" $primary onClick={onEdit}>
-            수정
-          </ActionButton>
+          {canEdit && (
+            <ActionButton type="button" $primary onClick={onEdit}>
+              수정
+            </ActionButton>
+          )}
         </Footer>
       </Drawer>
     </>

@@ -6,7 +6,6 @@ import Button from "../../components/ui/Button";
 const EMPTY_FORM = {
   id: "",
   code: "",
-  lot: "",
   name: "",
   unit: "",
 };
@@ -16,7 +15,6 @@ export default function MaterialNewEdit({
   mode = "new",
   material,
   previewCode = "",
-  previewLot = "",
   onClose,
   onSave,
 }) {
@@ -29,7 +27,6 @@ export default function MaterialNewEdit({
       setForm({
         id: material.id ?? "",
         code: material.code ?? "",
-        lot: material.lot ?? "",
         name: material.name ?? "",
         unit: material.unit ?? "",
       });
@@ -39,11 +36,10 @@ export default function MaterialNewEdit({
     setForm({
       id: "",
       code: previewCode,
-      lot: previewLot,
       name: "",
       unit: "",
     });
-  }, [isOpen, mode, material, previewCode, previewLot]);
+  }, [isOpen, mode, material, previewCode]);
 
   if (!isOpen) return null;
 
@@ -77,8 +73,6 @@ export default function MaterialNewEdit({
 
       code:
         mode === "edit" ? material?.code : previewCode || `MAT-${Date.now()}`,
-
-      lot: mode === "edit" ? material?.lot : previewLot || `LOT-${Date.now()}`,
 
       registeredAt:
         mode === "edit"
@@ -127,17 +121,6 @@ export default function MaterialNewEdit({
               <Input
                 type="text"
                 value={mode === "edit" ? form.code : previewCode}
-                placeholder="자동 생성"
-                disabled
-              />
-            </FormGroup>
-
-            <FormGroup>
-              <Label>LOT 번호</Label>
-
-              <Input
-                type="text"
-                value={mode === "edit" ? form.lot : previewLot}
                 placeholder="자동 생성"
                 disabled
               />
