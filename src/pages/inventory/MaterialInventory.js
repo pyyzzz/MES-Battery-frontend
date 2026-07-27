@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   FiAlertTriangle,
-  FiCheck,
   FiPackage,
   FiPlus,
   FiShield,
@@ -15,6 +14,8 @@ import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
+import inventoryApi from "../../api/inventory";
+import AuthContext from "../../context/AuthContext";
 
 const TABLE_COLUMNS = [
   { key: "number", label: "No", width: 70, align: "center" },
@@ -28,25 +29,7 @@ const TABLE_COLUMNS = [
   { key: "registeredAt", label: "자재등록일자", width: 130, align: "center" },
 ];
 
-const INITIAL_MATERIALS = [
-  { id: 1, code: "MAT-20260209-0001", name: "납(Pb)", stock: 1101, safetyStock: 5000, unit: "KG", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "자재 창고 (Main)", lotNo: "ML-260208-0001-INIT" },
-  { id: 2, code: "MAT-20260209-0002", name: "양극판", stock: 423, safetyStock: 10000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "자재 창고 (Main)", lotNo: "ML-260208-0002-INIT" },
-  { id: 3, code: "MAT-20260209-0003", name: "음극판", stock: 423, safetyStock: 10000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "자재 창고 (Main)", lotNo: "ML-260208-0003-INIT" },
-  { id: 4, code: "MAT-20260209-0004", name: "분리판", stock: 1368, safetyStock: 50000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-09 17:49", location: "자재 창고 (Main)", lotNo: "ML-260209-0004-INIT" },
-  { id: 5, code: "MAT-20260209-0005", name: "전해액", stock: 472, safetyStock: 5000, unit: "L", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "위험물 창고", lotNo: "ML-260208-0005-INIT" },
-  { id: 6, code: "MAT-20260209-0006", name: "케이스", stock: 1, safetyStock: 1000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "자재 창고 (Main)", lotNo: "ML-260208-0006-INIT" },
-  { id: 7, code: "MAT-20260209-0007", name: "커버", stock: 1, safetyStock: 1000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "자재 창고 (Main)", lotNo: "ML-260208-0007-INIT" },
-  { id: 8, code: "MAT-20260209-0008", name: "단자", stock: 2, safetyStock: 5000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "부품 창고", lotNo: "ML-260208-0008-INIT" },
-  { id: 9, code: "MAT-20260209-0009", name: "라벨", stock: 60, safetyStock: 5000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-08 15:57", location: "부품 창고", lotNo: "ML-260208-0009-INIT" },
-  { id: 10, code: "MAT-20260209-160043", name: "포장지", stock: 1000, safetyStock: 1000, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-09 16:00", location: "포장재 창고", lotNo: "ML-260209-0010-INIT" },
-  { id: 11, code: "MAT-20260209-170423", name: "하드케이스", stock: 100, safetyStock: 100, unit: "EA", registeredAt: "2026-02-09", lastInboundAt: "2026-02-09 17:04", location: "부품 창고", lotNo: "ML-260209-0011-INIT" },
-];
-
-const getStatus = ({ stock, safetyStock }) => {
-  if (stock <= 0) return "danger";
-  if (stock < safetyStock) return "warning";
-  return "safe";
-};
+const EMPTY_SUMMARY = { total: 0, safe: 0, warning: 0, danger: 0 };
 
 const formatNumber = (value) => Number(value).toLocaleString();
 
@@ -377,7 +360,11 @@ const ModalActions = styled.div`
 `;
 
 function MaterialInventory() {
-  const [materials, setMaterials] = useState(INITIAL_MATERIALS);
+  const { user } = useContext(AuthContext);
+
+  const [materials, setMaterials] = useState([]);
+  const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({ startDate: "", endDate: "", status: "", keyword: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
@@ -385,22 +372,28 @@ function MaterialInventory() {
   const [inboundQuantity, setInboundQuantity] = useState("");
   const itemsPerPage = 8;
 
-  const summary = useMemo(() => {
-    const counts = { safe: 0, warning: 0, danger: 0 };
-    materials.forEach((material) => { counts[getStatus(material)] += 1; });
-    return { total: materials.length, ...counts };
-  }, [materials]);
+  const loadInventory = async (activeFilters) => {
+    setIsLoading(true);
+    try {
+      const [materialsRes, summaryRes] = await Promise.all([
+        inventoryApi.getMaterials(activeFilters),
+        inventoryApi.getMaterialSummary(activeFilters),
+      ]);
+      setMaterials(materialsRes.data);
+      setSummary(summaryRes.data);
+    } catch (error) {
+      console.warn("자재 재고 조회 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const filteredMaterials = useMemo(() => {
-    const keyword = filters.keyword.trim().toLowerCase();
-    return materials.filter((material) => {
-      const status = getStatus(material);
-      return (!filters.startDate || material.registeredAt >= filters.startDate)
-        && (!filters.endDate || material.registeredAt <= filters.endDate)
-        && (!filters.status || status === filters.status)
-        && (!keyword || [material.code, material.name].some((value) => value.toLowerCase().includes(keyword)));
-    });
-  }, [materials, filters]);
+  // 필터가 바뀔 때마다 목록/요약을 함께 조회한다 (materials, materials/summary 동일 필터 지원)
+  useEffect(() => {
+    setCurrentPage(1);
+    loadInventory(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const handleFilterChange = (values) => {
     setFilters(values);
@@ -418,26 +411,46 @@ function MaterialInventory() {
     setInboundOpen(true);
   };
 
-  const confirmInbound = () => {
+  const confirmInbound = async () => {
     const quantity = Number(inboundQuantity);
     if (!selectedMaterial || !Number.isFinite(quantity) || quantity <= 0) return;
 
-    const lotNo = `ML-${new Date().toISOString().slice(2, 10).replaceAll("-", "")}-${String(Date.now()).slice(-4)}`;
-    const nextMaterial = { ...selectedMaterial, stock: selectedMaterial.stock + quantity, lastInboundAt: "2026-07-15 16:00", lotNo };
-    setMaterials((previous) => previous.map((item) => item.id === nextMaterial.id ? nextMaterial : item));
-    setSelectedMaterial(nextMaterial);
-    setInboundOpen(false);
-    setInboundQuantity("");
+    try {
+      const response = await inventoryApi.inboundMaterial(selectedMaterial.id, {
+        quantity,
+        employeeId: user?.employeeId ?? null,
+      });
+      const updatedMaterial = response.data;
+
+      setMaterials((previous) =>
+        previous.map((item) => (item.id === updatedMaterial.id ? updatedMaterial : item))
+      );
+      setSelectedMaterial(updatedMaterial);
+      setInboundOpen(false);
+      setInboundQuantity("");
+
+      // 입고로 안전/주의/경고 건수가 바뀔 수 있으므로 요약도 다시 조회
+      const summaryRes = await inventoryApi.getMaterialSummary(filters);
+      setSummary(summaryRes.data);
+    } catch (error) {
+      console.warn("자재 입고 처리 실패:", error);
+    }
   };
 
   const statusInfo = (material) => {
-    const status = getStatus(material);
+    const status = material.status;
     if (status === "safe") return { status, label: "안전", icon: <FiShield /> };
     if (status === "warning") return { status, label: "주의", icon: <FiAlertTriangle /> };
-    return { status, label: "경고", icon: <FiXCircle /> };
+    return { status: "danger", label: "경고", icon: <FiXCircle /> };
   };
 
-  const tableRows = filteredMaterials.map((material, index) => {
+  const lotStatusInfo = (status) => {
+    if (status === "IN_USE") return { status: "safe", label: "사용중" };
+    if (status === "DEFECT") return { status: "danger", label: "불량" };
+    return { status: "warning", label: "대기" };
+  };
+
+  const tableRows = materials.map((material, index) => {
     const info = statusInfo(material);
     return {
       id: material.id,
@@ -520,7 +533,7 @@ function MaterialInventory() {
         <TablePanel>
           <TableHeader>
             <PanelTitle style={{ margin: 0 }}>자재별 재고 현황</PanelTitle>
-            <ResultText>조회 결과 <strong>{filteredMaterials.length}</strong>건</ResultText>
+            <ResultText>조회 결과 <strong>{materials.length}</strong>건</ResultText>
           </TableHeader>
           <Pagination
             columns={TABLE_COLUMNS}
@@ -533,6 +546,9 @@ function MaterialInventory() {
             onPageChange={setCurrentPage}
             onRowClick={(row) => setSelectedMaterial(row.material)}
             tableProps={{
+              emptyText: isLoading
+                ? "자재 재고를 불러오는 중입니다..."
+                : "조건에 맞는 자재가 없습니다.",
               tableLayout: "fixed",
               headerBackground: "#f1f3f6",
             }}
@@ -564,12 +580,27 @@ function MaterialInventory() {
               </DetailGrid></DetailCard>
             </DetailSection>
             <DetailSection>
-              <SectionTitle>위치별 재고 현황</SectionTitle>
-              <MiniTable><thead><tr><th>위치</th><th>수량</th><th>최근 입고일</th></tr></thead><tbody><tr><td>{selectedMaterial.location}</td><td>{formatNumber(selectedMaterial.stock)} {selectedMaterial.unit}</td><td>{selectedMaterial.lastInboundAt}</td></tr></tbody></MiniTable>
-            </DetailSection>
-            <DetailSection>
               <SectionTitle>LOT별 재고 현황</SectionTitle>
-              <MiniTable><thead><tr><th>LOT 번호</th><th>입고일</th><th>잔량</th><th>상태</th></tr></thead><tbody><tr><td>{selectedMaterial.lotNo}</td><td>{selectedMaterial.lastInboundAt}</td><td>{formatNumber(selectedMaterial.stock)}</td><td><StatusBadge $status="safe"><FiCheck /> OK</StatusBadge></td></tr></tbody></MiniTable>
+              <MiniTable>
+                <thead><tr><th>LOT 번호</th><th>입고일</th><th>잔량</th><th>상태</th></tr></thead>
+                <tbody>
+                  {selectedMaterial.lots?.length ? (
+                    selectedMaterial.lots.map((lot) => {
+                      const info = lotStatusInfo(lot.status);
+                      return (
+                        <tr key={lot.id}>
+                          <td>{lot.lotNo}</td>
+                          <td>{lot.inboundAt}</td>
+                          <td>{formatNumber(lot.currentQuantity)} {selectedMaterial.unit}</td>
+                          <td><StatusBadge $status={info.status}>{info.label}</StatusBadge></td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr><td colSpan={4}>등록된 LOT이 없습니다.</td></tr>
+                  )}
+                </tbody>
+              </MiniTable>
             </DetailSection>
           </DrawerBody>
           <DrawerFooter><ActionButton type="button" variant="outline" onClick={closeDrawer}>닫기</ActionButton><ActionButton type="button" $primary onClick={openInbound}><FiPlus /> 입고 등록</ActionButton></DrawerFooter>

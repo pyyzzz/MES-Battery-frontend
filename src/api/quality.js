@@ -3,7 +3,14 @@
 import axiosInstance from "./axiosInstance";
 
 const qualityApi = {
-  // TODO: 검사/불량 관련 함수 추가
+  getInspections: (params) =>
+    axiosInstance.get("/api/mes/quality/inspections", { params }),
+  getSummary: (params) =>
+    axiosInstance.get("/api/mes/quality/summary", { params }),
+  getTrend: (params) =>
+    axiosInstance.get("/api/mes/quality/trend", { params }),
+  getDefects: (params) =>
+    axiosInstance.get("/api/mes/quality/defects", { params }),
 };
 
 export default qualityApi;

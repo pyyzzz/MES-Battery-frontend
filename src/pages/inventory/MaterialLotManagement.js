@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   FiAlertTriangle,
@@ -11,21 +11,9 @@ import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
+import inventoryApi from "../../api/inventory";
 
-const INITIAL_LOTS = [
-  { id: 12, inboundAt: "2026-02-09 17:49", status: "WAITING", lotNo: "ML-2602091749-4", materialCode: "MAT-20260209-0004", materialName: "분리판", unit: "EA", totalStock: 50, consumed: 0, updatedAt: "2026-02-09 17:49:49" },
-  { id: 11, inboundAt: "2026-02-09 17:04", status: "WAITING", lotNo: "ML-2602091704-INIT", materialCode: "MAT-20260209-170423", materialName: "하드케이스", unit: "EA", totalStock: 100, consumed: 0, updatedAt: "2026-02-09 17:04:23" },
-  { id: 10, inboundAt: "2026-02-09 16:00", status: "WAITING", lotNo: "ML-2602091600-INIT", materialCode: "MAT-20260209-160043", materialName: "포장지", unit: "EA", totalStock: 1000, consumed: 0, updatedAt: "2026-02-09 16:00:43" },
-  { id: 9, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0009-INIT", materialCode: "MAT-20260209-0009", materialName: "라벨", unit: "EA", totalStock: 600, consumed: 540, updatedAt: "2026-02-10 15:20:11" },
-  { id: 8, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0008-INIT", materialCode: "MAT-20260209-0008", materialName: "단자", unit: "EA", totalStock: 1200, consumed: 1198, updatedAt: "2026-02-10 15:20:05" },
-  { id: 7, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0007-INIT", materialCode: "MAT-20260209-0007", materialName: "커버", unit: "EA", totalStock: 600, consumed: 599, updatedAt: "2026-02-10 15:19:58" },
-  { id: 6, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0006-INIT", materialCode: "MAT-20260209-0006", materialName: "케이스", unit: "EA", totalStock: 600, consumed: 599, updatedAt: "2026-02-10 15:19:54" },
-  { id: 5, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0005-INIT", materialCode: "MAT-20260209-0005", materialName: "전해액", unit: "L", totalStock: 1800, consumed: 1328, updatedAt: "2026-02-10 15:19:48" },
-  { id: 4, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0004-INIT", materialCode: "MAT-20260209-0004", materialName: "분리판", unit: "EA", totalStock: 7600, consumed: 6282, updatedAt: "2026-02-10 15:19:42" },
-  { id: 3, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0003-INIT", materialCode: "MAT-20260209-0003", materialName: "음극판", unit: "EA", totalStock: 3800, consumed: 3377, updatedAt: "2026-02-10 15:19:35" },
-  { id: 2, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0002-INIT", materialCode: "MAT-20260209-0002", materialName: "양극판", unit: "EA", totalStock: 3800, consumed: 3377, updatedAt: "2026-02-10 15:19:31" },
-  { id: 1, inboundAt: "2026-02-08 15:57", status: "WAITING", lotNo: "ML-260208-0001-INIT", materialCode: "MAT-20260209-0001", materialName: "납(Pb)", unit: "KG", totalStock: 5400, consumed: 4299, updatedAt: "2026-02-10 15:19:25" },
-];
+const EMPTY_SUMMARY = { total: 0, inUse: 0, waiting: 0, defect: 0 };
 
 const STATUS_META = {
   WAITING: { label: "생산 대기", color: "#ad7000", background: "#fff5df" },
@@ -94,33 +82,38 @@ const MiniTable = styled.table`
 `;
 
 function MaterialLotManagement() {
-  const [lots] = useState(INITIAL_LOTS);
+  const [lots, setLots] = useState([]);
+  const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({ startDate: "", endDate: "", status: "", keyword: "" });
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLot, setSelectedLot] = useState(null);
   const itemsPerPage = 8;
 
-  const summary = useMemo(() => ({
-    total: lots.length,
-    inUse: lots.filter((lot) => lot.status === "IN_USE").length,
-    waiting: lots.filter((lot) => lot.status === "WAITING").length,
-    defect: lots.filter((lot) => lot.status === "DEFECT").length,
-  }), [lots]);
+  const loadLots = async (activeFilters) => {
+    setIsLoading(true);
+    try {
+      const [lotsRes, summaryRes] = await Promise.all([
+        inventoryApi.getLots(activeFilters),
+        inventoryApi.getLotSummary(activeFilters),
+      ]);
+      setLots(lotsRes.data);
+      setSummary(summaryRes.data);
+    } catch (error) {
+      console.warn("원료 LOT 조회 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const filteredLots = useMemo(() => {
-    const keyword = filters.keyword.trim().toLowerCase();
-    return lots.filter((lot) => {
-      const date = lot.inboundAt.slice(0, 10);
-      return (!filters.startDate || date >= filters.startDate)
-        && (!filters.endDate || date <= filters.endDate)
-        && (!filters.status || lot.status === filters.status)
-        && (!keyword || [lot.lotNo, lot.materialName, lot.materialCode].some((value) => value.toLowerCase().includes(keyword)));
-    });
-  }, [lots, filters]);
+  // 필터가 바뀔 때마다 LOT 목록/요약을 함께 조회한다 (lots, lots/summary 동일 필터 지원)
+  useEffect(() => {
+    setCurrentPage(1);
+    loadLots(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const changeFilters = (values) => { setFilters(values); setCurrentPage(1); };
-  const getRate = (lot) => lot.totalStock > 0 ? Number(((lot.consumed / lot.totalStock) * 100).toFixed(1)) : 0;
-  const getRemaining = (lot) => Math.max(0, lot.totalStock - lot.consumed);
 
   const lotColumns = [
     { key: "id", label: "No", width: 70 },
@@ -142,7 +135,7 @@ function MaterialLotManagement() {
       width: 170,
       align: "center",
       render: (_, lot) => {
-        const rate = getRate(lot);
+        const rate = lot.consumptionRate;
         return <RateCell><RateTrack><RateFill $rate={rate} /></RateTrack><RateText>{rate}%</RateText></RateCell>;
       },
     },
@@ -183,10 +176,10 @@ function MaterialLotManagement() {
       </FilterPanel>
 
       <TablePanel>
-        <TableTop><PanelTitle style={{ margin: 0 }}>원료 LOT 현황</PanelTitle><ResultText>조회 결과 <strong>{filteredLots.length}</strong>건</ResultText></TableTop>
+        <TableTop><PanelTitle style={{ margin: 0 }}>원료 LOT 현황</PanelTitle><ResultText>조회 결과 <strong>{lots.length}</strong>건</ResultText></TableTop>
         <Pagination
           columns={lotColumns}
-          rows={filteredLots}
+          rows={lots}
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
           visiblePages={5}
@@ -195,6 +188,9 @@ function MaterialLotManagement() {
           onPageChange={setCurrentPage}
           onRowClick={setSelectedLot}
           tableProps={{
+            emptyText: isLoading
+              ? "원료 LOT을 불러오는 중입니다..."
+              : "조건에 맞는 LOT이 없습니다.",
             tableLayout: "fixed",
             headerBackground: "#f1f3f6",
           }}
@@ -219,12 +215,14 @@ function MaterialLotManagement() {
         <Section><SectionTitle>재고 현황</SectionTitle><DetailCard><DetailGrid>
           <DetailItem><DetailLabel>총 입고 수량</DetailLabel><DetailValue>{formatNumber(selectedLot.totalStock)} {selectedLot.unit}</DetailValue></DetailItem>
           <DetailItem><DetailLabel>생산 투입량</DetailLabel><DetailValue>{formatNumber(selectedLot.consumed)} {selectedLot.unit}</DetailValue></DetailItem>
-          <DetailItem><DetailLabel>현재고</DetailLabel><DetailValue>{formatNumber(getRemaining(selectedLot))} {selectedLot.unit}</DetailValue></DetailItem>
-          <DetailItem><DetailLabel>소진율</DetailLabel><DetailValue>{getRate(selectedLot)}%</DetailValue></DetailItem>
+          <DetailItem><DetailLabel>현재고</DetailLabel><DetailValue>{formatNumber(selectedLot.remaining)} {selectedLot.unit}</DetailValue></DetailItem>
+          <DetailItem><DetailLabel>소진율</DetailLabel><DetailValue>{selectedLot.consumptionRate}%</DetailValue></DetailItem>
         </DetailGrid></DetailCard></Section>
         <Section><SectionTitle>투입 이력</SectionTitle>
           <MiniTable><thead><tr><th>일시</th><th>제품 LOT</th><th>수량</th></tr></thead><tbody>
-            {selectedLot.consumed > 0 ? <tr><td>{selectedLot.updatedAt}</td><td>LOT-20260210-005</td><td>{formatNumber(selectedLot.consumed)} {selectedLot.unit}</td></tr> : <tr><td colSpan="3" style={{ textAlign: "center", color: "#8a929e" }}>투입 이력이 없습니다.</td></tr>}
+            {selectedLot.usages?.length ? selectedLot.usages.map((usage, index) => (
+              <tr key={index}><td>{usage.occurredAt}</td><td>{usage.productLotNo}</td><td>{formatNumber(usage.quantity)} {selectedLot.unit}</td></tr>
+            )) : <tr><td colSpan="3" style={{ textAlign: "center", color: "#8a929e" }}>투입 이력이 없습니다.</td></tr>}
           </tbody></MiniTable>
         </Section>
         <Section><SectionTitle>최근 상태 변경일</SectionTitle><DetailCard><DetailValue>{selectedLot.updatedAt}</DetailValue></DetailCard></Section>
