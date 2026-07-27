@@ -653,8 +653,7 @@ function QualityPage() {
 
         <SummaryGrid>
           <SummaryCard
-            height={110}
-            padding={16}
+          height={116}
             gap={12}
             icon={<FiClipboard />}
             iconBoxSize={48}
@@ -667,8 +666,7 @@ function QualityPage() {
           />
 
           <SummaryCard
-            height={110}
-            padding={16}
+          height={116}
             gap={12}
             icon={<FiCheckCircle />}
             iconBoxSize={48}
@@ -683,8 +681,7 @@ function QualityPage() {
           />
 
           <SummaryCard
-            height={110}
-            padding={16}
+          height={116}
             gap={12}
             icon={<FiXCircle />}
             iconBoxSize={48}
@@ -699,8 +696,7 @@ function QualityPage() {
           />
 
           <SummaryCard
-            height={110}
-            padding={16}
+          height={116}
             gap={12}
             icon={<span style={{ fontSize: 22 }}>%</span>}
             iconBoxSize={48}
@@ -713,8 +709,7 @@ function QualityPage() {
           />
 
           <SummaryCard
-            height={110}
-            padding={16}
+          height={116}
             gap={12}
             icon={<FiXCircle />}
             iconBoxSize={48}

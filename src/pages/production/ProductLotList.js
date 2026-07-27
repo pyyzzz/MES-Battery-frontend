@@ -311,7 +311,6 @@ export default function ProductLotList() {
         <SummaryGrid>
           <StatusSummaryCard
             height={116}
-            padding={18}
             gap={14}
             icon={<FiCheckCircle />}
             iconBoxSize={50}
@@ -326,7 +325,6 @@ export default function ProductLotList() {
 
           <StatusSummaryCard
             height={116}
-            padding={18}
             gap={14}
             icon={<FiRefreshCw />}
             iconBoxSize={50}
@@ -341,7 +339,6 @@ export default function ProductLotList() {
 
           <StatusSummaryCard
             height={116}
-            padding={18}
             gap={14}
             icon={<FiClock />}
             iconBoxSize={50}

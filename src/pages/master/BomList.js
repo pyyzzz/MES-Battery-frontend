@@ -346,7 +346,6 @@ function Bom() {
               onClick={() => handleSelectProduct(product.id)}
               title={product.productName}
               value={product.productCode}
-              padding={12}
               gap={8}
               titleFontSize={14}
               titleFontWeight={600}
@@ -533,7 +532,6 @@ const ProductList = styled.div`
 const ProductCard = styled(SummaryCard)`
   position: relative;
   min-height: 72px;
-  padding: 14px 16px;
   border: 1px solid ${({ $active }) => ($active ? "#9fc2ff" : "#d7dde8")};
   border-radius: 12px;
   background: ${({ $active }) => ($active ? "#eef4ff" : "#ffffff")};

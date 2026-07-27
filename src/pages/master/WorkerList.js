@@ -191,7 +191,7 @@ export default function WorkerList() {
     { key: "workerCode", label: "사원 번호", width: 170, align: "center" },
     { key: "workerName", label: "사원명", width: 120, align: "center" },
     { key: "role", label: "직급/권한", width: 130, align: "center" },
-    { key: "statusView", label: "재직 상태", width: 120, align: "center" },
+    { key: "statusView", label: "출퇴근 상태", width: 120, align: "center" },
     { key: "hiredAt", label: "입사일", width: 150, align: "center" },
     { key: "management", label: "관리", width: 120, align: "center" },
   ];
@@ -207,7 +207,7 @@ export default function WorkerList() {
     statusView: (
       <StatusBadge $active={worker.isActive}>
         <StatusDot />
-        {worker.isActive ? "재직" : "퇴사"}
+        {worker.isActive ? "출근" : "퇴근"}
       </StatusBadge>
     ),
     management: (
@@ -243,7 +243,7 @@ export default function WorkerList() {
         <div>
           <Title>작업자 관리</Title>
           <Description>
-            시스템에 등록된 작업자 정보와 재직 상태를 관리합니다.
+            시스템에 등록된 작업자 정보와 출퇴근 상태를 관리합니다.
           </Description>
         </div>
         <HeaderActionButton type="button" variant="primary" onClick={openNew}>
@@ -255,7 +255,6 @@ export default function WorkerList() {
       <SummaryGrid>
         <StatusSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiUsers />}
           iconBoxSize={50}
@@ -270,14 +269,13 @@ export default function WorkerList() {
 
         <StatusSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiUserCheck />}
           iconBoxSize={50}
           iconSize={24}
           iconBackground="#e5f8ec"
           iconColor="#168853"
-          title="재직"
+          title="출근"
           titleFontSize={13}
           value={counts.active}
           valueFontSize={25}
@@ -285,14 +283,13 @@ export default function WorkerList() {
 
         <StatusSummaryCard
           height={116}
-          padding={18}
           gap={14}
           icon={<FiUserX />}
           iconBoxSize={50}
           iconSize={24}
           iconBackground="#f0f2f6"
           iconColor="#697386"
-          title="퇴사"
+          title="퇴근"
           titleFontSize={13}
           value={counts.inactive}
           valueFontSize={25}
@@ -317,11 +314,11 @@ export default function WorkerList() {
             },
             {
               name: "isActive",
-              label: "재직 상태",
+              label: "출퇴근 상태",
               width: 150,
               options: [
-                { value: "true", label: "재직" },
-                { value: "false", label: "퇴사" },
+                { value: "true", label: "출근" },
+                { value: "false", label: "퇴근" },
               ],
             },
           ]}
@@ -531,7 +528,7 @@ const DateText = styled.span`
   white-space: nowrap;
 `;
 
-// 재직/퇴사 상태를 배지 형태로 보여주는 스타일
+// 출근/퇴근 상태를 배지 형태로 보여주는 스타일
 const StatusBadge = styled.span`
   display: inline-flex;
   align-items: center;

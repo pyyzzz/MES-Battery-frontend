@@ -153,10 +153,10 @@ function MaterialLotManagement() {
       <Header><Title>원료 LOT 관리</Title><Description>자재 LOT별 입고, 생산 투입 및 소진 현황을 추적하고 관리합니다.</Description></Header>
 
       <SummaryGrid>
-        <LotSummaryCard height={116} padding={18} gap={14} icon={<FiEdit3 />} iconBoxSize={50} iconSize={24} iconBackground="#e8efff" iconColor="#0755d9" title="전체 LOT" titleFontSize={13} value={summary.total} valueFontSize={25} />
-        <LotSummaryCard height={116} padding={18} gap={14} icon={<FiRefreshCw />} iconBoxSize={50} iconSize={24} iconBackground="#e8f8ef" iconColor="#18a860" title="생산중(투입)" titleFontSize={13} value={summary.inUse} valueFontSize={25} />
-        <LotSummaryCard height={116} padding={18} gap={14} icon={<span style={{ fontSize: 23 }}>⌛</span>} iconBoxSize={50} iconSize={24} iconBackground="#fff5df" iconColor="#e39400" title="대기중" titleFontSize={13} value={summary.waiting} valueFontSize={25} />
-        <LotSummaryCard height={116} padding={18} gap={14} icon={<FiAlertTriangle />} iconBoxSize={50} iconSize={24} iconBackground="#fdecee" iconColor="#e34b55" title="품절/불량" titleFontSize={13} value={summary.defect} valueFontSize={25} />
+        <LotSummaryCard height={116} gap={14} icon={<FiEdit3 />} iconBoxSize={50} iconSize={24} iconBackground="#e8efff" iconColor="#0755d9" title="전체 LOT" titleFontSize={13} value={summary.total} valueFontSize={25} />
+        <LotSummaryCard height={116} gap={14} icon={<FiRefreshCw />} iconBoxSize={50} iconSize={24} iconBackground="#e8f8ef" iconColor="#18a860" title="생산중(투입)" titleFontSize={13} value={summary.inUse} valueFontSize={25} />
+        <LotSummaryCard height={116} gap={14} icon={<span style={{ fontSize: 23 }}>⌛</span>} iconBoxSize={50} iconSize={24} iconBackground="#fff5df" iconColor="#e39400" title="대기중" titleFontSize={13} value={summary.waiting} valueFontSize={25} />
+        <LotSummaryCard height={116} gap={14} icon={<FiAlertTriangle />} iconBoxSize={50} iconSize={24} iconBackground="#fdecee" iconColor="#e34b55" title="품절/불량" titleFontSize={13} value={summary.defect} valueFontSize={25} />
       </SummaryGrid>
 
       <FilterPanel>

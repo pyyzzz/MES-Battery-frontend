@@ -10,7 +10,7 @@ const Card = styled.div`
   height: ${({ $height }) => toCssSize($height, "auto")};
   min-width: 0;
 
-  padding: ${({ $padding }) => toCssSize($padding, "24px")};
+  padding: ${({ $padding }) => toCssSize($padding, "18px")};
 
   background: ${({ $background }) => $background};
   border: ${({ $border }) => $border};
@@ -103,7 +103,7 @@ function SummaryCard({
 
   width = "100%",
   height = "auto",
-  padding = 24,
+  padding = 18,
   gap = 22,
 
   background = "#ffffff",

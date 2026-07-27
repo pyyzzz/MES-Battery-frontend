@@ -293,9 +293,9 @@ function MaterialTransactionHistory() {
       </Header>
 
       <SummaryGrid>
-        <TransactionSummaryCard height={116} padding={18} gap={14} icon={<FiArrowDownCircle />} iconBoxSize={50} iconSize={24} iconBackground="#e8f8ef" iconColor="#18a860" title="입고된 자재 수량" titleFontSize={13} value={formatNumber(summary.inbound)} valueFontSize={25} />
-        <TransactionSummaryCard height={116} padding={18} gap={14} icon={<FiArrowUpCircle />} iconBoxSize={50} iconSize={24} iconBackground="#fdecee" iconColor="#e34b55" title="생산 투입" titleFontSize={13} value={formatNumber(summary.consumption)} valueFontSize={25} />
-        <TransactionSummaryCard height={116} padding={18} gap={14} icon={<FiRepeat />} iconBoxSize={50} iconSize={24} iconBackground="#e8efff" iconColor="#0755d9" title="입출고 비율 (투입/입고)" titleFontSize={13} value={`${summary.ratio}%`} valueFontSize={25} />
+        <TransactionSummaryCard height={116} gap={14} icon={<FiArrowDownCircle />} iconBoxSize={50} iconSize={24} iconBackground="#e8f8ef" iconColor="#18a860" title="입고된 자재 수량" titleFontSize={13} value={formatNumber(summary.inbound)} valueFontSize={25} />
+        <TransactionSummaryCard height={116} gap={14} icon={<FiArrowUpCircle />} iconBoxSize={50} iconSize={24} iconBackground="#fdecee" iconColor="#e34b55" title="생산 투입" titleFontSize={13} value={formatNumber(summary.consumption)} valueFontSize={25} />
+        <TransactionSummaryCard height={116} gap={14} icon={<FiRepeat />} iconBoxSize={50} iconSize={24} iconBackground="#e8efff" iconColor="#0755d9" title="입출고 비율 (투입/입고)" titleFontSize={13} value={`${summary.ratio}%`} valueFontSize={25} />
       </SummaryGrid>
 
       <FilterPanel>
