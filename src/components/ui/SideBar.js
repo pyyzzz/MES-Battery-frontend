@@ -1,6 +1,6 @@
 // MES 전체 좌측 네비게이션 - 6개 그룹 아코디언 메뉴, activeItem으로 현재 위치 표시
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import {
   FiGrid,
@@ -14,6 +14,10 @@ import {
   FiChevronsRight,
   FiUser,
 } from "react-icons/fi";
+import MemberInfoModal from "./MemberInfoModal";
+import PasswordChangeModal from "./PasswordChangeModal";
+import AuthContext from "../../context/AuthContext";
+import axiosInstance from "../../api/axiosInstance";
 
 const MENU_ITEMS = [
   { key: "대시보드", label: "대시보드", icon: FiGrid, path: "/mes/dashboard" },
@@ -349,12 +353,27 @@ const ToggleSection = styled.div`
   transform: translateY(6px);
 `;
 
-const UserSummary = styled.div`
+// 회원 정보 모달을 여는 사용자 영역 버튼
+const UserSummary = styled.button`
   min-width: 0;
+  flex: 1;
+  align-self: stretch;
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
   color: var(--sidebar-text);
+  text-align: left;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sidebar-active);
+    outline-offset: 2px;
+  }
 `;
 
 const UserIcon = styled.span`
@@ -408,8 +427,12 @@ const CollapseButton = styled.button`
 `;
 
 export default function SideBar({ activeItem }) {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [collapsedMenu, setCollapsedMenu] = useState(null);
+  const [memberInfoModalOpen, setMemberInfoModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const defaultOpenGroup = MENU_ITEMS.find((item) =>
     item.children?.some((child) => child.key === activeItem)
   )?.key;
@@ -424,6 +447,21 @@ export default function SideBar({ activeItem }) {
         ? prev.filter((groupKey) => groupKey !== key)
         : [...prev, key]
     );
+  };
+
+  // 로그아웃: 서버 세션 종료, 인증 정보 초기화, 로그인 화면 이동
+  const handleLogout = async () => {
+    if (!window.confirm("로그아웃하시겠습니까?")) return;
+
+    try {
+      await axiosInstance.post("/api/mes/auth/logout");
+    } catch (error) {
+      console.warn("서버 로그아웃 요청에 실패했습니다.", error);
+    } finally {
+      setMemberInfoModalOpen(false);
+      logout();
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
@@ -531,7 +569,13 @@ export default function SideBar({ activeItem }) {
       </Nav>
 
       <ToggleSection $collapsed={collapsed}>
-        <UserSummary title="관리자 님">
+        {/* 신규 회원 정보 버튼: 사용자 영역 전체 클릭 시 모달 표시 */}
+        <UserSummary
+          type="button"
+          title="회원 정보"
+          aria-label="회원 정보"
+          onClick={() => setMemberInfoModalOpen(true)}
+        >
           <UserIcon>
             <FiUser size={17} />
           </UserIcon>
@@ -554,6 +598,24 @@ export default function SideBar({ activeItem }) {
           )}
         </CollapseButton>
       </ToggleSection>
+
+      {/* 회원 정보 모달: 사번 확인, 로그아웃, 비밀번호 변경 진입 */}
+      <MemberInfoModal
+        isOpen={memberInfoModalOpen}
+        username={user?.username}
+        onClose={() => setMemberInfoModalOpen(false)}
+        onLogout={handleLogout}
+        onEdit={() => {
+          setMemberInfoModalOpen(false);
+          setPasswordModalOpen(true);
+        }}
+      />
+
+      {/* 비밀번호 변경 모달: 현재 비밀번호 확인 및 새 비밀번호 저장 */}
+      <PasswordChangeModal
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+      />
 
     </Container>
   );

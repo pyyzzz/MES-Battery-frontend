@@ -52,7 +52,7 @@ const initialWorkers = [
     id: 4,
     workerCode: "W-260203-0004",
     workerName: "김하린",
-    role: "품질 관리자",
+    role: "작업자",
     isActive: true,
     hiredAt: "2025-06-12",
     createdAt: "2025-06-12 08:50",
@@ -203,7 +203,11 @@ export default function WorkerList() {
     workerCode: <WorkerCode>{worker.workerCode}</WorkerCode>,
     workerName: <WorkerText>{worker.workerName}</WorkerText>,
     role: <WorkerText>{worker.role}</WorkerText>,
-    hiredAt: <DateText>{worker.hiredAt || worker.createdAt?.split(" ")[0] || "-"}</DateText>,
+    hiredAt: (
+      <DateText>
+        {worker.hiredAt || worker.createdAt?.split(" ")[0] || "-"}
+      </DateText>
+    ),
     statusView: (
       <StatusBadge $active={worker.isActive}>
         <StatusDot />
@@ -309,7 +313,6 @@ export default function WorkerList() {
               options: [
                 { value: "관리자", label: "관리자" },
                 { value: "작업자", label: "작업자" },
-                { value: "품질 관리자", label: "품질 관리자" },
               ],
             },
             {
