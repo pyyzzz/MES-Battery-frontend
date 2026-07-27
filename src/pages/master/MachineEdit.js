@@ -105,6 +105,7 @@ export default function MachineEdit({
               placeholder="예: MC-001"
               value={formData.machine_code}
               onChange={handleChange}
+              readOnly
               required
             />
           </FormGroup>

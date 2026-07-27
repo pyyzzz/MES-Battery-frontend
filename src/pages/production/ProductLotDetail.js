@@ -12,45 +12,23 @@ const TABS = [
   { id: "equipment", label: "설비" },
 ];
 
-const PROCESS_STEPS = [
-  // LOT가 어떤 공정을 거쳤는지 보여주는 임시 공정 이력 데이터
-  { name: "1공정", machine: "MAC-A-01", time: "08:00 ~ 09:20" },
-  { name: "2공정", machine: "MAC-A-02", time: "09:25 ~ 11:10" },
-  { name: "3공정", machine: "MAC-A-03", time: "11:20 ~ 13:30" },
-  { name: "4공정", machine: "MAC-A-04", time: "13:40 ~ 15:10" },
-  { name: "검사공정", machine: "MAC-A-05", time: "15:20 ~ 16:45" },
-];
-
-const MATERIALS = [
-  // 이 LOT 생산에 투입된 자재 LOT 예시 데이터
-  {
-    name: "양극재",
-    lot: "MAT-20231025-001",
-    amount: "150",
-    unit: "kg",
-    time: "08:00",
-  },
-  {
-    name: "전해액",
-    lot: "MAT-20231025-002",
-    amount: "20",
-    unit: "L",
-    time: "08:22",
-  },
-];
-
-const EQUIPMENT = [
-  // 공정별로 사용한 설비 예시 데이터
-  { code: "MAC-A-01", name: "전극공정", time: "08:00 ~ 09:20" },
-  { code: "MAC-A-02", name: "조립공정", time: "09:25 ~ 11:10" },
-  { code: "MAC-A-03", name: "활성화공정", time: "11:20 ~ 13:30" },
-  { code: "MAC-A-04", name: "패킹공정", time: "13:40 ~ 15:10" },
-  { code: "MAC-A-05", name: "검사공정", time: "15:20 ~ 16:45" },
-];
-
 // 숫자를 한국식 천 단위 콤마로 보여주기 위한 formatter
 // 예: 5000 -> "5,000"
 const number = new Intl.NumberFormat("ko-KR");
+
+const formatProcessTime = (process) => {
+  if (process.startedAt && process.endedAt) {
+    return `${process.startedAt} ~ ${process.endedAt}`;
+  }
+  return process.startedAt || process.endedAt || "-";
+};
+
+const formatEquipmentLabel = (process) => {
+  if (process.equipmentCode && process.equipmentName) {
+    return `${process.equipmentCode} / ${process.equipmentName}`;
+  }
+  return process.equipmentCode || process.equipmentName || "-";
+};
 
 export default function FinishedLotDetailDrawer({ lot, onClose }) {
   // activeTab은 drawer 안에서 현재 선택된 탭을 기억
@@ -61,14 +39,19 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
 
   // 부모 목록에서 받은 LOT 검사 수량
   // lot 값이 없을 때 화면이 깨지지 않도록 기본값 사용
-  const inspectionQty = lot?.inspectionQty ?? 1000;
+  const inspectionQty = lot?.inspectionQty ?? 0;
 
   // 부모 목록에서 받은 합격 수량
-  const goodQty = lot?.goodQty ?? 998;
+  const goodQty = lot?.goodQty ?? 0;
 
   // 부모 목록에서 받은 불합격 수량
   // 값이 없으면 검사 수량 - 합격 수량으로 계산
   const defectQty = lot?.defectQty ?? Math.max(inspectionQty - goodQty, 0);
+  const finishedAt =
+    lot?.quality?.inspectedAt ||
+    [...(lot?.processes ?? [])].reverse().find((process) => process.endedAt)
+      ?.endedAt ||
+    "-";
 
   // 최종 검사 합격률 계산
   // 검사 수량이 0이면 나누기 오류를 피하기 위해 "0.0" 표시
@@ -145,7 +128,7 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
                 style={{ width: `${Math.min(Number(passRate), 100)}%` }}
               />
             </Progress>
-            <FinishedAt>검사 완료&nbsp; 16:45</FinishedAt>
+            <FinishedAt>검사 완료&nbsp; {finishedAt}</FinishedAt>
           </SummaryCard>
         </SummaryWrap>
 
@@ -171,7 +154,7 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
             </LotInfoItem>
 
             <LotInfoItem>
-              <SmallLabel>LOT 생성일</SmallLabel>
+              <SmallLabel>생산일</SmallLabel>
               <Value>
                 {lot.createdDate || "-"}
                 {lot.createdTime ? ` ${lot.createdTime}` : ""}
@@ -204,9 +187,13 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
               defectQty={defectQty}
             />
           )}
-          {activeTab === "lot" && <LotTab />}
-          {activeTab === "material" && <MaterialTab />}
-          {activeTab === "equipment" && <EquipmentTab />}
+          {activeTab === "lot" && <LotTab processes={lot.processes ?? []} />}
+          {activeTab === "material" && (
+            <MaterialTab materials={lot.materials ?? []} />
+          )}
+          {activeTab === "equipment" && (
+            <EquipmentTab processes={lot.processes ?? []} />
+          )}
         </Body>
 
         <Footer>
@@ -232,26 +219,32 @@ function SectionTitle({ children }) {
 }
 
 function WorkTab({ lot, inspectionQty, goodQty, defectQty }) {
-  // 작업 시작/종료, 작업지시, 검사 수량 요약을 보여주는 탭
+  // 공정 검사 시작/종료, 작업지시, 검사 수량 요약을 보여주는 탭
+  const processes = lot.processes ?? [];
+  const startedAt = processes.find((process) => process.startedAt)?.startedAt;
+  const endedAt = [...processes].reverse().find((process) => process.endedAt)
+    ?.endedAt;
+  const workerName = processes.find((process) => process.workerName)?.workerName;
+
   return (
     <>
-      <SectionTitle>생산 이력 정보</SectionTitle>
+      <SectionTitle>공정 검사 이력 정보</SectionTitle>
       <InfoGrid>
         <InfoCard>
-          <SmallLabel>작업 시작</SmallLabel>
-          <Value>2023-10-25 08:00</Value>
+          <SmallLabel>검사 시작</SmallLabel>
+          <Value>{startedAt || "-"}</Value>
         </InfoCard>
         <InfoCard>
-          <SmallLabel>작업 종료</SmallLabel>
-          <Value>2023-10-25 16:45</Value>
+          <SmallLabel>검사 종료</SmallLabel>
+          <Value>{endedAt || "-"}</Value>
         </InfoCard>
         <InfoCard>
           <SmallLabel>작업 지시 담당자</SmallLabel>
-          <PersonValue>김준수</PersonValue>
+          <PersonValue>{workerName || "-"}</PersonValue>
         </InfoCard>
         <InfoCard>
           <SmallLabel>작업 지시</SmallLabel>
-          <Value>{lot.workOrderNo || "WO-20231025-001"}</Value>
+          <Value>{lot.workOrderNo || "-"}</Value>
         </InfoCard>
       </InfoGrid>
       <SectionTitle>검사 실적 요약</SectionTitle>
@@ -273,30 +266,31 @@ function WorkTab({ lot, inspectionQty, goodQty, defectQty }) {
   );
 }
 
-function LotTab() {
+function LotTab({ processes }) {
   // LOT 추적 탭, 공정 이력을 시간 순서로 보여줌
   return (
     <>
       <SectionTitle>LOT 추적</SectionTitle>
       <Timeline>
-        {PROCESS_STEPS.map((step) => (
-          <TimelineRow key={step.name}>
+        {processes.length === 0 && <EmptyState>공정 이력이 없습니다.</EmptyState>}
+        {processes.map((process) => (
+          <TimelineRow key={`${process.processCode}-${process.startedAt}`}>
             <TimelineMarker>
               <FiCheck />
             </TimelineMarker>
             <ProcessCard>
               <CardTop>
-                <strong>{step.name}</strong>
-                <PassText>PASS</PassText>
+                <strong>{process.processName || process.processCode || "-"}</strong>
+                <PassText>{process.result || "-"}</PassText>
               </CardTop>
               <ProcessMeta>
                 <span>
                   <SmallLabel>설비</SmallLabel>
-                  {step.machine}
+                  {formatEquipmentLabel(process)}
                 </span>
                 <span>
                   <SmallLabel>시간</SmallLabel>
-                  {step.time}
+                  {formatProcessTime(process)}
                 </span>
               </ProcessMeta>
             </ProcessCard>
@@ -307,8 +301,12 @@ function LotTab() {
   );
 }
 
-function MaterialTab() {
+function MaterialTab({ materials }) {
   // 자재 탭, 생산에 사용된 자재 LOT와 투입량을 보여줌
+  const materialTypeCount = new Set(
+    materials.map((item) => item.materialCode).filter(Boolean),
+  ).size;
+
   return (
     <>
       <SectionTitle>투입 자재</SectionTitle>
@@ -316,30 +314,32 @@ function MaterialTab() {
         <span>
           <SmallLabel>자재 종류</SmallLabel>
           <BigValue>
-            2<em>종</em>
+            {materialTypeCount}<em>종</em>
           </BigValue>
         </span>
         <span>
           <SmallLabel>자재 LOT</SmallLabel>
           <BigValue>
-            2<em>개</em>
+            {materials.length}<em>개</em>
           </BigValue>
         </span>
       </MaterialSummary>
       <Stack>
-        {MATERIALS.map((item) => (
-          <MaterialCard key={item.lot}>
+        {materials.length === 0 && <EmptyState>투입 자재 이력이 없습니다.</EmptyState>}
+        {materials.map((item) => (
+          <MaterialCard key={`${item.materialCode}-${item.materialLotNo}`}>
             <CardTop>
-              <strong>{item.name}</strong>
+              <strong>{item.materialName || "-"}</strong>
               <Amount>
-                {item.amount} <small>{item.unit}</small>
+                {number.format(Number(item.quantity ?? 0))}{" "}
+                <small>{item.unit}</small>
               </Amount>
             </CardTop>
             <MaterialLot>
-              <span>자재 LOT</span> {item.lot}
+              <span>자재 LOT</span> {item.materialLotNo || "-"}
             </MaterialLot>
             <TimeLine>
-              <FiClock /> {item.time}
+              {item.materialCode || "-"}
             </TimeLine>
           </MaterialCard>
         ))}
@@ -348,28 +348,37 @@ function MaterialTab() {
   );
 }
 
-function EquipmentTab() {
+function EquipmentTab({ processes }) {
   // 설비 탭, LOT 생산에 사용된 설비 목록을 보여줌
+  const equipmentRows = processes.filter(
+    (process) => process.equipmentCode || process.equipmentName,
+  );
+
   return (
     <>
       <SectionTitle>
-        사용 설비 <HeadingCount>5대</HeadingCount>
+        사용 설비 <HeadingCount>{equipmentRows.length}대</HeadingCount>
       </SectionTitle>
       <Stack>
-        {EQUIPMENT.map((item) => (
-          <EquipmentCard key={item.code}>
+        {equipmentRows.length === 0 && <EmptyState>사용 설비 이력이 없습니다.</EmptyState>}
+        {equipmentRows.map((item) => (
+          <EquipmentCard key={`${item.processCode}-${item.equipmentCode || item.equipmentName}`}>
             <EquipmentTop>
               <MachineIcon>
                 <FiSettings />
               </MachineIcon>
               <MachineName>
-                <strong>{item.code}</strong>
-                <span>{item.name}</span>
+                <strong>{item.equipmentCode || item.equipmentName || "-"}</strong>
+                <span>
+                  {[item.equipmentName, item.processName || item.processCode]
+                    .filter(Boolean)
+                    .join(" / ") || "-"}
+                </span>
               </MachineName>
-              <DoneBadge>공정 완료</DoneBadge>
+              <DoneBadge>{item.result || "-"}</DoneBadge>
             </EquipmentTop>
             <TimeLine>
-              <FiClock /> {item.time}
+              <FiClock /> {formatProcessTime(item)}
             </TimeLine>
           </EquipmentCard>
         ))}
@@ -783,6 +792,17 @@ const Stack = styled.div`
   display: grid;
   gap: 10px;
 `;
+
+const EmptyState = styled.div`
+  padding: 20px;
+  border: 1px solid #d6dce8;
+  border-radius: 9px;
+  background: #fff;
+  color: #7a8495;
+  font-size: 13px;
+  text-align: center;
+`;
+
 // 자재 탭에서 원자재 하나를 표시하는 카드
 const MaterialCard = styled.div`
   padding: 15px;

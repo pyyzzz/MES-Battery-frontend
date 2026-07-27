@@ -19,6 +19,7 @@ const masterApi = {
   getProcess: (id) => axiosInstance.get(`/api/mes/processes/${id}`),
   createProcess: (data) => axiosInstance.post("/api/mes/processes", data),
   updateProcess: (id, data) => axiosInstance.put(`/api/mes/processes/${id}`, data),
+  deleteProcess: (id) => axiosInstance.delete(`/api/mes/processes/${id}`),
 
   getEquipment: (params) => axiosInstance.get("/api/mes/equipment", { params }),
   getEquipmentById: (id) => axiosInstance.get(`/api/mes/equipment/${id}`),

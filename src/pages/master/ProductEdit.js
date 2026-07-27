@@ -232,6 +232,7 @@ export default function ProductEdit({ isOpen, product, onClose, onSave }) {
                 type="text"
                 value={productCode}
                 onChange={(e) => setProductCode(e.target.value)}
+                readOnly
               />
             </FormGroup>
             <FormGroup>
