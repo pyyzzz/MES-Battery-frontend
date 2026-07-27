@@ -134,7 +134,11 @@ export default function MemberInfoModal({
   return (
     <>
       <Overlay onClick={onClose} />
-      <Modal role="dialog" aria-modal="true" aria-labelledby="member-info-title">
+      <Modal
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="member-info-title"
+      >
         <ModalTitle id="member-info-title">회원 정보</ModalTitle>
 
         <MemberSummary>
@@ -156,7 +160,7 @@ export default function MemberInfoModal({
           </ActionButton>
           <RightActions>
             <ActionButton type="button" onClick={onEdit}>
-              회원정보 수정
+              비밀번호 수정
             </ActionButton>
             <ActionButton type="button" variant="outline" onClick={onClose}>
               닫기
