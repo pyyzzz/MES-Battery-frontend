@@ -41,6 +41,11 @@ export default function BomMaterialEditor({
   const isCompact = variant === "compact";
 
   const totalPages = Math.max(Math.ceil(rows.length / itemsPerPage), 1);
+  const normalizedProcessOptions = processOptions.map((option) =>
+    typeof option === "string"
+      ? { id: option, processName: option, processCode: option }
+      : option,
+  );
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
@@ -49,14 +54,23 @@ export default function BomMaterialEditor({
   const selectedMaterial = materialOptions.find(
     (material) => material.materialCode === materialCode,
   );
+  const selectedProcess = normalizedProcessOptions.find(
+    (option) => String(option.id) === String(process),
+  );
 
   const addMaterial = () => {
-    if (!selectedMaterial || !process || Number(quantity) <= 0) {
+    if (!selectedMaterial || !selectedProcess || Number(quantity) <= 0) {
       alert("자재, 투입 공정 및 소요량을 정확히 설정해주세요.");
       return;
     }
-    if (rows.some((row) => row.materialCode === materialCode)) {
-      alert("이미 추가된 자재입니다.");
+    if (
+      rows.some(
+        (row) =>
+          row.materialCode === materialCode &&
+          String(row.inputProcessId ?? row.process) === String(selectedProcess.id),
+      )
+    ) {
+      alert("이미 추가된 자재와 공정 조합입니다.");
       return;
     }
 
@@ -64,9 +78,11 @@ export default function BomMaterialEditor({
       ...rows,
       {
         id: Date.now(),
+        _isNew: true,
         ...selectedMaterial,
         requiredQty: Number(quantity),
-        process,
+        inputProcessId: selectedProcess.id,
+        process: selectedProcess.processName,
       },
     ]);
     setCurrentPage(Math.ceil((rows.length + 1) / itemsPerPage));
@@ -76,6 +92,24 @@ export default function BomMaterialEditor({
   };
 
   const updateRow = (id, field, value) => {
+    if (field === "process") {
+      const nextProcess = normalizedProcessOptions.find(
+        (option) => String(option.id) === String(value),
+      );
+      onChange(
+        rows.map((row) =>
+          row.id === id
+            ? {
+                ...row,
+                inputProcessId: nextProcess?.id ?? value,
+                process: nextProcess?.processName ?? value,
+              }
+            : row,
+        ),
+      );
+      return;
+    }
+
     onChange(
       rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
     );
@@ -111,13 +145,15 @@ export default function BomMaterialEditor({
       render: (value, row) =>
         editableRows ? (
           <SmallSelect
-            value={value}
+            value={row.inputProcessId ?? value}
             onChange={(event) =>
               updateRow(row.id, "process", event.target.value)
             }
           >
-            {processOptions.map((option) => (
-              <option key={option}>{option}</option>
+            {normalizedProcessOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.processName}
+              </option>
             ))}
           </SmallSelect>
         ) : (
@@ -169,8 +205,10 @@ export default function BomMaterialEditor({
               onChange={(event) => setProcess(event.target.value)}
             >
               <option value="">{isCompact ? "공정 선택" : "투입 공정을 선택하세요"}</option>
-              {processOptions.map((option) => (
-                <option key={option}>{option}</option>
+              {normalizedProcessOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.processName}
+                </option>
               ))}
             </select>
           </Field>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   FiEdit2,
@@ -14,61 +14,10 @@ import Pagination from "../../components/ui/Pagination";
 import Button from "../../components/ui/Button";
 import WorkerDetail from "./WorkerDetail";
 import WorkerNewEdit from "./WorkerNewEdit";
-
-// 백엔드 연결 전까지 화면 확인용으로 쓰는 임시 작업자 데이터
-// DB의 worker_code, worker_name, role, is_active, hired_at, created_at, updated_at에 맞춘 형태
-const initialWorkers = [
-  {
-    id: 1,
-    workerCode: "W-260203-0001",
-    workerName: "김민규",
-    role: "관리자",
-    isActive: true,
-    hiredAt: "2025-09-25",
-    createdAt: "2025-09-25 09:10",
-    updatedAt: "2026-02-03 10:20",
-  },
-  {
-    id: 2,
-    workerCode: "W-260203-0002",
-    workerName: "이현수",
-    role: "작업자",
-    isActive: true,
-    hiredAt: "2025-06-13",
-    createdAt: "2025-06-13 08:45",
-    updatedAt: "2026-02-03 10:25",
-  },
-  {
-    id: 3,
-    workerCode: "W-260203-0003",
-    workerName: "양찬종",
-    role: "작업자",
-    isActive: false,
-    hiredAt: "2025-10-26",
-    createdAt: "2025-10-26 09:30",
-    updatedAt: "2026-01-31 17:40",
-  },
-  {
-    id: 4,
-    workerCode: "W-260203-0004",
-    workerName: "김하린",
-    role: "작업자",
-    isActive: true,
-    hiredAt: "2025-06-12",
-    createdAt: "2025-06-12 08:50",
-    updatedAt: "2026-02-02 14:15",
-  },
-  {
-    id: 5,
-    workerCode: "W-260203-0005",
-    workerName: "우민규",
-    role: "작업자",
-    isActive: true,
-    hiredAt: "2025-07-03",
-    createdAt: "2025-07-03 09:05",
-    updatedAt: "2026-02-01 11:30",
-  },
-];
+import masterApi from "../../api/master";
+import AuthContext from "../../context/AuthContext";
+import NoPermissionText from "../../components/ui/NoPermissionText";
+import { hasMasterWritePermission } from "../../utils/masterPermissions";
 
 // 검색 조건 초기값, 초기화 버튼에서 그대로 다시 사용
 const emptyFilters = {
@@ -90,11 +39,32 @@ const createWorkerCode = (workers) => {
   return `W-${today}-${String(maxNumber + 1).padStart(4, "0")}`;
 };
 
+const formatDate = (value) => (value ? String(value).slice(0, 10) : "");
+
+const mapWorkerFromApi = (worker) => ({
+  id: worker.id,
+  workerCode: worker.employeeNo ?? "",
+  workerName: worker.employeeName ?? "",
+  role: worker.role ?? "",
+  isActive: worker.active !== false,
+  hiredAt: formatDate(worker.hireDate),
+  createdAt: formatDate(worker.hireDate),
+  updatedAt: "",
+});
+
+const toWorkerPayload = (form, active = true) => ({
+  employeeName: form.workerName,
+  hireDate: form.hiredAt,
+  role: form.role,
+  active,
+});
+
 const PAGE_SIZE = 8;
 
 export default function WorkerList() {
-  // 지금은 프론트에서만 들고 있는 임시 목록, 나중에 목록 조회 API 결과로 교체하면 됨
-  const [workers, setWorkers] = useState(initialWorkers);
+  const { user } = useContext(AuthContext);
+  const canManage = hasMasterWritePermission(user);
+  const [workers, setWorkers] = useState([]);
   const [filters, setFilters] = useState(emptyFilters);
   const [page, setPage] = useState(1);
 
@@ -104,6 +74,20 @@ export default function WorkerList() {
   // formOpen은 드로어 열림 여부, editingWorker는 등록/수정 모드 구분용
   const [formOpen, setFormOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState(null);
+
+  const loadWorkers = async () => {
+    try {
+      const { data } = await masterApi.getWorkers();
+      setWorkers((data ?? []).map(mapWorkerFromApi));
+    } catch (error) {
+      console.error("작업자 목록 조회 실패", error);
+      setWorkers([]);
+    }
+  };
+
+  useEffect(() => {
+    loadWorkers();
+  }, []);
 
   const counts = useMemo(
     () => ({
@@ -135,11 +119,13 @@ export default function WorkerList() {
   );
 
   const openNew = () => {
+    if (!canManage) return;
     setEditingWorker(null);
     setFormOpen(true);
   };
 
   const openEdit = (worker) => {
+    if (!canManage) return;
     setSelectedWorker(null);
     setEditingWorker(worker);
     setFormOpen(true);
@@ -150,40 +136,29 @@ export default function WorkerList() {
     setEditingWorker(null);
   };
 
-  // 지금은 화면 상태만 변경, 나중에 create/update API 호출 위치
-  const saveWorker = (form) => {
-    const now = new Date()
-      .toLocaleString("sv-SE", { hour12: false })
-      .slice(0, 16);
+  const saveWorker = async (form) => {
+    if (!canManage) return;
+    try {
+      if (editingWorker) {
+        await masterApi.updateWorker(
+          editingWorker.id,
+          toWorkerPayload(form, editingWorker.isActive),
+        );
+      } else {
+        await masterApi.createWorker(toWorkerPayload(form));
+      }
 
-    if (editingWorker) {
-      setWorkers((prev) =>
-        prev.map((item) =>
-          item.id === editingWorker.id
-            ? { ...item, ...form, updatedAt: now }
-            : item,
-        ),
-      );
-    } else {
-      setWorkers((prev) => [
-        ...prev,
-        {
-          ...form,
-          id: Math.max(0, ...prev.map(({ id }) => id)) + 1,
-          isActive: true,
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
+      await loadWorkers();
+      closeForm();
+    } catch (error) {
+      console.error("작업자 저장 실패", error);
+      alert("작업자 저장에 실패했습니다. 백엔드 서버와 권한을 확인해 주세요.");
     }
-
-    closeForm();
   };
 
   const removeWorker = (worker) => {
-    if (window.confirm(`${worker.workerName} 작업자를 삭제하시겠습니까?`)) {
-      setWorkers((prev) => prev.filter(({ id }) => id !== worker.id));
-    }
+    if (!canManage) return;
+    alert(`${worker.workerName} 작업자 삭제 API가 아직 없어 삭제할 수 없습니다.`);
   };
 
   const columns = [
@@ -214,7 +189,7 @@ export default function WorkerList() {
         {worker.isActive ? "출근" : "퇴근"}
       </StatusBadge>
     ),
-    management: (
+    management: canManage ? (
       <Management>
         <IconButton
           type="button"
@@ -238,6 +213,8 @@ export default function WorkerList() {
           <FiTrash2 />
         </DeleteButton>
       </Management>
+    ) : (
+      <NoPermissionText>권한 없음</NoPermissionText>
     ),
   }));
 
@@ -250,10 +227,12 @@ export default function WorkerList() {
             시스템에 등록된 작업자 정보와 출퇴근 상태를 관리합니다.
           </Description>
         </div>
-        <HeaderActionButton type="button" variant="primary" onClick={openNew}>
-          <FiPlus size={16} />
-          작업자 등록
-        </HeaderActionButton>
+        {canManage && (
+          <HeaderActionButton type="button" variant="primary" onClick={openNew}>
+            <FiPlus size={16} />
+            작업자 등록
+          </HeaderActionButton>
+        )}
       </Header>
 
       <SummaryGrid>
@@ -379,6 +358,7 @@ export default function WorkerList() {
         worker={selectedWorker}
         onClose={() => setSelectedWorker(null)}
         onEdit={openEdit}
+        canEdit={canManage}
       />
       <WorkerNewEdit
         open={formOpen}

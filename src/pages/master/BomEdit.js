@@ -4,7 +4,15 @@ import { FiX } from "react-icons/fi";
 import BomMaterialEditor from "../../components/ui/BomMaterialEditor";
 import Button from "../../components/ui/Button";
 
-export default function BomEdit({ isOpen, product, bomRows, onClose, onSave }) {
+export default function BomEdit({
+  isOpen,
+  product,
+  bomRows,
+  materialOptions,
+  processOptions,
+  onClose,
+  onSave,
+}) {
   const [editingRows, setEditingRows] = useState([]);
 
   useEffect(() => {
@@ -62,6 +70,8 @@ export default function BomEdit({ isOpen, product, bomRows, onClose, onSave }) {
           <BomMaterialEditor
             rows={editingRows}
             onChange={setEditingRows}
+            materialOptions={materialOptions}
+            processOptions={processOptions}
             editableRows
             variant="compact"
           />

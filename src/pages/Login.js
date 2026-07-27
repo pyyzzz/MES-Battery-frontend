@@ -20,7 +20,7 @@ export default function Login() {
 
     // TODO: 백엔드 로그인 API 완성되면 이 블록 삭제
     if (username === "test" && password === "test") {
-      login({ username: "test", role: "ADMIN" });
+      login({ username: "test", role: "USER" });
       navigate("/mes/dashboard");
       return;
     }

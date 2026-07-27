@@ -222,6 +222,7 @@ export default function ProcessEdit({
   onClose,
   processData,
   onUpdate,
+  workers = [],
 }) {
   const [formData, setFormData] = useState({
     id: "",
@@ -231,7 +232,7 @@ export default function ProcessEdit({
     step_name: "",
     machine: "설비 선택 (없음)",
     description: "",
-    worker: "",
+    managerEmployeeId: "",
   });
 
   useEffect(() => {
@@ -244,7 +245,7 @@ export default function ProcessEdit({
         step_name: processData.step_name || "",
         machine: processData.machine || "설비 선택 (없음)",
         description: processData.description || "",
-        worker: processData.worker || "",
+        managerEmployeeId: processData.managerEmployeeId || "",
       });
     }
   }, [processData, isOpen]);
@@ -272,7 +273,9 @@ export default function ProcessEdit({
       is_active: formData.is_active === "사용",
       machine: formData.machine,
       description: formData.description,
-      worker: formData.worker,
+      managerEmployeeId: formData.managerEmployeeId
+        ? Number(formData.managerEmployeeId)
+        : processData?.managerEmployeeId,
     });
 
     onClose();
@@ -365,16 +368,23 @@ export default function ProcessEdit({
             />
           </FormGroup>
 
-          {/* 담당자 입력 필드 */}
           <FormGroup>
             <label>담당자</label>
-            <Input
-              type="text"
-              name="worker"
-              placeholder="작업자 성명"
-              value={formData.worker}
+            <Select
+              name="managerEmployeeId"
+              value={formData.managerEmployeeId}
               onChange={handleChange}
-            />
+            >
+              {workers.length === 0 ? (
+                <option value="">기존 담당자 유지</option>
+              ) : (
+                workers.map((worker) => (
+                  <option key={worker.id} value={worker.id}>
+                    {worker.employeeName}
+                  </option>
+                ))
+              )}
+            </Select>
           </FormGroup>
         </Form>
 

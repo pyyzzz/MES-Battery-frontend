@@ -22,7 +22,7 @@ const dummyHistory = [
   defect,
 }));
 
-export default function WorkerDetail({ worker, onClose, onEdit }) {
+export default function WorkerDetail({ worker, onClose, onEdit, canEdit = true }) {
   const [historyPage, setHistoryPage] = useState(1);
 
   useEffect(() => {
@@ -129,9 +129,11 @@ export default function WorkerDetail({ worker, onClose, onEdit }) {
             닫기
           </ActionButton>
 
-          <ActionButton type="button" $primary onClick={() => onEdit(worker)}>
-            수정
-          </ActionButton>
+          {canEdit && (
+            <ActionButton type="button" $primary onClick={() => onEdit(worker)}>
+              수정
+            </ActionButton>
+          )}
         </Footer>
       </Drawer>
     </>
