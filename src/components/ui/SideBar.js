@@ -64,7 +64,7 @@ const Container = styled.aside`
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  padding: 25px 0 24px;
+  padding: 23px 0 22px;
   transition: width 0.16s ease-out;
 `;
 
@@ -361,7 +361,7 @@ const UserSummary = styled.button`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 8px;
+  padding: 4px 10px;
   border-radius: 8px;
   color: var(--sidebar-text);
   text-align: left;
