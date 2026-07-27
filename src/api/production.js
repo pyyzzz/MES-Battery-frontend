@@ -5,7 +5,10 @@
 import axiosInstance from "./axiosInstance";
 
 const productionApi = {
-  // TODO: 작업지시 관련 함수
+  getWorkOrders: (params) => axiosInstance.get("/api/mes/work-orders", { params }),
+  getWorkOrder: (id) => axiosInstance.get(`/api/mes/work-orders/${id}`),
+  createWorkOrder: (data) => axiosInstance.post("/api/mes/work-orders", data),
+
   // TODO: 완제품 LOT 관련 함수
 };
 

@@ -5,7 +5,7 @@ import { FiX } from "react-icons/fi";
 import Badge from "../../components/ui/Badge";
 
 // 작업지시 상세 사이드 드로어
-export default function WorkOrderDetail({ order, onClose, onEdit }) {
+export default function WorkOrderDetail({ order, onClose }) {
   // Escape 닫기 + 배경 스크롤 방지 추가
   useEffect(() => {
     if (!order) return;
@@ -130,15 +130,11 @@ export default function WorkOrderDetail({ order, onClose, onEdit }) {
           </DetailSection>
         </DrawerBody>
 
-        {/* 상세 드로어 하단 버튼 */}
+        {/* 상세 드로어 하단 버튼 - 작업지시 수정 API가 없어 닫기만 제공 */}
         <DrawerFooter>
           <CancelButton type="button" onClick={onClose}>
             닫기
           </CancelButton>
-
-          <EditFooterButton type="button" onClick={onEdit}>
-            수정
-          </EditFooterButton>
         </DrawerFooter>
       </SideDrawer>
     </>
@@ -330,16 +326,6 @@ const CancelButton = styled(FooterButton)`
 
   &:hover {
     background: #f5f7fa;
-  }
-`;
-
-const EditFooterButton = styled(FooterButton)`
-  border: 1px solid #0b57d0;
-  background: #0b57d0;
-  color: #fff;
-
-  &:hover {
-    background: #0848ad;
   }
 `;
 

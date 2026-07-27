@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   FiCheckCircle,
@@ -24,184 +24,21 @@ import UiButton from "../../components/ui/Button";
 import SummaryCard from "../../components/ui/SummaryCard";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
+import qualityApi from "../../api/quality";
 
 /* =========================================================
-   MOCK DATA
+   CONSTANTS
 ========================================================= */
 
-const MOCK_INSPECTIONS = [
-  {
-    id: 1,
-    inspectedAt: "2026-02-10 15:20",
-    result: "OK",
-    defectCode: "",
-    defectType: "",
-    defectQty: 0,
-    lotNo: "LOT-20260210-005",
-    productName: "12V 중형 배터리",
-    workOrderNo: "WO-20260210-005",
-    processCode: "PROC-050",
-    processName: "검사공정",
-    machineCode: "MAC-A-05",
-    machineName: "Inspector #1",
-    workerName: "김하린",
-    voltage: 217.2,
-    humidity: 47.2,
-  },
-  {
-    id: 2,
-    inspectedAt: "2026-02-10 15:19",
-    result: "NG",
-    defectCode: "SCRATCH",
-    defectType: "스크래치",
-    defectQty: 2,
-    lotNo: "LOT-20260210-004",
-    productName: "12V 중형 배터리",
-    workOrderNo: "WO-20260210-004",
-    processCode: "PROC-050",
-    processName: "검사공정",
-    machineCode: "MAC-A-05",
-    machineName: "Inspector #2",
-    workerName: "이현수",
-    voltage: 220.1,
-    humidity: 41.2,
-  },
-  {
-    id: 3,
-    inspectedAt: "2026-02-10 15:18",
-    result: "OK",
-    defectCode: "",
-    defectType: "",
-    defectQty: 0,
-    lotNo: "LOT-20260210-003",
-    productName: "12V 소형 배터리",
-    workOrderNo: "WO-20260210-003",
-    processCode: "PROC-030",
-    processName: "활성화공정",
-    machineCode: "MAC-A-03",
-    machineName: "Formation Sys #1",
-    workerName: "우민규",
-    voltage: 219.5,
-    humidity: 48.2,
-  },
-  {
-    id: 4,
-    inspectedAt: "2026-02-10 15:17",
-    result: "NG",
-    defectCode: "MISALIGNMENT",
-    defectType: "정렬 불량",
-    defectQty: 1,
-    lotNo: "LOT-20260210-002",
-    productName: "12V 대형 배터리",
-    workOrderNo: "WO-20260210-002",
-    processCode: "PROC-020",
-    processName: "조립공정",
-    machineCode: "MAC-A-02",
-    machineName: "Assembly Line #1",
-    workerName: "양찬종",
-    voltage: 218.8,
-    humidity: 44.7,
-  },
-  {
-    id: 5,
-    inspectedAt: "2026-02-10 15:16",
-    result: "OK",
-    defectCode: "",
-    defectType: "",
-    defectQty: 0,
-    lotNo: "LOT-20260210-001",
-    productName: "12V 소형 배터리",
-    workOrderNo: "WO-20260210-001",
-    processCode: "PROC-050",
-    processName: "검사공정",
-    machineCode: "MAC-A-05",
-    machineName: "Inspector #1",
-    workerName: "김하린",
-    voltage: 221.3,
-    humidity: 42.5,
-  },
-  {
-    id: 6,
-    inspectedAt: "2026-02-09 16:42",
-    result: "NG",
-    defectCode: "CONTAMINATION",
-    defectType: "오염",
-    defectQty: 3,
-    lotNo: "LOT-20260209-003",
-    productName: "12V 중형 배터리",
-    workOrderNo: "WO-20260209-003",
-    processCode: "PROC-030",
-    processName: "활성화공정",
-    machineCode: "MAC-A-03",
-    machineName: "Formation Sys #1",
-    workerName: "이현수",
-    voltage: 216.7,
-    humidity: 49.3,
-  },
-  {
-    id: 7,
-    inspectedAt: "2026-02-09 16:21",
-    result: "OK",
-    defectCode: "",
-    defectType: "",
-    defectQty: 0,
-    lotNo: "LOT-20260209-002",
-    productName: "12V 대형 배터리",
-    workOrderNo: "WO-20260209-002",
-    processCode: "PROC-040",
-    processName: "팩공정",
-    machineCode: "MAC-A-04",
-    machineName: "Pack Line #1",
-    workerName: "우민규",
-    voltage: 220.4,
-    humidity: 43.8,
-  },
-  {
-    id: 8,
-    inspectedAt: "2026-02-09 15:58",
-    result: "NG",
-    defectCode: "DIMENSION",
-    defectType: "치수 불량",
-    defectQty: 1,
-    lotNo: "LOT-20260209-001",
-    productName: "12V 소형 배터리",
-    workOrderNo: "WO-20260209-001",
-    processCode: "PROC-020",
-    processName: "조립공정",
-    machineCode: "MAC-A-02",
-    machineName: "Assembly Line #1",
-    workerName: "양찬종",
-    voltage: 215.9,
-    humidity: 50.1,
-  },
-];
+const EMPTY_SUMMARY = {
+  total: 0,
+  ok: 0,
+  ng: 0,
+  okRate: 0,
+  topDefect: "-",
+};
 
-const TREND_DATA = [
-  { date: "02-05", ok: 420, ng: 31 },
-  { date: "02-06", ok: 405, ng: 28 },
-  { date: "02-07", ok: 380, ng: 35 },
-  { date: "02-08", ok: 352, ng: 24 },
-  { date: "02-09", ok: 340, ng: 27 },
-  { date: "02-10", ok: 326, ng: 29 },
-];
-
-const DEFECT_CHART_DATA = [
-  { name: "스크래치", value: 42 },
-  { name: "오염", value: 35 },
-  { name: "치수", value: 32 },
-  { name: "정렬", value: 24 },
-  { name: "용접", value: 21 },
-  { name: "기타", value: 20 },
-];
-
-const BAR_COLORS = [
-  "#dd4c51",
-  "#dd4c51",
-  "#dd4c51",
-  "#dd4c51",
-  "#dd4c51",
-  "#dd4c51",
-];
+const BAR_COLOR = "#dd4c51";
 
 /* =========================================================
    STYLES
@@ -498,7 +335,11 @@ const DefectCard = styled(DetailCard)`
 ========================================================= */
 
 function QualityPage() {
-  const [rows] = useState(MOCK_INSPECTIONS);
+  const [rows, setRows] = useState([]);
+  const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [trendData, setTrendData] = useState([]);
+  const [defectData, setDefectData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -513,77 +354,47 @@ function QualityPage() {
 
   const itemsPerPage = 8;
 
-  const summary = useMemo(() => {
-    const total = rows.length;
-    const ok = rows.filter((row) => row.result === "OK").length;
-    const ng = rows.filter((row) => row.result === "NG").length;
-    const okRate = total > 0 ? Math.round((ok / total) * 100) : 0;
+  // 필터가 바뀔 때마다 검사이력/요약/추이/불량분포를 함께 조회한다.
+  // (4개 엔드포인트 모두 동일한 startDate/endDate/result/defectType/keyword를 지원)
+  useEffect(() => {
+    let ignore = false;
+    setCurrentPage(1);
 
-    const defectCountMap = rows
-      .filter((row) => row.result === "NG")
-      .reduce((acc, row) => {
-        acc[row.defectType] = (acc[row.defectType] || 0) + row.defectQty;
-        return acc;
-      }, {});
+    const loadQualityData = async () => {
+      setIsLoading(true);
 
-    const topDefect =
-      Object.entries(defectCountMap).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-      "-";
+      try {
+        const [inspectionsRes, summaryRes, trendRes, defectsRes] =
+          await Promise.all([
+            qualityApi.getInspections(filters),
+            qualityApi.getSummary(filters),
+            qualityApi.getTrend(filters),
+            qualityApi.getDefects(filters),
+          ]);
 
-    return {
-      total,
-      ok,
-      ng,
-      okRate,
-      topDefect,
+        if (ignore) return;
+
+        setRows(inspectionsRes.data);
+        setSummary(summaryRes.data);
+        setTrendData(trendRes.data);
+        setDefectData(defectsRes.data);
+      } catch (error) {
+        if (!ignore) {
+          console.warn("품질 데이터 조회 실패:", error);
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
     };
-  }, [rows]);
 
-  const filteredRows = useMemo(() => {
-    const keyword = filters.keyword.trim().toLowerCase();
+    loadQualityData();
 
-    return rows.filter((row) => {
-      const inspectedDate = row.inspectedAt.slice(0, 10);
-
-      const matchStart =
-        !filters.startDate || inspectedDate >= filters.startDate;
-
-      const matchEnd =
-        !filters.endDate || inspectedDate <= filters.endDate;
-
-      const matchResult =
-        !filters.result || row.result === filters.result;
-
-      const matchDefect =
-        !filters.defectType ||
-        row.defectType === filters.defectType;
-
-      const matchKeyword =
-        !keyword ||
-        [
-          row.lotNo,
-          row.productName,
-          row.workOrderNo,
-          row.processName,
-          row.machineName,
-          row.workerName,
-          row.defectCode,
-          row.defectType,
-        ].some((value) =>
-          String(value || "")
-            .toLowerCase()
-            .includes(keyword)
-        );
-
-      return (
-        matchStart &&
-        matchEnd &&
-        matchResult &&
-        matchDefect &&
-        matchKeyword
-      );
-    });
-  }, [rows, filters]);
+    return () => {
+      ignore = true;
+    };
+  }, [filters]);
 
   const qualityColumns = [
     { key: "inspectedAt", label: "검사일시", width: 170, render: (date) => <TableText>{date}</TableText> },
@@ -731,7 +542,7 @@ function QualityPage() {
             <ChartBox>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={TREND_DATA}
+                  data={trendData}
                   margin={{ top: 10, right: 16, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid
@@ -776,7 +587,7 @@ function QualityPage() {
             <ChartBox>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={DEFECT_CHART_DATA}
+                  data={defectData}
                   margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid
@@ -800,10 +611,10 @@ function QualityPage() {
                     name="불량 수량"
                     radius={[5, 5, 0, 0]}
                   >
-                    {DEFECT_CHART_DATA.map((item, index) => (
+                    {defectData.map((item) => (
                       <Cell
                         key={item.name}
-                        fill={BAR_COLORS[index]}
+                        fill={BAR_COLOR}
                       />
                     ))}
                   </Bar>
@@ -841,10 +652,14 @@ function QualityPage() {
                 label: "불량 유형",
                 placeholder: "불량 유형 전체",
                 options: [
-                  { value: "스크래치", label: "스크래치" },
-                  { value: "오염", label: "오염" },
-                  { value: "치수 불량", label: "치수 불량" },
-                  { value: "정렬 불량", label: "정렬 불량" },
+                  { value: "두께불량", label: "두께불량" },
+                  { value: "정렬불량", label: "정렬불량" },
+                  { value: "충전불량", label: "충전불량" },
+                  { value: "체결불량", label: "체결불량" },
+                  { value: "전압불량", label: "전압불량" },
+                  { value: "용량불량", label: "용량불량" },
+                  { value: "저항불량", label: "저항불량" },
+                  { value: "중량불량", label: "중량불량" },
                 ],
               },
             ]}
@@ -870,7 +685,7 @@ function QualityPage() {
 
           <Pagination
             columns={qualityColumns}
-            rows={filteredRows}
+            rows={rows}
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             visiblePages={5}
@@ -884,7 +699,9 @@ function QualityPage() {
               headerColor: "#555d6c",
               cellColor: "#22262d",
               hoverBackground: "#f7faff",
-              emptyText: "조건에 맞는 검사 이력이 없습니다.",
+              emptyText: isLoading
+                ? "검사 이력을 불러오는 중입니다..."
+                : "조건에 맞는 검사 이력이 없습니다.",
             }}
           />
         </TablePanel>

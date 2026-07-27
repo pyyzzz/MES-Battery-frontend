@@ -8,10 +8,9 @@ import {
 } from "../../components/ui/FilterPanel";
 import FilterDatePicker from "../../components/ui/FilterDatePicker";
 
-// 작업지시 등록·수정 사이드 드로어
+// 작업지시 등록 사이드 드로어 - 백엔드에 수정 API가 없어 등록 전용
 export default function WorkOrderNewEdit({
   open,
-  editingOrderId,
   orderForm,
   setOrderForm,
   products,
@@ -26,7 +25,7 @@ export default function WorkOrderNewEdit({
       {/* 드로어 뒤쪽 어두운 배경 */}
       <DrawerBackdrop onClick={onClose} />
 
-      {/* 작업지시 등록·수정 드로어 */}
+      {/* 작업지시 등록 드로어 */}
       <SideDrawer
         role="dialog"
         aria-modal="true"
@@ -35,14 +34,10 @@ export default function WorkOrderNewEdit({
         <DrawerHeader>
           <div>
             <DrawerTitle id="work-order-drawer-title">
-              {editingOrderId ? "작업지시 수정" : "작업지시 등록"}
+              작업지시 등록
             </DrawerTitle>
 
-            <DrawerDescription>
-              {editingOrderId
-                ? "선택한 작업지시 정보를 수정합니다."
-                : "새로운 작업지시를 등록합니다."}
-            </DrawerDescription>
+            <DrawerDescription>새로운 작업지시를 등록합니다.</DrawerDescription>
           </div>
 
           <CloseButton type="button" onClick={onClose} aria-label="닫기">
@@ -52,8 +47,7 @@ export default function WorkOrderNewEdit({
 
         <DrawerForm onSubmit={onSubmit}>
           <DrawerBody>
-            {/* 제품명 */}
-            {/* DB에는 product_id가 저장되므로 제품명을 직접 입력하지 않고 제품 마스터에서 선택 */}
+            {/* 제품명 - 선택한 제품의 bomId를 찾아서 등록 시 함께 보낸다 */}
             <Field>
               <Label htmlFor="work-order-product">제품명</Label>
 
@@ -72,7 +66,7 @@ export default function WorkOrderNewEdit({
                   <option value="">제품을 선택하세요</option>
 
                   {products.map((product) => (
-                    <option key={product.productId} value={product.productId}>
+                    <option key={product.id} value={product.id}>
                       {product.productName}
                     </option>
                   ))}
@@ -80,8 +74,7 @@ export default function WorkOrderNewEdit({
               </SelectControl>
             </Field>
 
-            {/* 지시 수량 */}
-            {/* DB work_order.planned_qty와 연결*/}
+            {/* 지시 수량 - work_order.order_quantity와 연결 */}
             <Field>
               <Label htmlFor="work-order-quantity">지시 수량</Label>
 
@@ -101,27 +94,7 @@ export default function WorkOrderNewEdit({
               />
             </Field>
 
-            {/* 담당자 */}
-            {/* 현재는 화면용 worker 값을 사용하고, 백엔드 연결 전 worker_id 추가 여부를 합의 */}
-            <Field>
-              <Label htmlFor="work-order-worker">담당자</Label>
-
-              <Input
-                id="work-order-worker"
-                required
-                value={orderForm.worker}
-                onChange={(event) =>
-                  setOrderForm({
-                    ...orderForm,
-                    worker: event.target.value,
-                  })
-                }
-                placeholder="담당자 이름"
-              />
-            </Field>
-
-            {/* 납기일 */}
-            {/* DB work_order.due_at과 연결 */}
+            {/* 납기일 - work_order.due_date와 연결 */}
             <Field>
               <Label htmlFor="work-order-due-date">납기일</Label>
 
@@ -136,28 +109,6 @@ export default function WorkOrderNewEdit({
                 }
               />
             </Field>
-
-            {/* 상태 */}
-            <Field>
-              <Label htmlFor="work-order-status">상태</Label>
-
-              <SelectControl>
-                <DrawerSelect
-                  id="work-order-status"
-                  value={orderForm.status}
-                  onChange={(event) =>
-                    setOrderForm({
-                      ...orderForm,
-                      status: event.target.value,
-                    })
-                  }
-                >
-                  <option value="대기중">대기중</option>
-                  <option value="진행중">진행중</option>
-                  <option value="완료">완료</option>
-                </DrawerSelect>
-              </SelectControl>
-            </Field>
           </DrawerBody>
 
           <DrawerFooter>
@@ -165,9 +116,7 @@ export default function WorkOrderNewEdit({
               취소
             </CancelButton>
 
-            <Button type="submit">
-              {editingOrderId ? "수정하기" : "등록하기"}
-            </Button>
+            <Button type="submit">등록하기</Button>
           </DrawerFooter>
         </DrawerForm>
       </SideDrawer>
