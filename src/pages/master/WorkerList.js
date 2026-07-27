@@ -65,6 +65,7 @@ export default function WorkerList() {
   const { user } = useContext(AuthContext);
   const canManage = hasMasterWritePermission(user);
   const [workers, setWorkers] = useState([]);
+  const [permissionError, setPermissionError] = useState(false);
   const [filters, setFilters] = useState(emptyFilters);
   const [page, setPage] = useState(1);
 
@@ -78,9 +79,11 @@ export default function WorkerList() {
   const loadWorkers = async () => {
     try {
       const { data } = await masterApi.getWorkers();
+      setPermissionError(false);
       setWorkers((data ?? []).map(mapWorkerFromApi));
     } catch (error) {
       console.error("작업자 목록 조회 실패", error);
+      setPermissionError(error.response?.status === 403);
       setWorkers([]);
     }
   };
@@ -349,7 +352,9 @@ export default function WorkerList() {
           tableProps={{
             tableLayout: "fixed",
             headerBackground: "#f1f3f6",
-            emptyText: "조건에 맞는 작업자가 없습니다.",
+            emptyText: permissionError
+              ? "권한이 없습니다."
+              : "조건에 맞는 작업자가 없습니다.",
           }}
         />
       </TablePanel>

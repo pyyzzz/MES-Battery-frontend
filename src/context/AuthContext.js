@@ -1,5 +1,6 @@
 // 사용자 인증 상태를 관리하는 Context Provider
-import { createContext, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
+import axiosInstance from "../api/axiosInstance";
 
 const AuthContext = createContext(null);
 
@@ -8,20 +9,56 @@ export function AuthProvider({ children }) {
   // 로그인 성공 여부와 최소한의 사용자 정보만 상태로 관리한다.
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  const restoreSession = useCallback(async () => {
+    try {
+      const { data } = await axiosInstance.get("/api/mes/auth/me");
+      setUser(data);
+      setIsAuthenticated(true);
+      return data;
+    } catch (error) {
+      setUser(null);
+      setIsAuthenticated(false);
+      return null;
+    } finally {
+      setIsAuthLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
 
   const login = (userInfo) => {
     setUser(userInfo);
     setIsAuthenticated(true);
+    setIsAuthLoading(false);
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    // TODO: 백엔드 로그아웃 API(세션 만료 처리) 연결
+  const logout = async () => {
+    try {
+      await axiosInstance.post("/api/mes/auth/logout");
+    } catch (error) {
+      console.warn("서버 로그아웃 요청에 실패했습니다.", error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAuthLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isAuthLoading,
+        user,
+        login,
+        logout,
+        restoreSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

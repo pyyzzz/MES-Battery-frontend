@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   FiActivity,
@@ -26,419 +26,85 @@ import UiButton from "../../components/ui/Button";
 import Pagination from "../../components/ui/Pagination";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import SummaryCard from "../../components/ui/SummaryCard";
+import reportApi from "../../api/report";
 
-/* =========================================================
-   Mock 데이터
-========================================================= */
+const EMPTY_SUMMARY = {
+  lotCount: 0,
+  planQty: 0,
+  actualQty: 0,
+  goodQty: 0,
+  defectQty: 0,
+  achievementRate: 0,
+  yieldRate: 0,
+};
 
-const MOCK_REPORT_ROWS = [
-  {
-    id: 1,
-    productionDate: "2026-02-10",
-    lotNo: "LOT-20260210-005",
-    productCode: "BAT-12V-M",
-    productName: "12V 중형 배터리",
-    workOrderNo: "WO-20260210-005",
-    planQty: 55,
-    actualQty: 71,
-    goodQty: 70,
-    defectQty: 1,
-    status: "COMPLETED",
-    equipment: "Inspector #1",
-    yieldRate: 98.6,
-    processes: [
-      {
-        processCode: "PROC-010",
-        processName: "전극공정",
-        equipmentName: "Electrode Line #1",
-        workerName: "김민수",
-        startedAt: "2026-02-10 08:00",
-        endedAt: "2026-02-10 09:10",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-020",
-        processName: "조립공정",
-        equipmentName: "Assembly Line #1",
-        workerName: "이현수",
-        startedAt: "2026-02-10 09:20",
-        endedAt: "2026-02-10 10:35",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-030",
-        processName: "활성화공정",
-        equipmentName: "Formation Sys #1",
-        workerName: "박지훈",
-        startedAt: "2026-02-10 10:45",
-        endedAt: "2026-02-10 12:15",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-050",
-        processName: "검사공정",
-        equipmentName: "Inspector #1",
-        workerName: "김하린",
-        startedAt: "2026-02-10 13:10",
-        endedAt: "2026-02-10 14:00",
-        result: "NG 1건",
-      },
-    ],
-    materials: [
-      {
-        materialCode: "MAT-001",
-        materialName: "양극판",
-        materialLotNo: "ML-20260208-001",
-        quantity: 142,
-        unit: "EA",
-      },
-      {
-        materialCode: "MAT-002",
-        materialName: "음극판",
-        materialLotNo: "ML-20260208-002",
-        quantity: 142,
-        unit: "EA",
-      },
-      {
-        materialCode: "MAT-003",
-        materialName: "전해액",
-        materialLotNo: "ML-20260209-003",
-        quantity: 85.2,
-        unit: "L",
-      },
-    ],
-    quality: {
-      result: "NG",
-      inspectedAt: "2026-02-10 14:00",
-      inspectorName: "김하린",
-      defectCode: "SCRATCH",
-      defectType: "스크래치",
-      defectQty: 1,
-      voltage: 12.7,
-      resistance: 3.1,
-    },
-  },
-  {
-    id: 2,
-    productionDate: "2026-02-10",
-    lotNo: "LOT-20260210-004",
-    productCode: "BAT-12V-L",
-    productName: "12V 대형 배터리",
-    workOrderNo: "WO-20260210-004",
-    planQty: 11,
-    actualQty: 14,
-    goodQty: 14,
-    defectQty: 0,
-    status: "COMPLETED",
-    equipment: "Assembly Line #2",
-    yieldRate: 100,
-    processes: [
-      {
-        processCode: "PROC-010",
-        processName: "전극공정",
-        equipmentName: "Electrode Line #2",
-        workerName: "최지훈",
-        startedAt: "2026-02-10 08:10",
-        endedAt: "2026-02-10 09:00",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-020",
-        processName: "조립공정",
-        equipmentName: "Assembly Line #2",
-        workerName: "이수진",
-        startedAt: "2026-02-10 09:10",
-        endedAt: "2026-02-10 10:00",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-050",
-        processName: "검사공정",
-        equipmentName: "Inspector #2",
-        workerName: "김하린",
-        startedAt: "2026-02-10 11:00",
-        endedAt: "2026-02-10 11:30",
-        result: "완료",
-      },
-    ],
-    materials: [
-      {
-        materialCode: "MAT-001",
-        materialName: "양극판",
-        materialLotNo: "ML-20260208-001",
-        quantity: 28,
-        unit: "EA",
-      },
-      {
-        materialCode: "MAT-004",
-        materialName: "배터리 케이스",
-        materialLotNo: "ML-20260209-004",
-        quantity: 14,
-        unit: "EA",
-      },
-    ],
-    quality: {
-      result: "OK",
-      inspectedAt: "2026-02-10 11:30",
-      inspectorName: "김하린",
-      defectCode: "",
-      defectType: "",
-      defectQty: 0,
-      voltage: 12.8,
-      resistance: 2.9,
-    },
-  },
-  {
-    id: 3,
-    productionDate: "2026-02-10",
-    lotNo: "LOT-20260210-003",
-    productCode: "BAT-12V-S",
-    productName: "12V 소형 배터리",
-    workOrderNo: "WO-20260210-003",
-    planQty: 123,
-    actualQty: 156,
-    goodQty: 150,
-    defectQty: 6,
-    status: "COMPLETED",
-    equipment: "Formation Sys #1",
-    yieldRate: 96.2,
-    processes: [
-      {
-        processCode: "PROC-010",
-        processName: "전극공정",
-        equipmentName: "Electrode Line #1",
-        workerName: "김민수",
-        startedAt: "2026-02-10 07:50",
-        endedAt: "2026-02-10 09:30",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-030",
-        processName: "활성화공정",
-        equipmentName: "Formation Sys #1",
-        workerName: "박지훈",
-        startedAt: "2026-02-10 10:00",
-        endedAt: "2026-02-10 12:50",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-050",
-        processName: "검사공정",
-        equipmentName: "Inspector #1",
-        workerName: "김하린",
-        startedAt: "2026-02-10 13:00",
-        endedAt: "2026-02-10 14:10",
-        result: "NG 6건",
-      },
-    ],
-    materials: [
-      {
-        materialCode: "MAT-001",
-        materialName: "양극판",
-        materialLotNo: "ML-20260208-001",
-        quantity: 312,
-        unit: "EA",
-      },
-      {
-        materialCode: "MAT-002",
-        materialName: "음극판",
-        materialLotNo: "ML-20260208-002",
-        quantity: 312,
-        unit: "EA",
-      },
-    ],
-    quality: {
-      result: "NG",
-      inspectedAt: "2026-02-10 14:10",
-      inspectorName: "김하린",
-      defectCode: "MISALIGNMENT",
-      defectType: "정렬 불량",
-      defectQty: 6,
-      voltage: 12.4,
-      resistance: 3.8,
-    },
-  },
-  {
-    id: 4,
-    productionDate: "2026-02-09",
-    lotNo: "LOT-20260209-005",
-    productCode: "BAT-12V-S",
-    productName: "12V 소형 배터리",
-    workOrderNo: "WO-20260209-005",
-    planQty: 201,
-    actualQty: 230,
-    goodQty: 219,
-    defectQty: 11,
-    status: "COMPLETED",
-    equipment: "Formation Sys #2",
-    yieldRate: 95.2,
-    processes: [
-      {
-        processCode: "PROC-010",
-        processName: "전극공정",
-        equipmentName: "Electrode Line #1",
-        workerName: "김민수",
-        startedAt: "2026-02-09 08:00",
-        endedAt: "2026-02-09 09:40",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-030",
-        processName: "활성화공정",
-        equipmentName: "Formation Sys #2",
-        workerName: "박지훈",
-        startedAt: "2026-02-09 10:00",
-        endedAt: "2026-02-09 13:20",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-050",
-        processName: "검사공정",
-        equipmentName: "Inspector #2",
-        workerName: "김하린",
-        startedAt: "2026-02-09 13:30",
-        endedAt: "2026-02-09 15:00",
-        result: "NG 11건",
-      },
-    ],
-    materials: [
-      {
-        materialCode: "MAT-001",
-        materialName: "양극판",
-        materialLotNo: "ML-20260207-001",
-        quantity: 460,
-        unit: "EA",
-      },
-    ],
-    quality: {
-      result: "NG",
-      inspectedAt: "2026-02-09 15:00",
-      inspectorName: "김하린",
-      defectCode: "CONTAMINATION",
-      defectType: "오염",
-      defectQty: 11,
-      voltage: 12.3,
-      resistance: 4.1,
-    },
-  },
-  {
-    id: 5,
-    productionDate: "2026-02-09",
-    lotNo: "LOT-20260209-004",
-    productCode: "BAT-12V-M",
-    productName: "12V 중형 배터리",
-    workOrderNo: "WO-20260209-004",
-    planQty: 11,
-    actualQty: 14,
-    goodQty: 14,
-    defectQty: 0,
-    status: "COMPLETED",
-    equipment: "Assembly Line #1",
-    yieldRate: 100,
-    processes: [
-      {
-        processCode: "PROC-020",
-        processName: "조립공정",
-        equipmentName: "Assembly Line #1",
-        workerName: "이현수",
-        startedAt: "2026-02-09 09:00",
-        endedAt: "2026-02-09 10:10",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-050",
-        processName: "검사공정",
-        equipmentName: "Inspector #1",
-        workerName: "김하린",
-        startedAt: "2026-02-09 10:30",
-        endedAt: "2026-02-09 11:00",
-        result: "완료",
-      },
-    ],
-    materials: [
-      {
-        materialCode: "MAT-004",
-        materialName: "배터리 케이스",
-        materialLotNo: "ML-20260208-004",
-        quantity: 14,
-        unit: "EA",
-      },
-    ],
-    quality: {
-      result: "OK",
-      inspectedAt: "2026-02-09 11:00",
-      inspectorName: "김하린",
-      defectCode: "",
-      defectType: "",
-      defectQty: 0,
-      voltage: 12.8,
-      resistance: 2.7,
-    },
-  },
-  {
-    id: 6,
-    productionDate: "2026-02-08",
-    lotNo: "LOT-20260208-003",
-    productCode: "BAT-12V-L",
-    productName: "12V 대형 배터리",
-    workOrderNo: "WO-20260208-003",
-    planQty: 80,
-    actualQty: 78,
-    goodQty: 76,
-    defectQty: 2,
-    status: "COMPLETED",
-    equipment: "Pack Line #1",
-    yieldRate: 97.4,
-    processes: [
-      {
-        processCode: "PROC-020",
-        processName: "조립공정",
-        equipmentName: "Assembly Line #2",
-        workerName: "이수진",
-        startedAt: "2026-02-08 08:30",
-        endedAt: "2026-02-08 10:00",
-        result: "완료",
-      },
-      {
-        processCode: "PROC-040",
-        processName: "팩공정",
-        equipmentName: "Pack Line #1",
-        workerName: "박지훈",
-        startedAt: "2026-02-08 10:20",
-        endedAt: "2026-02-08 11:40",
-        result: "완료",
-      },
-    ],
-    materials: [],
-    quality: {
-      result: "NG",
-      inspectedAt: "2026-02-08 12:00",
-      inspectorName: "김하린",
-      defectCode: "DIMENSION",
-      defectType: "치수 불량",
-      defectQty: 2,
-      voltage: 12.5,
-      resistance: 3.5,
-    },
-  },
-];
+const toNumber = (value) => Number(value ?? 0) || 0;
 
-const DAILY_CHART_DATA = [
-  { date: "02-05", plan: 350, actual: 342 },
-  { date: "02-06", plan: 380, actual: 371 },
-  { date: "02-07", plan: 400, actual: 396 },
-  { date: "02-08", plan: 410, actual: 402 },
-  { date: "02-09", plan: 430, actual: 458 },
-  { date: "02-10", plan: 450, actual: 485 },
-];
+const formatNumber = (value) => toNumber(value).toLocaleString();
 
-const PROCESS_CHART_DATA = [
-  { process: "전극", output: 280, defect: 21 },
-  { process: "조립", output: 265, defect: 17 },
-  { process: "활성화", output: 250, defect: 13 },
-  { process: "팩", output: 242, defect: 8 },
-  { process: "검사", output: 231, defect: 5 },
-];
+const createReportParams = (filters) =>
+  Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== "")
+  );
+
+const normalizeQuality = (quality, defectQty) => ({
+  result: quality?.result || (defectQty > 0 ? "NG" : "OK"),
+  inspectedAt: quality?.inspectedAt || "",
+  inspectorName: quality?.inspectorName || "-",
+  defectCode: quality?.defectCode || "",
+  defectType: quality?.defectType || "",
+  defectQty: toNumber(quality?.defectQty ?? defectQty),
+  voltage: quality?.voltage ?? "-",
+  resistance: quality?.resistance ?? "-",
+});
+
+const normalizeReportRow = (lot) => {
+  const actualQty = toNumber(lot.actualQty);
+  const goodQty = toNumber(lot.goodQty);
+  const defectQty = toNumber(lot.defectQty);
+
+  return {
+    id: lot.id,
+    productionDate: lot.productionDate || "",
+    lotNo: lot.lotNo || "",
+    productCode: lot.productCode || "",
+    productName: lot.productName || "",
+    workOrderNo: lot.workOrderNo || "",
+    planQty: toNumber(lot.planQty),
+    actualQty,
+    goodQty,
+    defectQty,
+    status: lot.status || "",
+    equipment: lot.equipment || "",
+    yieldRate: toNumber(lot.yieldRate),
+    processes: lot.processes ?? [],
+    materials: lot.materials ?? [],
+    quality: normalizeQuality(lot.quality, defectQty),
+  };
+};
+
+const normalizeSummary = (summary) => ({
+  lotCount: toNumber(summary?.lotCount),
+  planQty: toNumber(summary?.planQty),
+  actualQty: toNumber(summary?.actualQty),
+  goodQty: toNumber(summary?.goodQty),
+  defectQty: toNumber(summary?.defectQty),
+  achievementRate: toNumber(summary?.achievementRate),
+  yieldRate: toNumber(summary?.yieldRate),
+});
+
+const uniqueOptions = (items) => {
+  const seen = new Set();
+
+  return items.filter((item) => {
+    if (!item.value || seen.has(item.value)) {
+      return false;
+    }
+
+    seen.add(item.value);
+    return true;
+  });
+};
 
 /* =========================================================
    Styled Components
@@ -956,7 +622,12 @@ const QualityResult = styled.span`
 ========================================================= */
 
 function ProductionReport() {
-  const [rows] = useState(MOCK_REPORT_ROWS);
+  const [rows, setRows] = useState([]);
+  const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [dailyChartData, setDailyChartData] = useState([]);
+  const [processChartData, setProcessChartData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -972,122 +643,110 @@ function ProductionReport() {
 
   const itemsPerPage = 8;
 
-  const filteredRows = useMemo(() => {
-    const keyword = filters.keyword.trim().toLowerCase();
+  useEffect(() => {
+    let isMounted = true;
+    const params = createReportParams(filters);
 
-    return rows.filter((row) => {
-      const matchesStartDate =
-        !filters.startDate ||
-        row.productionDate >= filters.startDate;
+    const loadReport = async () => {
+      setIsLoading(true);
+      setLoadError("");
 
-      const matchesEndDate =
-        !filters.endDate ||
-        row.productionDate <= filters.endDate;
+      try {
+        const [lotsResponse, summaryResponse, dailyResponse, processResponse] =
+          await Promise.all([
+            reportApi.getLots(params),
+            reportApi.getSummary(params),
+            reportApi.getDailyProduction(params),
+            reportApi.getProcessProduction(params),
+          ]);
 
-      const matchesProduct =
-        !filters.product ||
-        row.productCode === filters.product;
+        if (!isMounted) return;
 
-      const matchesEquipment =
-        !filters.equipment ||
-        row.processes.some(
-          (process) =>
-            process.equipmentName === filters.equipment
-        );
+        setRows((lotsResponse.data ?? []).map(normalizeReportRow));
+        setSummary(normalizeSummary(summaryResponse.data));
+        setDailyChartData(dailyResponse.data ?? []);
+        setProcessChartData(processResponse.data ?? []);
+      } catch (error) {
+        if (!isMounted) return;
 
-      const matchesProcess =
-        !filters.process ||
-        row.processes.some(
-          (process) =>
-            process.processCode === filters.process
-        );
-
-      const searchableValues = [
-        row.lotNo,
-        row.productCode,
-        row.productName,
-        row.workOrderNo,
-        row.equipment,
-        ...row.materials.flatMap((material) => [
-          material.materialCode,
-          material.materialName,
-          material.materialLotNo,
-        ]),
-      ];
-
-      const matchesKeyword =
-        !keyword ||
-        searchableValues.some((value) =>
-          String(value || "")
-            .toLowerCase()
-            .includes(keyword)
-        );
-
-      return (
-        matchesStartDate &&
-        matchesEndDate &&
-        matchesProduct &&
-        matchesEquipment &&
-        matchesProcess &&
-        matchesKeyword
-      );
-    });
-  }, [rows, filters]);
-
-  const summary = useMemo(() => {
-    const planQty = filteredRows.reduce(
-      (sum, row) => sum + row.planQty,
-      0
-    );
-
-    const actualQty = filteredRows.reduce(
-      (sum, row) => sum + row.actualQty,
-      0
-    );
-
-    const goodQty = filteredRows.reduce(
-      (sum, row) => sum + row.goodQty,
-      0
-    );
-
-    const defectQty = filteredRows.reduce(
-      (sum, row) => sum + row.defectQty,
-      0
-    );
-
-    const achievementRate =
-      planQty > 0
-        ? Number(((actualQty / planQty) * 100).toFixed(1))
-        : 0;
-
-    const yieldRate =
-      actualQty > 0
-        ? Number(((goodQty / actualQty) * 100).toFixed(1))
-        : 0;
-
-    return {
-      lotCount: filteredRows.length,
-      planQty,
-      actualQty,
-      goodQty,
-      defectQty,
-      achievementRate,
-      yieldRate,
+        console.error("생산 리포트 조회 실패:", error);
+        setRows([]);
+        setSummary(EMPTY_SUMMARY);
+        setDailyChartData([]);
+        setProcessChartData([]);
+        setLoadError("생산 리포트 데이터를 불러오지 못했습니다.");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     };
-  }, [filteredRows]);
+
+    loadReport();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [filters]);
+
+  const filteredRows = rows;
+
+  const productOptions = useMemo(
+    () =>
+      uniqueOptions(
+        rows.map((row) => ({
+          value: row.productCode,
+          label: row.productName
+            ? `${row.productCode} / ${row.productName}`
+            : row.productCode,
+        }))
+      ),
+    [rows]
+  );
+
+  const equipmentOptions = useMemo(
+    () =>
+      uniqueOptions(
+        rows
+          .flatMap((row) => [
+            row.equipment,
+            ...row.processes.map((process) => process.equipmentName),
+          ])
+          .map((equipment) => ({
+            value: equipment,
+            label: equipment,
+          }))
+      ),
+    [rows]
+  );
+
+  const processOptions = useMemo(
+    () =>
+      uniqueOptions(
+        rows.flatMap((row) =>
+          row.processes.map((process) => ({
+            value: process.processCode,
+            label: process.processName
+              ? `${process.processCode} / ${process.processName}`
+              : process.processCode,
+          }))
+        )
+      ),
+    [rows]
+  );
 
   const productionColumns = [
     { key: "productionDate", label: "생산일", width: 120, render: (date) => <TableText>{date}</TableText> },
     { key: "lotNo", label: "LOT 번호", width: 180, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
     { key: "productName", label: "제품명", width: 135 },
-    { key: "planQty", label: "계획", width: 80, render: (quantity) => <TableText>{quantity.toLocaleString()}</TableText> },
-    { key: "actualQty", label: "실적", width: 80, render: (quantity) => <TableText>{quantity.toLocaleString()}</TableText> },
-    { key: "goodQty", label: "양품", width: 80, render: (quantity) => <TableText>{quantity.toLocaleString()}</TableText> },
+    { key: "planQty", label: "계획", width: 80, render: (quantity) => <TableText>{formatNumber(quantity)}</TableText> },
+    { key: "actualQty", label: "실적", width: 80, render: (quantity) => <TableText>{formatNumber(quantity)}</TableText> },
+    { key: "goodQty", label: "양품", width: 80, render: (quantity) => <TableText>{formatNumber(quantity)}</TableText> },
     {
       key: "defectQty",
       label: "불량",
       width: 80,
-      render: (quantity) => <QuantityNg $hasDefect={quantity > 0}>{quantity.toLocaleString()}</QuantityNg>,
+      render: (quantity) => <QuantityNg $hasDefect={quantity > 0}>{formatNumber(quantity)}</QuantityNg>,
     },
     { key: "yieldRate", label: "수율", width: 80, render: (rate) => <TableText>{rate}%</TableText> },
     { key: "status", label: "상태", width: 110, render: () => <StatusBadge>생산 완료</StatusBadge> },
@@ -1145,7 +804,7 @@ function ProductionReport() {
             iconColor="#17a964"
             title="생산 실적"
             titleFontSize={13}
-            value={summary.actualQty.toLocaleString()}
+            value={formatNumber(summary.actualQty)}
             valueFontSize={24}
           />
 
@@ -1159,7 +818,7 @@ function ProductionReport() {
             iconColor="#17a964"
             title="양품"
             titleFontSize={13}
-            value={summary.goodQty.toLocaleString()}
+            value={formatNumber(summary.goodQty)}
             valueFontSize={24}
           />
 
@@ -1173,7 +832,7 @@ function ProductionReport() {
             iconColor="#d92d34"
             title="불량"
             titleFontSize={13}
-            value={summary.defectQty.toLocaleString()}
+            value={formatNumber(summary.defectQty)}
             valueFontSize={24}
           />
 
@@ -1199,7 +858,7 @@ function ProductionReport() {
             <ChartBox>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={DAILY_CHART_DATA}
+                  data={dailyChartData}
                   margin={{
                     top: 10,
                     right: 18,
@@ -1254,7 +913,7 @@ function ProductionReport() {
             <ChartBox>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={PROCESS_CHART_DATA}
+                  data={processChartData}
                   margin={{
                     top: 10,
                     right: 16,
@@ -1315,39 +974,21 @@ function ProductionReport() {
                 label: "제품",
                 placeholder: "전체 제품",
                 width: 170,
-                options: [
-                  { value: "BAT-12V-S", label: "12V 소형 배터리" },
-                  { value: "BAT-12V-M", label: "12V 중형 배터리" },
-                  { value: "BAT-12V-L", label: "12V 대형 배터리" },
-                ],
+                options: productOptions,
               },
               {
                 name: "equipment",
                 label: "설비",
                 placeholder: "전체 설비",
                 width: 170,
-                options: [
-                  "Electrode Line #1",
-                  "Assembly Line #1",
-                  "Assembly Line #2",
-                  "Formation Sys #1",
-                  "Formation Sys #2",
-                  "Inspector #1",
-                  "Inspector #2",
-                ].map((value) => ({ value, label: value })),
+                options: equipmentOptions,
               },
               {
                 name: "process",
                 label: "공정",
                 placeholder: "전체 공정",
                 width: 160,
-                options: [
-                  { value: "PROC-010", label: "전극공정" },
-                  { value: "PROC-020", label: "조립공정" },
-                  { value: "PROC-030", label: "활성화공정" },
-                  { value: "PROC-040", label: "팩공정" },
-                  { value: "PROC-050", label: "검사공정" },
-                ],
+                options: processOptions,
               },
             ]}
             keywordLabel="통합 검색"
@@ -1370,7 +1011,7 @@ function ProductionReport() {
             <TableSummary>
               조회 LOT <strong>{summary.lotCount}</strong>건 · 총 생산{" "}
               <strong>
-                {summary.actualQty.toLocaleString()}
+                {formatNumber(summary.actualQty)}
               </strong>
               개
             </TableSummary>
@@ -1391,7 +1032,9 @@ function ProductionReport() {
               headerBackground: "#f1f3f6",
               headerColor: "#555d6b",
               cellColor: "#23272e",
-              emptyText: "조건에 맞는 생산 실적이 없습니다.",
+              emptyText: isLoading
+                ? "생산 리포트 데이터를 불러오는 중입니다."
+                : loadError || "조건에 맞는 생산 실적이 없습니다.",
             }}
           />
         </TablePanel>

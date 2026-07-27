@@ -5,7 +5,10 @@
 import axiosInstance from "./axiosInstance";
 
 const inventoryApi = {
-  // TODO: 자재 재고 / 원료 LOT / 자재 트랜잭션 관련 함수 추가
+  getTransactions: (params) =>
+    axiosInstance.get("/api/mes/inventory/transactions", { params }),
+  getTransactionSummary: (params) =>
+    axiosInstance.get("/api/mes/inventory/transactions/summary", { params }),
 };
 
 export default inventoryApi;

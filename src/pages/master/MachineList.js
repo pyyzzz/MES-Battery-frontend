@@ -47,6 +47,7 @@ const toEquipmentCreatePayload = (machine) => ({
   equipmentCode: machine.machine_code,
   equipmentName: machine.machine_name,
   processId: Number(machine.processId || machine.process_id),
+  equipmentStatus: machine.status,
   active: machine.use_yn === "Y",
   statusMessage: machine.message === "-" ? "" : machine.message,
 });
@@ -54,6 +55,7 @@ const toEquipmentCreatePayload = (machine) => ({
 const toEquipmentUpdatePayload = (machine) => ({
   equipmentName: machine.machine_name,
   processId: Number(machine.processId || machine.process_id),
+  equipmentStatus: machine.status,
   active: machine.use_yn === "Y",
   statusMessage: machine.message === "-" ? "" : machine.message,
 });

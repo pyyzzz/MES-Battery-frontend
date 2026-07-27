@@ -30,7 +30,9 @@ const toProcessRow = (process) => ({
   seq: process.sequenceNo ?? 0,
   step_code: process.processCode ?? "",
   step_name: process.processName ?? "",
-  is_active: process.processStatus !== "미사용",
+  is_active:
+    process.processStatus !== "INACTIVE" &&
+    process.processStatus !== "미사용",
   machine: process.equipment?.equipmentCode ?? "설비 선택 (없음)",
   description: process.description ?? "",
   worker: process.managerEmployee?.employeeName ?? "",
@@ -333,10 +335,20 @@ export default function ProcessList() {
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = (e, id) => {
+  const handleDelete = async (e, process) => {
     e.stopPropagation();
     if (!canManage) return;
-    window.alert("공정 삭제 API가 아직 없어 삭제할 수 없습니다.");
+    if (!window.confirm(`${process.step_name} 공정을 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      await masterApi.deleteProcess(process.id);
+      await loadProcesses();
+    } catch (error) {
+      console.error("공정 삭제 실패:", error);
+      window.alert("공정 삭제에 실패했습니다.");
+    }
   };
 
   const handleRowClick = (row) => {
@@ -453,7 +465,7 @@ export default function ProcessList() {
           aria-label={`${row.step_name} 삭제`}
           onClick={(event) => {
             event.stopPropagation();
-            handleDelete(event, row.id);
+            handleDelete(event, row);
           }}
         >
           <FiTrash2 />

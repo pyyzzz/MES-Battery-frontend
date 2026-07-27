@@ -17,7 +17,6 @@ import {
 import MemberInfoModal from "./MemberInfoModal";
 import PasswordChangeModal from "./PasswordChangeModal";
 import AuthContext from "../../context/AuthContext";
-import axiosInstance from "../../api/axiosInstance";
 
 const MENU_ITEMS = [
   { key: "대시보드", label: "대시보드", icon: FiGrid, path: "/mes/dashboard" },
@@ -453,15 +452,9 @@ export default function SideBar({ activeItem }) {
   const handleLogout = async () => {
     if (!window.confirm("로그아웃하시겠습니까?")) return;
 
-    try {
-      await axiosInstance.post("/api/mes/auth/logout");
-    } catch (error) {
-      console.warn("서버 로그아웃 요청에 실패했습니다.", error);
-    } finally {
-      setMemberInfoModalOpen(false);
-      logout();
-      navigate("/login", { replace: true });
-    }
+    await logout();
+    setMemberInfoModalOpen(false);
+    navigate("/login", { replace: true });
   };
 
   return (
