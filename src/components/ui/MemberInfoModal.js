@@ -117,6 +117,10 @@ export default function MemberInfoModal({
   onEdit,
   onLogout,
   username,
+  employeeNo,
+  employeeName,
+  displayName,
+  role,
 }) {
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -130,6 +134,9 @@ export default function MemberInfoModal({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  const userDisplayName = displayName || employeeName || username || "-";
+  const displayMeta = [employeeNo, role].filter(Boolean).join(" / ");
 
   return (
     <>
@@ -147,8 +154,8 @@ export default function MemberInfoModal({
               <FiUser size={18} />
             </MemberIcon>
             <LabelText>
-              <strong>로그인 계정</strong>
-              <span>사번</span>
+              <strong>{userDisplayName}</strong>
+              <span>{displayMeta || "로그인 계정"}</span>
             </LabelText>
           </MemberLabel>
           <EmployeeNumber title={username}>{username || "-"}</EmployeeNumber>

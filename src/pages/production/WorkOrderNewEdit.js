@@ -14,6 +14,8 @@ export default function WorkOrderNewEdit({
   orderForm,
   setOrderForm,
   products,
+  stockMessages = [],
+  isSubmitDisabled = false,
   onClose,
   onSubmit,
 }) {
@@ -112,11 +114,21 @@ export default function WorkOrderNewEdit({
           </DrawerBody>
 
           <DrawerFooter>
+            {stockMessages.length > 0 && (
+              <StockWarning role="alert">
+                {stockMessages.map((message) => (
+                  <span key={message}>{message}</span>
+                ))}
+              </StockWarning>
+            )}
+
             <CancelButton type="button" onClick={onClose}>
               취소
             </CancelButton>
 
-            <Button type="submit">등록하기</Button>
+            <Button type="submit" disabled={isSubmitDisabled}>
+              등록하기
+            </Button>
           </DrawerFooter>
         </DrawerForm>
       </SideDrawer>
@@ -216,12 +228,29 @@ const DrawerBody = styled.div`
 // 드로어 하단 버튼 영역
 const DrawerFooter = styled.footer`
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 
   padding: 18px 24px;
   border-top: 1px solid #e5e9f0;
   background: #fff;
+`;
+
+const StockWarning = styled.div`
+  min-width: 0;
+  margin-right: auto;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.45;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  span {
+    overflow-wrap: anywhere;
+  }
 `;
 
 // 공용 필터와 동일한 화살표를 사용하는 상태 선택창

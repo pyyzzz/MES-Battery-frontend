@@ -12,6 +12,7 @@ import Badge from "../../components/ui/Badge";
 import SummaryCard from "../../components/ui/SummaryCard";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
 import FilterDatePicker from "../../components/ui/FilterDatePicker";
+import inventoryApi from "../../api/inventory";
 import masterApi from "../../api/master";
 import productionApi from "../../api/production";
 import AuthContext from "../../context/AuthContext";
@@ -52,6 +53,11 @@ const EMPTY_ORDER_FORM = {
   dueAt: "",
 };
 
+const toNumber = (value) => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+};
+
 const INITIAL_FILTERS = {
   workOrderNo: "",
   workOrderStatus: "",
@@ -64,6 +70,9 @@ export default function WorkOrderList() {
   // 전체 작업지시 목록
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
+  const [materialStocksById, setMaterialStocksById] = useState({});
+  const [bomItemsByProductId, setBomItemsByProductId] = useState({});
+  const [isStockCheckLoading, setIsStockCheckLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // 실제 목록에 적용된 검색 조건 (workOrderNo/workOrderStatus는 SearchFilterBar가 관리)
@@ -108,6 +117,168 @@ export default function WorkOrderList() {
     loadOrders();
     loadProducts();
   }, []);
+
+  const selectedProduct = useMemo(
+    () =>
+      products.find(
+        (product) => String(product.id) === String(orderForm.productId),
+      ),
+    [products, orderForm.productId],
+  );
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    let ignore = false;
+
+    const loadMaterialStocks = async () => {
+      setIsStockCheckLoading(true);
+      try {
+        const response = await inventoryApi.getMaterials();
+        if (ignore) return;
+
+        setMaterialStocksById(
+          Object.fromEntries(
+            response.data.map((material) => [
+              String(material.id),
+              toNumber(material.stock),
+            ]),
+          ),
+        );
+      } catch (error) {
+        console.error("자재 재고 조회 실패:", error);
+        if (!ignore) {
+          window.alert("자재 재고를 확인하지 못했습니다.");
+        }
+      } finally {
+        if (!ignore) {
+          setIsStockCheckLoading(false);
+        }
+      }
+    };
+
+    loadMaterialStocks();
+
+    return () => {
+      ignore = true;
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen || !selectedProduct?.id || bomItemsByProductId[selectedProduct.id]) {
+      return;
+    }
+
+    let ignore = false;
+
+    const loadBomItems = async () => {
+      setIsStockCheckLoading(true);
+      try {
+        const response = await masterApi.getBomItems(selectedProduct.id);
+        if (ignore) return;
+
+        setBomItemsByProductId((prev) => ({
+          ...prev,
+          [selectedProduct.id]: response.data,
+        }));
+      } catch (error) {
+        console.error("BOM 조회 실패:", error);
+        if (!ignore) {
+          window.alert("선택한 제품의 BOM을 확인하지 못했습니다.");
+        }
+      } finally {
+        if (!ignore) {
+          setIsStockCheckLoading(false);
+        }
+      }
+    };
+
+    loadBomItems();
+
+    return () => {
+      ignore = true;
+    };
+  }, [drawerOpen, selectedProduct?.id, bomItemsByProductId]);
+
+  const stockValidation = useMemo(() => {
+    if (!selectedProduct) {
+      return { isBlocked: false, messages: [] };
+    }
+
+    if (!selectedProduct.bomId) {
+      return {
+        isBlocked: true,
+        messages: ["선택한 제품에 연결된 BOM이 없어 등록할 수 없습니다."],
+      };
+    }
+
+    const orderQuantity = toNumber(orderForm.plannedQty);
+    if (orderQuantity <= 0) {
+      return { isBlocked: false, messages: [] };
+    }
+
+    const bomItems = bomItemsByProductId[selectedProduct.id];
+    if (!bomItems) {
+      return { isBlocked: false, messages: [] };
+    }
+
+    if (bomItems.length === 0) {
+      return {
+        isBlocked: true,
+        messages: ["선택한 제품에 등록된 BOM 자재가 없어 등록할 수 없습니다."],
+      };
+    }
+
+    bomItems
+      .map((item) => {
+        const requiredQuantity = toNumber(item.requiredQuantity) * orderQuantity;
+        const availableQuantity = materialStocksById[String(item.materialId)] ?? 0;
+
+        if (availableQuantity >= requiredQuantity) {
+          return null;
+        }
+
+        return `${item.materialName} 필요 ${requiredQuantity.toLocaleString("ko-KR")} ${item.unit || ""}, 현재 ${availableQuantity.toLocaleString("ko-KR")} ${item.unit || ""}`;
+      })
+      .filter(Boolean);
+
+    const requiredByMaterialId = bomItems.reduce((acc, item) => {
+      const materialId = String(item.materialId);
+      const requiredQuantity = toNumber(item.requiredQuantity) * orderQuantity;
+      const existing = acc[materialId] || {
+        materialName: item.materialName,
+        unit: item.unit || "",
+        requiredQuantity: 0,
+      };
+
+      acc[materialId] = {
+        ...existing,
+        requiredQuantity: existing.requiredQuantity + requiredQuantity,
+      };
+      return acc;
+    }, {});
+
+    const groupedShortageMessages = Object.entries(requiredByMaterialId)
+      .map(([materialId, item]) => {
+        const availableQuantity = materialStocksById[materialId] ?? 0;
+
+        if (availableQuantity >= item.requiredQuantity) {
+          return null;
+        }
+
+        return `${item.materialName} 필요 ${item.requiredQuantity.toLocaleString("ko-KR")} ${item.unit}, 현재 ${availableQuantity.toLocaleString("ko-KR")} ${item.unit}`;
+      })
+      .filter(Boolean);
+
+    const visibleShortageMessages = groupedShortageMessages.map((message) =>
+      message.startsWith("재고부족:") ? message : `재고부족: ${message}`,
+    );
+
+    return {
+      isBlocked: visibleShortageMessages.length > 0,
+      messages: visibleShortageMessages,
+    };
+  }, [selectedProduct, orderForm.plannedQty, bomItemsByProductId, materialStocksById]);
 
   // 상태별 작업지시 개수 계산 (전체 목록 기준, 필터 결과와 무관)
   const counts = useMemo(
@@ -210,12 +381,18 @@ export default function WorkOrderList() {
     event.preventDefault();
     if (!canManage) return;
 
-    const selectedProduct = products.find(
-      (product) => String(product.id) === String(orderForm.productId),
-    );
+    if (isStockCheckLoading) {
+      window.alert("자재 재고를 확인하는 중입니다.");
+      return;
+    }
 
     if (!selectedProduct?.bomId) {
       window.alert("선택한 제품에 연결된 BOM이 없어 등록할 수 없습니다.");
+      return;
+    }
+
+    if (stockValidation.isBlocked) {
+      window.alert(stockValidation.messages.join("\n"));
       return;
     }
 
@@ -230,7 +407,7 @@ export default function WorkOrderList() {
       closeDrawer();
     } catch (error) {
       console.error("작업지시 등록 실패:", error);
-      window.alert("작업지시 등록에 실패했습니다.");
+      window.alert(error.response?.data?.message || "작업지시 등록에 실패했습니다.");
     }
   };
 
@@ -385,6 +562,12 @@ export default function WorkOrderList() {
         orderForm={orderForm}
         setOrderForm={setOrderForm}
         products={products}
+        stockMessages={
+          isStockCheckLoading
+            ? ["자재 재고를 확인하는 중입니다."]
+            : stockValidation.messages
+        }
+        isSubmitDisabled={isStockCheckLoading || stockValidation.isBlocked}
         onClose={closeDrawer}
         onSubmit={handleSubmitOrder}
       />

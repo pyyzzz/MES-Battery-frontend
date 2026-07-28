@@ -7,7 +7,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
 export default function Login() {
-  const { login } = useContext(AuthContext);
+  const { login, restoreSession } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -25,6 +25,7 @@ export default function Login() {
         password,
       });
       login(response.data);
+      await restoreSession();
       navigate("/mes/dashboard");
     } catch (err) {
       setError("아이디 또는 비밀번호를 확인해주세요.");

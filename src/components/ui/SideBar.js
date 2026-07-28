@@ -439,6 +439,7 @@ export default function SideBar({ activeItem }) {
   const [openGroups, setOpenGroups] = useState(
     defaultOpenGroup ? [defaultOpenGroup] : []
   );
+  const displayName = user?.displayName || user?.employeeName || user?.username || "-";
 
   const toggleGroup = (key) => {
     setOpenGroups((prev) =>
@@ -572,7 +573,7 @@ export default function SideBar({ activeItem }) {
           <UserIcon>
             <FiUser size={17} />
           </UserIcon>
-          <UserName $collapsed={collapsed}>관리자 님</UserName>
+          <UserName $collapsed={collapsed}>{displayName} 님</UserName>
         </UserSummary>
 
         <CollapseButton
@@ -596,6 +597,10 @@ export default function SideBar({ activeItem }) {
       <MemberInfoModal
         isOpen={memberInfoModalOpen}
         username={user?.username}
+        employeeNo={user?.employeeNo}
+        employeeName={user?.employeeName}
+        displayName={user?.displayName}
+        role={user?.role}
         onClose={() => setMemberInfoModalOpen(false)}
         onLogout={handleLogout}
         onEdit={() => {
