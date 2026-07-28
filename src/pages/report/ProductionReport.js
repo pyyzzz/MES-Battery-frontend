@@ -176,14 +176,6 @@ const ReportSummaryCard = styled(SummaryCard)`
   align-items: center;
 `;
 
-// 양품/불량 집계 방식에 대한 보조 설명 문구
-const SummaryHelpNote = styled.p`
-  margin: -8px 2px 16px;
-  color: #8a94a6;
-  font-size: 11px;
-  line-height: 1.5;
-`;
-
 const ChartGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1.1fr;
@@ -867,11 +859,6 @@ function ProductionReport() {
             valueFontSize={24}
           />
         </SummaryGrid>
-
-        <SummaryHelpNote>
-          * 양품/불량은 LOT에 누적된 유닛이 아니라 공정별 판정 건수 기준이라, 완료된 LOT이라도
-          한 유닛이 여러 공정에서 불합격되면 양품 수가 실제 생산 수량보다 적게 보일 수 있습니다.
-        </SummaryHelpNote>
 
         <ChartGrid>
           <Panel>
