@@ -4,6 +4,13 @@ import { FiX } from "react-icons/fi";
 
 import Badge from "../../components/ui/Badge";
 
+// 날짜 변환 함수
+const formatDateTime = (value) => {
+  if (!value) return "-";
+
+  return String(value).replace("T", " ").slice(0, 16);
+};
+
 // 작업지시 상세 사이드 드로어
 export default function WorkOrderDetail({ order, onClose }) {
   // Escape 닫기 + 배경 스크롤 방지 추가
@@ -112,13 +119,13 @@ export default function WorkOrderDetail({ order, onClose }) {
                 <InfoItem>
                   <DetailLabel>실제 시작일시</DetailLabel>
                   <DetailValue>
-                    {!order.startedAt ? "아직 시작되지 않음" : order.startedAt}
+                    {!order.startedAt ? "아직 시작되지 않음" : formatDateTime(order.startedAt)}
                   </DetailValue>
                 </InfoItem>
 
                 <InfoItem>
                   <DetailLabel>완료일시</DetailLabel>
-                  <DetailValue>{order.completedAt || "-"}</DetailValue>
+                  <DetailValue>{formatDateTime(order.completedAt)}</DetailValue>
                 </InfoItem>
 
                 <InfoItem>

@@ -24,6 +24,14 @@ const STATUS_LABELS = {
   COMPLETED: "완료",
 };
 
+// 날짜 변환 함수
+const formatDateTime = (value) => {
+  if (!value) return "-";
+
+  return value.replace("T", " ").slice(0, 16);
+};
+
+
 // WorkOrder 응답(id/bom.product.productName/managerEmployee.employeeName 등)을
 // 화면 표시용 행으로 변환. createdAt은 실제 DB 컬럼이 없어 항상 빈 값.
 const toWorkOrderRow = (order) => ({
@@ -159,11 +167,11 @@ export default function WorkOrderList() {
     ),
 
     startCell: order.startedAt
-      ? <DateTimeText>{order.startedAt}</DateTimeText>
+      ? <DateTimeText>{formatDateTime(order.startedAt)}</DateTimeText>
       : "-",
 
     completedCell: order.completedAt
-      ? <DateTimeText>{order.completedAt}</DateTimeText>
+      ? <DateTimeText>{formatDateTime(order.completedAt)}</DateTimeText>
       : "-",
   }));
 
