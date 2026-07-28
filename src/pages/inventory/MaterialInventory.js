@@ -446,7 +446,7 @@ function MaterialInventory() {
 
   const lotStatusInfo = (status) => {
     if (status === "IN_USE") return { status: "safe", label: "사용중" };
-    if (status === "DEFECT") return { status: "danger", label: "불량" };
+    if (status === "DEFECT") return { status: "danger", label: "재고 소진" };
     return { status: "warning", label: "대기" };
   };
 

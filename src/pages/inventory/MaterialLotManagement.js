@@ -18,7 +18,7 @@ const EMPTY_SUMMARY = { total: 0, inUse: 0, waiting: 0, defect: 0 };
 const STATUS_META = {
   WAITING: { label: "생산 대기", color: "#ad7000", background: "#fff5df" },
   IN_USE: { label: "생산중(투입)", color: "#16925a", background: "#e8f8ef" },
-  DEFECT: { label: "품절/불량", color: "#d94852", background: "#fdecee" },
+  DEFECT: { label: "재고 소진", color: "#d94852", background: "#fdecee" },
 };
 
 const formatNumber = (value) => Number(value).toLocaleString();
@@ -149,7 +149,7 @@ function MaterialLotManagement() {
         <LotSummaryCard height={116} gap={14} icon={<FiEdit3 />} iconBoxSize={50} iconSize={24} iconBackground="#e8efff" iconColor="#0755d9" title="전체 LOT" titleFontSize={13} value={summary.total} valueFontSize={25} />
         <LotSummaryCard height={116} gap={14} icon={<FiRefreshCw />} iconBoxSize={50} iconSize={24} iconBackground="#e8f8ef" iconColor="#18a860" title="생산중(투입)" titleFontSize={13} value={summary.inUse} valueFontSize={25} />
         <LotSummaryCard height={116} gap={14} icon={<span style={{ fontSize: 23 }}>⌛</span>} iconBoxSize={50} iconSize={24} iconBackground="#fff5df" iconColor="#e39400" title="대기중" titleFontSize={13} value={summary.waiting} valueFontSize={25} />
-        <LotSummaryCard height={116} gap={14} icon={<FiAlertTriangle />} iconBoxSize={50} iconSize={24} iconBackground="#fdecee" iconColor="#e34b55" title="품절/불량" titleFontSize={13} value={summary.defect} valueFontSize={25} />
+        <LotSummaryCard height={116} gap={14} icon={<FiAlertTriangle />} iconBoxSize={50} iconSize={24} iconBackground="#fdecee" iconColor="#e34b55" title="재고 소진" titleFontSize={13} value={summary.defect} valueFontSize={25} />
       </SummaryGrid>
 
       <FilterPanel>
@@ -160,7 +160,7 @@ function MaterialLotManagement() {
           endDateLabel="종료일"
           dateWidth={145}
           filters={[{ name: "status", label: "LOT 상태", placeholder: "전체 상태", width: 160, options: [
-            { value: "WAITING", label: "생산 대기" }, { value: "IN_USE", label: "생산중(투입)" }, { value: "DEFECT", label: "품절/불량" },
+            { value: "WAITING", label: "생산 대기" }, { value: "IN_USE", label: "생산중(투입)" }, { value: "DEFECT", label: "재고 소진" },
           ] }]}
           keywordLabel="통합 검색"
           keywordPlaceholder="LOT번호 / 자재명 / 자재코드 검색"
