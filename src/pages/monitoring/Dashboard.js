@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import SummaryCard from "../../components/ui/SummaryCard";
 import DonutChart from "../../components/ui/DonutChart";
@@ -20,17 +20,40 @@ import {
   FiArchive,
 } from "react-icons/fi";
 import { MdPrecisionManufacturing } from "react-icons/md";
+import dashboardApi from "../../api/dashboard";
 
-const HOURLY_PRODUCTION_DATA = [
-  { time: "08:00", good: 58, defect: 2 },
-  { time: "09:00", good: 77, defect: 3 },
-  { time: "10:00", good: 38, defect: 2 },
-  { time: "11:00", good: 96, defect: 4 },
-  { time: "12:00", good: 116, defect: 4 },
-  { time: "13:00", good: 87, defect: 3 },
-  { time: "14:00", good: 144, defect: 6 },
-  { time: "15:00", good: 163, defect: 7 },
-];
+const EMPTY_DASHBOARD = {
+  kpi: {
+    todayProductionQty: 0,
+    equipmentRunRate: 0,
+    defectRate: 0,
+    runningEquipmentCount: 0,
+    totalEquipmentCount: 0,
+  },
+  yield: {
+    yieldRate: 0,
+    goodQty: 0,
+    defectQty: 0,
+  },
+  hourlyProduction: [],
+  defectTypes: [],
+  equipmentStatus: [],
+  materialStatus: [],
+  workerSummary: {
+    total: 0,
+    working: 0,
+  },
+  workerStatus: [],
+};
+
+const toNumber = (value) => Number(value ?? 0) || 0;
+
+const formatNumber = (value) => toNumber(value).toLocaleString();
+
+const formatRate = (value) => `${toNumber(value).toFixed(1)}%`;
+
+const formatMeasurement = (value, unit) =>
+  value === null || value === undefined ? "-" : `${toNumber(value).toFixed(1)}${unit}`;
 
 const DASHBOARD_TABLE_PROPS = {
   tableLayout: "fixed",
@@ -334,54 +357,7 @@ function DashBoard() {
   const [machinePage, setMachinePage] = useState(1);
   const [materialPage, setMaterialPage] = useState(1);
   const [workerPage, setWorkerPage] = useState(1);
-
-  // 상단 KPI 카드 데이터
-  const [kpiData] = useState([
-    {
-      icon: <FiArchive />,
-      iconBackground: "#e8efff",
-      iconColor: "#0755d9",
-      title: "금일 생산량",
-      value: "14,423",
-      subText: "완료 수량",
-      subType: "normal",
-    },
-    {
-      icon: <FiSettings />,
-      iconBackground: "#e8f8ef",
-      iconColor: "#17a964",
-      title: "설비 가동률",
-      value: "92.8%",
-      subText: "정상 운전 중",
-      subType: "success",
-    },
-    {
-      icon: <FiAlertTriangle />,
-      iconBackground: "#fdecec",
-      iconColor: "#d92d34",
-      title: "불량",
-      value: "1.2%",
-      subText: "임계값 2% 미만",
-      subType: "danger",
-    },
-    {
-      icon: <MdPrecisionManufacturing />,
-      iconBackground: "#eef1ff",
-      iconColor: "#415fd5",
-      title: "가동 설비",
-      value: "24 / 26",
-      subText: "온라인",
-      subType: "success",
-    },
-  ]);
-
-  // 불량 유형 분석
-  const [defectTypeData] = useState([
-    { name: "고온", value: 77, color: "#2563eb" },
-    { name: "라벨", value: 43, color: "#d97706" },
-    { name: "저전압", value: 26, color: "#059669" },
-    { name: "기타", value: 25, color: "#cbd5e1" },
-  ]);
+  const [dashboard, setDashboard] = useState(EMPTY_DASHBOARD);
 
   // 설비 가동 현황
   const machineColumns = [
@@ -392,61 +368,6 @@ function DashBoard() {
     { key: "status", label: "상태", width: "17%" },
   ];
 
-  const [machineRows] = useState([
-    {
-      id: 1,
-      machineName: (
-        <MachineNameWrapper>
-          <div>Electrode M/C #1</div>
-          <div>MAC-A-01</div>
-        </MachineNameWrapper>
-      ),
-      temp: "24.6°C",
-      humidity: "40.1%",
-      volt: "221.5V",
-      status: <StateBadge $type="run">RUN</StateBadge>,
-    },
-    {
-      id: 2,
-      machineName: (
-        <MachineNameWrapper>
-          <div>Assembly Line #1</div>
-          <div>MAC-A-02</div>
-        </MachineNameWrapper>
-      ),
-      temp: "24.6°C",
-      humidity: "40.9%",
-      volt: "221.4V",
-      status: <StateBadge $type="run">RUN</StateBadge>,
-    },
-    {
-      id: 3,
-      machineName: (
-        <MachineNameWrapper>
-          <div>Formation Sys #1</div>
-          <div>MAC-A-03</div>
-        </MachineNameWrapper>
-      ),
-      temp: "23.4°C",
-      humidity: "50.0%",
-      volt: "220.6V",
-      status: <StateBadge $type="run">RUN</StateBadge>,
-    },
-    {
-      id: 4,
-      machineName: (
-        <MachineNameWrapper>
-          <div>Pack Line #1</div>
-          <div>MAC-A-04</div>
-        </MachineNameWrapper>
-      ),
-      temp: "23.9°C",
-      humidity: "49.7%",
-      volt: "222.2V",
-      status: <StateBadge $type="run">RUN</StateBadge>,
-    },
-  ]);
-
   // 자재 현황
   const materialColumns = [
     { key: "code", label: "자재 코드", width: 135 },
@@ -455,63 +376,128 @@ function DashBoard() {
     { key: "unit", label: "단위", width: 80 },
   ];
 
-  const [materialRows] = useState([
-    {
-      id: 1,
-      code: <MaterialCode>MAT-V12-001</MaterialCode>,
-      name: "Lithium-ion Cell",
-      stock: <StockText>4,250</StockText>,
-      unit: "EA",
-    },
-    {
-      id: 2,
-      code: <MaterialCode>MAT-V12-042</MaterialCode>,
-      name: "Copper Plate",
-      stock: <StockText>120</StockText>,
-      unit: "KG",
-    },
-    {
-      id: 3,
-      code: <MaterialCode>MAT-V12-089</MaterialCode>,
-      name: "Separator",
-      stock: <StockText>850</StockText>,
-      unit: "M",
-    },
-  ]);
-
-  // 작업자 현황
+  // 근무자 현황
   const workerColumns = [
-    { key: "team", label: "팀명" },
-    { key: "count", label: "배정 인원" },
-    { key: "status", label: "상태" },
+    { key: "workerName", label: "근무자", align: "center", width: "50%" },
+    { key: "status", label: "출근 여부", align: "center", width: "50%" },
   ];
 
-  const [workerRows] = useState([
-    {
-      id: 1,
-      team: "조립 1팀",
-      count: "2명",
-      status: <StateBadge $type="run">가동중</StateBadge>,
-    },
-    {
-      id: 2,
-      team: "조립 2팀",
-      count: "2명",
-      status: <StateBadge $type="run">가동중</StateBadge>,
-    },
-    {
-      id: 3,
-      team: "포장팀",
-      count: "1명",
-      status: <StateBadge $type="run">가동중</StateBadge>,
-    },
-    {
-      id: 4,
-      team: "검사팀",
-      count: "3명",
-      status: <StateBadge $type="normal">정상</StateBadge>,
-    },
-  ]);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDashboard = async () => {
+      try {
+        const { data } = await dashboardApi.getDashboard();
+        if (isMounted) {
+          setDashboard(data ?? EMPTY_DASHBOARD);
+        }
+      } catch (error) {
+        console.error("대시보드 조회 실패:", error);
+        if (isMounted) {
+          setDashboard(EMPTY_DASHBOARD);
+        }
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const kpiData = useMemo(
+    () => [
+      {
+        icon: <FiArchive />,
+        iconBackground: "#e8efff",
+        iconColor: "#0755d9",
+        title: "금일 생산량",
+        value: formatNumber(dashboard.kpi?.todayProductionQty),
+        subText: "완료 수량",
+        subType: "normal",
+      },
+      {
+        icon: <FiSettings />,
+        iconBackground: "#e8f8ef",
+        iconColor: "#17a964",
+        title: "설비 가동률",
+        value: formatRate(dashboard.kpi?.equipmentRunRate),
+        subText: "정상 운전 중",
+        subType: "success",
+      },
+      {
+        icon: <FiAlertTriangle />,
+        iconBackground: "#fdecec",
+        iconColor: "#d92d34",
+        title: "불량",
+        value: formatRate(dashboard.kpi?.defectRate),
+        subText: "금일 검사 기준",
+        subType: "danger",
+      },
+      {
+        icon: <MdPrecisionManufacturing />,
+        iconBackground: "#eef1ff",
+        iconColor: "#415fd5",
+        title: "가동 설비",
+        value:
+          formatNumber(dashboard.kpi?.runningEquipmentCount) +
+          " / " +
+          formatNumber(dashboard.kpi?.totalEquipmentCount),
+        subText: "온라인",
+        subType: "success",
+      },
+    ],
+    [dashboard]
+  );
+
+  const machineRows = useMemo(
+    () =>
+      (dashboard.equipmentStatus ?? []).map((machine) => ({
+        id: machine.id,
+        machineName: (
+          <MachineNameWrapper>
+            <div>{machine.equipmentName || "-"}</div>
+            <div>{machine.equipmentCode || "-"}</div>
+          </MachineNameWrapper>
+        ),
+        temp: formatMeasurement(machine.temp, "°C"),
+        humidity: formatMeasurement(machine.humidity, "%"),
+        volt: formatMeasurement(machine.volt, "V"),
+        status: (
+          <StateBadge $type={machine.running ? "run" : "normal"}>
+            {machine.running ? "RUN" : "STOP"}
+          </StateBadge>
+        ),
+      })),
+    [dashboard.equipmentStatus]
+  );
+
+  const materialRows = useMemo(
+    () =>
+      (dashboard.materialStatus ?? []).map((material) => ({
+        id: material.id,
+        code: <MaterialCode>{material.code || "-"}</MaterialCode>,
+        name: material.name || "-",
+        stock: <StockText>{formatNumber(material.stock)}</StockText>,
+        unit: material.unit || "-",
+      })),
+    [dashboard.materialStatus]
+  );
+
+  const workerRows = useMemo(
+    () =>
+      (dashboard.workerStatus ?? []).map((worker) => ({
+        id: worker.id,
+        workerName: worker.workerName || "-",
+        status: (
+          <StateBadge $type={worker.present ? "run" : "normal"}>
+            {worker.present ? "출근" : "미출근"}
+          </StateBadge>
+        ),
+      })),
+    [dashboard.workerStatus]
+  );
 
   return (
     <DashboardWrapper>
@@ -553,7 +539,7 @@ function DashBoard() {
           <ChartBox>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={HOURLY_PRODUCTION_DATA}
+                data={dashboard.hourlyProduction ?? []}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <CartesianGrid
@@ -592,7 +578,7 @@ function DashBoard() {
         <BoardCard>
           <CardTitle>불량 유형 분석</CardTitle>
           <DonutChart
-            data={defectTypeData}
+            data={dashboard.defectTypes ?? []}
             height={260}
             chartSize={180}
             innerRadius={60}
@@ -629,13 +615,13 @@ function DashBoard() {
             <YieldOverview>
               <div>
                 <YieldLabel>현재 양품률</YieldLabel>
-                <YieldRate>98.8%</YieldRate>
+                <YieldRate>{formatRate(dashboard.yield?.yieldRate)}</YieldRate>
               </div>
               <TargetBadge>목표 97.0%</TargetBadge>
             </YieldOverview>
 
-            <YieldTrack aria-label="현재 양품률 98.8%">
-              <YieldFill $percent={98.8} />
+            <YieldTrack aria-label={`현재 양품률 ${formatRate(dashboard.yield?.yieldRate)}`}>
+              <YieldFill $percent={toNumber(dashboard.yield?.yieldRate)} />
             </YieldTrack>
             <YieldScale>
               <span>0%</span>
@@ -645,19 +631,19 @@ function DashBoard() {
             <YieldStats>
               <YieldStat>
                 <span>양품 수량</span>
-                <strong>14,250</strong>
+                <strong>{formatNumber(dashboard.yield?.goodQty)}</strong>
               </YieldStat>
               <YieldStat $danger>
                 <span>불량 수량</span>
-                <strong>171</strong>
+                <strong>{formatNumber(dashboard.yield?.defectQty)}</strong>
               </YieldStat>
             </YieldStats>
           </YieldContent>
         </YieldCard>
       </SectionGrid>
 
-      {/* 최하단 단: 자재 현황 및 작업자 현황 */}
-      <SectionGrid style={{ gridTemplateColumns: "1fr 1fr" }}>
+      {/* 최하단 단: 자재 현황 및 근무자 현황 */}
+      <SectionGrid style={{ gridTemplateColumns: "3fr 2fr" }}>
         <TableBoardCard>
           <CardTitle>자재 현황 (Inventory Status)</CardTitle>
           <Pagination
@@ -673,9 +659,10 @@ function DashBoard() {
 
         <TableBoardCard>
           <CardTitle>
-            작업자 현황{" "}
+            근무자 현황{" "}
             <span style={{ color: "var(--color-primary)" }}>
-              총원: 12 근무: 8
+              총원: {formatNumber(dashboard.workerSummary?.total)} 근무:{" "}
+              {formatNumber(dashboard.workerSummary?.working)}
             </span>
           </CardTitle>
           <Pagination
