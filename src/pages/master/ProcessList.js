@@ -44,6 +44,7 @@ const toProcessPayload = (process, fallbackManagerEmployeeId) => ({
   processCode: process.step_code,
   processName: process.step_name,
   sequenceNo: Number(process.seq),
+  processStatus: process.processStatus,
   managerEmployeeId: process.managerEmployeeId ?? fallbackManagerEmployeeId,
   description: process.description,
 });

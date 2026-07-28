@@ -40,6 +40,18 @@ const EMPTY_SUMMARY = {
 
 const BAR_COLOR = "#dd4c51";
 
+// 공정별 원시 측정값 measurementCode -> 화면 라벨
+const MEASUREMENT_LABELS = {
+  THICKNESS: "두께",
+  ALIGNMENT: "정렬오차",
+  CURRENT: "충전전류",
+  TORQUE: "체결토크",
+  VOLTAGE: "전압",
+  CAPACITY: "용량",
+  RESISTANCE: "저항",
+  WEIGHT: "중량",
+};
+
 /* =========================================================
    STYLES
 ========================================================= */
@@ -420,8 +432,6 @@ function QualityPage() {
     { key: "workOrderNo", label: "작업지시", width: 160, render: (workOrderNo) => <IdentifierText>{workOrderNo}</IdentifierText> },
     { key: "processName", label: "공정", width: 100 },
     { key: "machineName", label: "설비", width: 150 },
-    { key: "voltage", label: "전압", width: 100, render: (voltage) => <TableText>{voltage}V</TableText> },
-    { key: "humidity", label: "습도", width: 90, render: (humidity) => <TableText>{humidity}%</TableText> },
   ];
 
   const handleFilterChange = (nextFilters) => {
@@ -831,21 +841,23 @@ function QualityPage() {
                 <SectionTitle>측정 정보</SectionTitle>
 
                 <DetailCard>
-                  <DetailGrid>
-                    <DetailItem>
-                      <DetailLabel>전압</DetailLabel>
-                      <DetailValue>
-                        {selectedRow.voltage}V
-                      </DetailValue>
-                    </DetailItem>
-
-                    <DetailItem>
-                      <DetailLabel>습도</DetailLabel>
-                      <DetailValue>
-                        {selectedRow.humidity}%
-                      </DetailValue>
-                    </DetailItem>
-                  </DetailGrid>
+                  {selectedRow.measurements?.length > 0 ? (
+                    <DetailGrid>
+                      {selectedRow.measurements.map((measurement) => (
+                        <DetailItem key={measurement.measurementCode}>
+                          <DetailLabel>
+                            {MEASUREMENT_LABELS[measurement.measurementCode] || measurement.measurementCode}
+                          </DetailLabel>
+                          <DetailValue>
+                            {measurement.measuredValue}
+                            {measurement.unit ? ` ${measurement.unit}` : ""}
+                          </DetailValue>
+                        </DetailItem>
+                      ))}
+                    </DetailGrid>
+                  ) : (
+                    <DetailValue>측정값이 없습니다.</DetailValue>
+                  )}
                 </DetailCard>
               </DrawerSection>
 

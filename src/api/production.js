@@ -9,7 +9,8 @@ const productionApi = {
   getWorkOrder: (id) => axiosInstance.get(`/api/mes/work-orders/${id}`),
   createWorkOrder: (data) => axiosInstance.post("/api/mes/work-orders", data),
 
-  // TODO: 완제품 LOT 관련 함수
+  getProductLots: (params) => axiosInstance.get("/api/mes/product-lots", { params }),
+  getProductLot: (id) => axiosInstance.get(`/api/mes/product-lots/${id}`),
 };
 
 export default productionApi;

@@ -1,8 +1,9 @@
 // 완제품 LOT 상세 drawer 화면
-// ProductLotList에서 LOT 행을 클릭했을 때 오른쪽에서 열리는 상세 패널
+// ProductLotList에서 LOT 행을 클릭하면 lotId를 받아 GET /product-lots/{id}로 직접 조회한다
 import { useEffect, useId, useState } from "react";
 import styled from "styled-components";
 import { FiCheck, FiClock, FiFileText, FiSettings, FiX } from "react-icons/fi";
+import productionApi from "../../api/production";
 
 const TABS = [
   // 상세 drawer 안에서 보여줄 탭 목록
@@ -12,9 +13,18 @@ const TABS = [
   { id: "equipment", label: "설비" },
 ];
 
+// ProductLotList.js와 동일한 실제 lotStatus 값 매핑
+const STATUS_LABELS = {
+  IN_PROGRESS: "생산중",
+  생산완료: "생산완료",
+};
+const toDisplayStatus = (status) => STATUS_LABELS[status] || status || "-";
+
 // 숫자를 한국식 천 단위 콤마로 보여주기 위한 formatter
 // 예: 5000 -> "5,000"
 const number = new Intl.NumberFormat("ko-KR");
+
+const formatDateTime = (value) => (value ? String(value).replace("T", " ").slice(0, 16) : "-");
 
 const formatProcessTime = (process) => {
   if (process.startedAt && process.endedAt) {
@@ -23,35 +33,22 @@ const formatProcessTime = (process) => {
   return process.startedAt || process.endedAt || "-";
 };
 
-const formatEquipmentLabel = (process) => {
-  if (process.equipmentCode && process.equipmentName) {
-    return `${process.equipmentCode} / ${process.equipmentName}`;
-  }
-  return process.equipmentCode || process.equipmentName || "-";
-};
-
-export default function FinishedLotDetailDrawer({ lot, onClose }) {
+export default function FinishedLotDetailDrawer({ lotId, onClose }) {
   // activeTab은 drawer 안에서 현재 선택된 탭을 기억
   const [activeTab, setActiveTab] = useState("work");
+  const [lot, setLot] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // drawer 제목과 dialog를 연결하기 위한 접근성 id
   const titleId = useId();
 
-  // 부모 목록에서 받은 LOT 검사 수량
-  // lot 값이 없을 때 화면이 깨지지 않도록 기본값 사용
-  const inspectionQty = lot?.inspectionQty ?? 0;
-
-  // 부모 목록에서 받은 합격 수량
-  const goodQty = lot?.goodQty ?? 0;
-
-  // 부모 목록에서 받은 불합격 수량
-  // 값이 없으면 검사 수량 - 합격 수량으로 계산
-  const defectQty = lot?.defectQty ?? Math.max(inspectionQty - goodQty, 0);
+  const inspectionQty = lot?.inspectionCount ?? 0;
+  const goodQty = lot?.passCount ?? 0;
+  const defectQty = lot?.failCount ?? 0;
+  const processes = lot?.processes ?? [];
+  const materials = lot?.materials ?? [];
   const finishedAt =
-    lot?.quality?.inspectedAt ||
-    [...(lot?.processes ?? [])].reverse().find((process) => process.endedAt)
-      ?.endedAt ||
-    "-";
+    [...processes].reverse().find((process) => process.endedAt)?.endedAt || "-";
 
   // 최종 검사 합격률 계산
   // 검사 수량이 0이면 나누기 오류를 피하기 위해 "0.0" 표시
@@ -60,11 +57,31 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
     : "0.0";
 
   useEffect(() => {
-    // drawer가 열릴 때는 배경 스크롤을 막고, ESC 키를 누르면 닫힘
-    if (!lot) return undefined;
+    if (!lotId) {
+      setLot(null);
+      return undefined;
+    }
 
     // 새 LOT 상세를 열 때마다 첫 탭을 작업 정보로 초기화
     setActiveTab("work");
+    setIsLoading(true);
+
+    let ignore = false;
+    productionApi
+      .getProductLot(lotId)
+      .then((response) => {
+        if (!ignore) setLot(response.data);
+      })
+      .catch((error) => {
+        console.error("완제품 LOT 상세 조회 실패:", error);
+        if (!ignore) {
+          window.alert("완제품 LOT 상세를 불러오지 못했습니다.");
+          onClose();
+        }
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
 
     // drawer 뒤쪽 페이지가 같이 스크롤되지 않게 기존 body overflow 값을 저장
     const previousOverflow = document.body.style.overflow;
@@ -83,13 +100,35 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
     // drawer가 닫힐 때 실행되는 정리 함수
     // body 스크롤과 keydown 이벤트를 원래대로 복구
     return () => {
+      ignore = true;
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [lot, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lotId]);
 
   // 선택된 LOT이 없으면 drawer를 화면에 표시하지 않음
-  if (!lot) return null;
+  if (!lotId) return null;
+  if (isLoading || !lot) {
+    return (
+      <Layer>
+        <Backdrop type="button" aria-label="상세 닫기" onClick={onClose} />
+        <Drawer role="dialog" aria-modal="true" aria-labelledby={titleId}>
+          <DrawerHeader>
+            <HeaderTop>
+              <DrawerTitle id={titleId}>완제품 LOT 상세</DrawerTitle>
+              <CloseButton type="button" onClick={onClose} aria-label="완제품 LOT 상세 닫기">
+                <FiX />
+              </CloseButton>
+            </HeaderTop>
+          </DrawerHeader>
+          <Body>불러오는 중...</Body>
+        </Drawer>
+      </Layer>
+    );
+  }
+
+  const status = toDisplayStatus(lot.lotStatus);
 
   return (
     <Layer>
@@ -100,7 +139,7 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
             <div>
               <TitleRow>
                 <DrawerTitle id={titleId}>완제품 LOT 상세</DrawerTitle>
-                <CompleteBadge $status={lot.status}>{lot.status}</CompleteBadge>
+                <CompleteBadge $status={status}>{status}</CompleteBadge>
               </TitleRow>
             </div>
             <CloseButton
@@ -129,6 +168,10 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
               />
             </Progress>
             <FinishedAt>검사 완료&nbsp; {finishedAt}</FinishedAt>
+            <HelpNote>
+              * 합격/불합격은 유닛이 아니라 공정별 판정 건수 기준이라, 한 유닛이 여러 공정에서
+              불합격되면 불합격 수가 실제 불량 유닛 수보다 많게 집계될 수 있습니다.
+            </HelpNote>
           </SummaryCard>
         </SummaryWrap>
 
@@ -143,22 +186,17 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
 
             <LotInfoItem>
               <SmallLabel>LOT 번호</SmallLabel>
-              <Value>{lot.lotNo || "-"}</Value>
+              <Value>{lot.productLotNo || "-"}</Value>
             </LotInfoItem>
 
             <LotInfoItem>
               <SmallLabel>LOT 상태</SmallLabel>
-              <CompleteBadge $status={lot.status}>
-                {lot.status || "-"}
-              </CompleteBadge>
+              <CompleteBadge $status={status}>{status}</CompleteBadge>
             </LotInfoItem>
 
             <LotInfoItem>
               <SmallLabel>생산일</SmallLabel>
-              <Value>
-                {lot.createdDate || "-"}
-                {lot.createdTime ? ` ${lot.createdTime}` : ""}
-              </Value>
+              <Value>{formatDateTime(lot.lotCreatedAt)}</Value>
             </LotInfoItem>
           </LotInfoCard>
         </LotInfoWrap>
@@ -187,13 +225,9 @@ export default function FinishedLotDetailDrawer({ lot, onClose }) {
               defectQty={defectQty}
             />
           )}
-          {activeTab === "lot" && <LotTab processes={lot.processes ?? []} />}
-          {activeTab === "material" && (
-            <MaterialTab materials={lot.materials ?? []} />
-          )}
-          {activeTab === "equipment" && (
-            <EquipmentTab processes={lot.processes ?? []} />
-          )}
+          {activeTab === "lot" && <LotTab processes={processes} />}
+          {activeTab === "material" && <MaterialTab materials={materials} />}
+          {activeTab === "equipment" && <EquipmentTab processes={processes} />}
         </Body>
 
         <Footer>
@@ -286,7 +320,7 @@ function LotTab({ processes }) {
               <ProcessMeta>
                 <span>
                   <SmallLabel>설비</SmallLabel>
-                  {formatEquipmentLabel(process)}
+                  {process.equipmentName || "-"}
                 </span>
                 <span>
                   <SmallLabel>시간</SmallLabel>
@@ -651,6 +685,13 @@ const SmallLabel = styled.span`
   color: #8a94a6;
   font-size: 12px;
   font-weight: 600;
+`;
+// 합격/불합격 집계 방식에 대한 보조 설명 문구
+const HelpNote = styled.p`
+  margin: 10px 2px 0;
+  color: #8a94a6;
+  font-size: 11px;
+  line-height: 1.5;
 `;
 // 카드 안의 실제 값 텍스트
 const Value = styled.strong`

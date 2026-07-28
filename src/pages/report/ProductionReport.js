@@ -42,6 +42,15 @@ const toNumber = (value) => Number(value ?? 0) || 0;
 
 const formatNumber = (value) => toNumber(value).toLocaleString();
 
+// 백엔드 status는 workOrderStatus(WAITING/IN_PROGRESS/COMPLETED) 또는 lotStatus(IN_PROGRESS/생산완료) 둘 중 하나
+const STATUS_LABELS = {
+  WAITING: "대기중",
+  IN_PROGRESS: "생산중",
+  COMPLETED: "생산완료",
+};
+
+const toStatusLabel = (status) => STATUS_LABELS[status] || status || "-";
+
 const createReportParams = (filters) =>
   Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== "")
@@ -165,6 +174,14 @@ const SummaryGrid = styled.div`
 const ReportSummaryCard = styled(SummaryCard)`
   flex-direction: row;
   align-items: center;
+`;
+
+// 양품/불량 집계 방식에 대한 보조 설명 문구
+const SummaryHelpNote = styled.p`
+  margin: -8px 2px 16px;
+  color: #8a94a6;
+  font-size: 11px;
+  line-height: 1.5;
 `;
 
 const ChartGrid = styled.div`
@@ -749,7 +766,7 @@ function ProductionReport() {
       render: (quantity) => <QuantityNg $hasDefect={quantity > 0}>{formatNumber(quantity)}</QuantityNg>,
     },
     { key: "yieldRate", label: "수율", width: 80, render: (rate) => <TableText>{rate}%</TableText> },
-    { key: "status", label: "상태", width: 110, render: () => <StatusBadge>생산 완료</StatusBadge> },
+    { key: "status", label: "상태", width: 110, render: (status) => <StatusBadge>{toStatusLabel(status)}</StatusBadge> },
   ];
 
   const handleFilterChange = (nextFilters) => {
@@ -850,6 +867,11 @@ function ProductionReport() {
             valueFontSize={24}
           />
         </SummaryGrid>
+
+        <SummaryHelpNote>
+          * 양품/불량은 LOT에 누적된 유닛이 아니라 공정별 판정 건수 기준이라, 완료된 LOT이라도
+          한 유닛이 여러 공정에서 불합격되면 양품 수가 실제 생산 수량보다 적게 보일 수 있습니다.
+        </SummaryHelpNote>
 
         <ChartGrid>
           <Panel>

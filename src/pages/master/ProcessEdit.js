@@ -271,6 +271,8 @@ export default function ProcessEdit({
       seq: Number(formData.seq),
       step_name: formData.step_name,
       is_active: formData.is_active === "사용",
+      // 백엔드 processStatus 실제 값: 활성은 "사용", 비활성은 삭제(soft delete) API와 동일하게 "INACTIVE"
+      processStatus: formData.is_active === "사용" ? "사용" : "INACTIVE",
       machine: formData.machine,
       description: formData.description,
       managerEmployeeId: formData.managerEmployeeId
