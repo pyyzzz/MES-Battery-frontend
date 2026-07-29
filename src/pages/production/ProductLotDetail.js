@@ -168,10 +168,6 @@ export default function FinishedLotDetailDrawer({ lotId, onClose }) {
               />
             </Progress>
             <FinishedAt>검사 완료&nbsp; {finishedAt}</FinishedAt>
-            <HelpNote>
-              * 합격/불합격은 유닛이 아니라 공정별 판정 건수 기준이라, 한 유닛이 여러 공정에서
-              불합격되면 불합격 수가 실제 불량 유닛 수보다 많게 집계될 수 있습니다.
-            </HelpNote>
           </SummaryCard>
         </SummaryWrap>
 
@@ -685,13 +681,6 @@ const SmallLabel = styled.span`
   color: #8a94a6;
   font-size: 12px;
   font-weight: 600;
-`;
-// 합격/불합격 집계 방식에 대한 보조 설명 문구
-const HelpNote = styled.p`
-  margin: 10px 2px 0;
-  color: #8a94a6;
-  font-size: 11px;
-  line-height: 1.5;
 `;
 // 카드 안의 실제 값 텍스트
 const Value = styled.strong`
