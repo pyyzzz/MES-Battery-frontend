@@ -119,6 +119,13 @@ function MaterialTransactionHistory() {
       render: (lotNo) => <LotNumber>{lotNo || "-"}</LotNumber>,
     },
     {
+      key: "processName",
+      label: "투입 공정",
+      width: 120,
+      align: "center",
+      render: (processName) => processName || "-",
+    },
+    {
       key: "quantity",
       label: "이동수량",
       width: 90,
@@ -290,6 +297,15 @@ function MaterialTransactionHistory() {
                     <DetailItem>
                       <DetailLabel>제품 LOT 번호</DetailLabel>
                       <DetailValue>{selectedTransaction.productLotNo}</DetailValue>
+                    </DetailItem>
+                    <DetailItem>
+                      <DetailLabel>투입 공정</DetailLabel>
+                      <DetailValue>
+                        {selectedTransaction.processName || "-"}
+                        {selectedTransaction.processCode && selectedTransaction.processCode !== "-"
+                          ? ` (${selectedTransaction.processCode})`
+                          : ""}
+                      </DetailValue>
                     </DetailItem>
                     <DetailItem $full>
                       <DetailLabel>자재 LOT 번호</DetailLabel>
