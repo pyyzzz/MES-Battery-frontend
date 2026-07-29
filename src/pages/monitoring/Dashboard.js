@@ -538,7 +538,7 @@ const workerColumns = [
       <SectionGrid>
         <BoardCard>
           <CardTitle>
-            시간별 생산 현황 <span>양품 / 불량</span>
+            시간별 생산 현황 <span>완제품 양품 / 불량</span>
           </CardTitle>
           <ChartBox>
             <ResponsiveContainer width="100%" height="100%">
