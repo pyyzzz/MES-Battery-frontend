@@ -69,9 +69,9 @@ export default function MachineDetail({
           </Field>
 
           <Field>
-            <Label>사용 여부</Label>
+            <Label>연동 여부</Label>
             <Value>
-              {selectedMachine.use_yn === "Y" ? "사용 중" : "사용 중지"}
+              {selectedMachine.use_yn === "Y" ? "연동" : "미연동"}
             </Value>
           </Field>
 

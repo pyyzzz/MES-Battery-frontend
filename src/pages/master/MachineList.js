@@ -246,7 +246,7 @@ const UseYnBadge = styled.span`
   text-align: center;
 
   ${({ $useYn }) =>
-    $useYn === "사용 중"
+    $useYn === "연동"
       ? `
       background-color: #e6f4ea;
       color: #137333;
@@ -453,13 +453,13 @@ export default function MachineList() {
     },
     { key: "machine_name", label: "설비명", align: "center", width: 130 },
     { key: "status_badge", label: "설비상태", align: "center", width: 100 },
-    { key: "use_yn_badge", label: "사용 여부", align: "center", width: 100 },
+    { key: "use_yn_badge", label: "연동 여부", align: "center", width: 100 },
     { key: "message_el", label: "메시지", align: "center", width: 200 },
     { key: "management", label: "관리", align: "center", width: 120 },
   ];
 
   const rows = filteredRows.map((mac) => {
-    const displayUseYn = mac.use_yn === "Y" ? "사용 중" : "사용 중지";
+    const displayUseYn = mac.use_yn === "Y" ? "연동" : "미연동";
 
     return {
       ...mac,
@@ -641,12 +641,12 @@ export default function MachineList() {
               },
               {
                 name: "useYn",
-                label: "사용 여부",
+                label: "연동 여부",
                 width: 140,
                 placeholder: "전체",
                 options: [
-                  { value: "Y", label: "사용 중" },
-                  { value: "N", label: "사용 중지" },
+                  { value: "Y", label: "연동" },
+                  { value: "N", label: "미연동" },
                 ],
               },
             ]}

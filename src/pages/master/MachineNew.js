@@ -125,16 +125,16 @@ export default function MachineNew({ isOpen, onClose, onSave, processes = [] }) 
             </Select>
           </FormGroup>
 
-          {/* 5. 사용여부 */}
+          {/* 5. 연동여부 */}
           <FormGroup>
-            <Label>사용 여부</Label>
+            <Label>연동 여부</Label>
             <Select
               name="use_yn"
               value={formData.use_yn}
               onChange={handleChange}
             >
-              <option value="Y">사용 중</option>
-              <option value="N">사용 중지</option>
+              <option value="Y">연동</option>
+              <option value="N">미연동</option>
             </Select>
           </FormGroup>
         </Form>
