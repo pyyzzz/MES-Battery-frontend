@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { FiBell } from "react-icons/fi";
 import styled from "styled-components";
 
+import notificationApi from "../../api/notification";
+
 const HeaderContainer = styled.header`
   height: 45px;
   flex-shrink: 0;
@@ -104,6 +106,13 @@ const NotificationHeader = styled.div`
 const NotificationItem = styled.div`
   padding: 13px 16px;
   border-bottom: 1px solid #f0f2f5;
+  border-left: 3px solid
+    ${({ $severity }) =>
+      $severity === "danger"
+        ? "#ef4444"
+        : $severity === "warning"
+          ? "#f59e0b"
+          : "#19b968"};
 
   &:last-child {
     border-bottom: 0;
@@ -114,6 +123,14 @@ const NotificationTitle = styled.div`
   color: #334155;
   font-size: 13px;
   font-weight: 600;
+`;
+
+const NotificationMessage = styled.div`
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 `;
 
 const NotificationTime = styled.div`
@@ -129,20 +146,41 @@ const EmptyNotification = styled.div`
   text-align: center;
 `;
 
-const NOTIFICATIONS = [
-  { id: 1, title: "새로운 작업 지시가 등록되었습니다.", time: "방금 전" },
-  { id: 2, title: "설비 점검 예정 시간이 다가옵니다.", time: "10분 전" },
-  { id: 3, title: "재고 부족 품목을 확인해 주세요.", time: "30분 전" },
-];
-
 export default function Header() {
   const [now, setNow] = useState(() => new Date());
+  const [notifications, setNotifications] = useState([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const notificationRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadNotifications = async () => {
+      try {
+        const response = await notificationApi.getNotifications();
+        if (isMounted) {
+          setNotifications(response.data ?? []);
+        }
+      } catch (error) {
+        console.warn("알림 조회 실패:", error);
+        if (isMounted) {
+          setNotifications([]);
+        }
+      }
+    };
+
+    loadNotifications();
+    const intervalId = window.setInterval(loadNotifications, 2000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
@@ -187,16 +225,22 @@ export default function Header() {
           onClick={() => setNotificationOpen((prev) => !prev)}
         >
           <FiBell size={19} />
-          <NotificationDot />
+          {notifications.length > 0 && <NotificationDot />}
         </NotificationButton>
 
         {notificationOpen && (
           <NotificationPanel>
             <NotificationHeader>알림</NotificationHeader>
-            {NOTIFICATIONS.length > 0 ? (
-              NOTIFICATIONS.map((notification) => (
-                <NotificationItem key={notification.id}>
+            {notifications.length > 0 ? (
+              notifications.map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  $severity={notification.severity}
+                >
                   <NotificationTitle>{notification.title}</NotificationTitle>
+                  {notification.message && (
+                    <NotificationMessage>{notification.message}</NotificationMessage>
+                  )}
                   <NotificationTime>{notification.time}</NotificationTime>
                 </NotificationItem>
               ))
