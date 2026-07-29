@@ -372,8 +372,10 @@ function MaterialInventory() {
   const [inboundQuantity, setInboundQuantity] = useState("");
   const itemsPerPage = 8;
 
-  const loadInventory = async (activeFilters) => {
-    setIsLoading(true);
+  const loadInventory = async (activeFilters, { silent = false } = {}) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     try {
       const [materialsRes, summaryRes] = await Promise.all([
         inventoryApi.getMaterials(activeFilters),
@@ -384,7 +386,9 @@ function MaterialInventory() {
     } catch (error) {
       console.warn("자재 재고 조회 실패:", error);
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -392,6 +396,13 @@ function MaterialInventory() {
   useEffect(() => {
     setCurrentPage(1);
     loadInventory(filters);
+    const intervalId = window.setInterval(() => {
+      loadInventory(filters, { silent: true });
+    }, 2000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 

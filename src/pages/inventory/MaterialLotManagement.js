@@ -90,8 +90,10 @@ function MaterialLotManagement() {
   const [selectedLot, setSelectedLot] = useState(null);
   const itemsPerPage = 8;
 
-  const loadLots = async (activeFilters) => {
-    setIsLoading(true);
+  const loadLots = async (activeFilters, { silent = false } = {}) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     try {
       const [lotsRes, summaryRes] = await Promise.all([
         inventoryApi.getLots(activeFilters),
@@ -102,7 +104,9 @@ function MaterialLotManagement() {
     } catch (error) {
       console.warn("원료 LOT 조회 실패:", error);
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -110,6 +114,13 @@ function MaterialLotManagement() {
   useEffect(() => {
     setCurrentPage(1);
     loadLots(filters);
+    const intervalId = window.setInterval(() => {
+      loadLots(filters, { silent: true });
+    }, 2000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 

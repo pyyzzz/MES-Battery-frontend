@@ -32,23 +32,42 @@ const formatDateTime = (value) => {
   return value.replace("T", " ").slice(0, 16);
 };
 
+const toNumber = (value) => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+};
+
+const calculateProgressRate = (currentQty, targetQty) => {
+  const target = toNumber(targetQty);
+  if (target <= 0) return 0;
+
+  return Math.min(100, Math.round((toNumber(currentQty) / target) * 100));
+};
 
 // WorkOrder 응답(id/bom.product.productName/managerEmployee.employeeName 등)을
 // 화면 표시용 행으로 변환. createdAt은 실제 DB 컬럼이 없어 항상 빈 값.
-const toWorkOrderRow = (order) => ({
-  workOrderId: order.id,
-  workOrderNo: order.workOrderNo ?? "",
-  productId: order.bom?.product?.id,
-  productName: order.bom?.product?.productName ?? "",
-  plannedQty: order.orderQuantity ?? 0,
-  worker: order.managerEmployee?.employeeName ?? "",
-  dueAt: order.dueDate ?? "",
-  workOrderStatus: order.workOrderStatus ?? "",
-  status: STATUS_LABELS[order.workOrderStatus] ?? order.workOrderStatus ?? "",
-  startedAt: order.actualStartAt ?? null,
-  completedAt: order.completedAt ?? null,
-  createdAt: null,
-});
+const toWorkOrderRow = (order) => {
+  const plannedQty = order.orderQuantity ?? order.targetQty ?? 0;
+  const completedQty =
+    order.currentQty ?? order.completedQuantity ?? (order.workOrderStatus === "COMPLETED" ? plannedQty : 0);
+
+  return {
+    workOrderId: order.id,
+    workOrderNo: order.workOrderNo ?? "",
+    productId: order.bom?.product?.id,
+    productName: order.bom?.product?.productName ?? "",
+    plannedQty,
+    completedQty,
+    progressRate: calculateProgressRate(completedQty, plannedQty),
+    worker: order.managerEmployee?.employeeName ?? "",
+    dueAt: order.dueDate ?? "",
+    workOrderStatus: order.workOrderStatus ?? "",
+    status: STATUS_LABELS[order.workOrderStatus] ?? order.workOrderStatus ?? "",
+    startedAt: order.actualStartAt ?? null,
+    completedAt: order.completedAt ?? null,
+    createdAt: null,
+  };
+};
 
 // 한 페이지에 표시할 개수
 const PAGE_SIZE = 8;
@@ -59,11 +78,6 @@ const EMPTY_ORDER_FORM = {
   productId: "",
   plannedQty: "",
   dueAt: "",
-};
-
-const toNumber = (value) => {
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : 0;
 };
 
 const INITIAL_FILTERS = {
@@ -99,16 +113,22 @@ export default function WorkOrderList() {
   // 등록 입력값
   const [orderForm, setOrderForm] = useState(EMPTY_ORDER_FORM);
 
-  const loadOrders = async () => {
-    setIsLoading(true);
+  const loadOrders = async ({ silent = false } = {}) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     try {
       const response = await productionApi.getWorkOrders();
       setOrders(response.data.map(toWorkOrderRow));
     } catch (error) {
       console.error("작업지시 목록 조회 실패:", error);
-      window.alert("작업지시 목록을 불러오지 못했습니다.");
+      if (!silent) {
+        window.alert("작업지시 목록을 불러오지 못했습니다.");
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -124,7 +144,26 @@ export default function WorkOrderList() {
   useEffect(() => {
     loadOrders();
     loadProducts();
+    const intervalId = window.setInterval(() => {
+      loadOrders({ silent: true });
+    }, 2000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, []);
+
+  useEffect(() => {
+    setSelectedOrder((currentOrder) => {
+      if (!currentOrder) return currentOrder;
+
+      const latestOrder = orders.find(
+        (order) => order.workOrderId === currentOrder.workOrderId,
+      );
+
+      return latestOrder ?? currentOrder;
+    });
+  }, [orders]);
 
   const selectedProduct = useMemo(
     () =>
@@ -328,6 +367,18 @@ export default function WorkOrderList() {
 
     quantityCell: order.plannedQty.toLocaleString("ko-KR"),
 
+    progressCell: (
+      <ProgressCell>
+        <ProgressTrack>
+          <ProgressFill $rate={order.progressRate} />
+        </ProgressTrack>
+        <ProgressText>
+          {order.progressRate}% ({order.completedQty.toLocaleString("ko-KR")}/
+          {order.plannedQty.toLocaleString("ko-KR")})
+        </ProgressText>
+      </ProgressCell>
+    ),
+
     statusCell: (
       <StatusBadge
         $status={order.status}
@@ -352,6 +403,7 @@ export default function WorkOrderList() {
     { key: "orderCell", label: "작업지시 번호" },
     { key: "productName", label: "제품명" },
     { key: "quantityCell", label: "지시 수량", align: "right" },
+    { key: "progressCell", label: "진행률", align: "center" },
     { key: "worker", label: "담당자" },
     { key: "dueAt", label: "납기일" },
     { key: "statusCell", label: "상태" },
@@ -558,7 +610,7 @@ export default function WorkOrderList() {
               itemsPerPage={PAGE_SIZE}
               onPageChange={setPage}
               onRowClick={(row) => openOrderDetail(row.originalOrder)}
-              tableProps={{ minWidth: 1260 }}
+              tableProps={{ minWidth: 1380 }}
             />
           </TableWrap>
         </TableCard>
@@ -758,29 +810,29 @@ const TableWrap = styled.div`
   }
 
   th:first-child {
-    width: 7%;
+    width: 6%;
     text-align: center !important;
   }
 
   th:nth-child(2) {
-    width: 18%;
+    width: 16%;
     text-align: center !important;
   }
 
   th:nth-child(3) {
-    width: 15%;
+    width: 14%;
   }
 
   th:nth-child(4) {
-    width: 10%;
-  }
-
-  th:nth-child(5) {
     width: 9%;
   }
 
-  th:nth-child(6) {
+  th:nth-child(5) {
     width: 13%;
+  }
+
+  th:nth-child(6) {
+    width: 9%;
   }
 
   th:nth-child(7) {
@@ -788,11 +840,15 @@ const TableWrap = styled.div`
   }
 
   th:nth-child(8) {
-    width: 16%;
+    width: 8%;
   }
 
   th:nth-child(9) {
-    width: 16%;
+    width: 13%;
+  }
+
+  th:nth-child(10) {
+    width: 13%;
   }
 
   td {
@@ -838,6 +894,40 @@ const DateTimeText = styled.span`
   color: #252a32;
   font-size: 13px;
   font-weight: 400;
+  white-space: nowrap;
+`;
+
+const ProgressCell = styled.div`
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+const ProgressTrack = styled.span`
+  width: min(100%, 94px);
+  height: 7px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #e3e8f0;
+`;
+
+const ProgressFill = styled.span`
+  display: block;
+  width: ${({ $rate }) => `${Math.max(0, Math.min(100, $rate))}%`};
+  height: 100%;
+  border-radius: inherit;
+  background: #0755d9;
+`;
+
+const ProgressText = styled.span`
+  color: #535b68;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
 `;
 

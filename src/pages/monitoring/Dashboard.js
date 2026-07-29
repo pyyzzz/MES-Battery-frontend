@@ -377,32 +377,36 @@ function DashBoard() {
   ];
 
   // 근무자 현황
-  const workerColumns = [
+const workerColumns = [
     { key: "workerName", label: "근무자", align: "center", width: "50%" },
     { key: "status", label: "출근 여부", align: "center", width: "50%" },
   ];
 
   useEffect(() => {
     let isMounted = true;
+    let hasLoadedOnce = false;
 
     const loadDashboard = async () => {
       try {
         const { data } = await dashboardApi.getDashboard();
         if (isMounted) {
           setDashboard(data ?? EMPTY_DASHBOARD);
+          hasLoadedOnce = true;
         }
       } catch (error) {
         console.error("대시보드 조회 실패:", error);
-        if (isMounted) {
+        if (isMounted && !hasLoadedOnce) {
           setDashboard(EMPTY_DASHBOARD);
         }
       }
     };
 
     loadDashboard();
+    const intervalId = window.setInterval(loadDashboard, 2000);
 
     return () => {
       isMounted = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 

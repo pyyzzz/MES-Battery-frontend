@@ -11,6 +11,16 @@ const formatDateTime = (value) => {
   return String(value).replace("T", " ").slice(0, 16);
 };
 
+const formatNumber = (value) => Number(value ?? 0).toLocaleString("ko-KR");
+
+const progressRate = (order) => {
+  const plannedQty = Number(order?.plannedQty ?? 0);
+  if (!Number.isFinite(plannedQty) || plannedQty <= 0) return 0;
+
+  const completedQty = Number(order?.completedQty ?? 0);
+  return Math.min(100, Math.round((completedQty / plannedQty) * 100));
+};
+
 // 작업지시 상세 사이드 드로어
 export default function WorkOrderDetail({ order, onClose }) {
   // Escape 닫기 + 배경 스크롤 방지 추가
@@ -100,9 +110,22 @@ export default function WorkOrderDetail({ order, onClose }) {
                   <DetailLabel>지시 수량</DetailLabel>
                   <DetailValue>
                     {order.plannedQty !== undefined && order.plannedQty !== null
-                      ? `${Number(order.plannedQty).toLocaleString("ko-KR")}개`
+                      ? `${formatNumber(order.plannedQty)}개`
                       : "-"}
                   </DetailValue>
+                </InfoItem>
+
+                <InfoItem>
+                  <DetailLabel>진행률</DetailLabel>
+                  <ProgressValue>
+                    <ProgressTrack>
+                      <ProgressFill $rate={progressRate(order)} />
+                    </ProgressTrack>
+                    <span>
+                      {progressRate(order)}% ({formatNumber(order.completedQty)}/
+                      {formatNumber(order.plannedQty)})
+                    </span>
+                  </ProgressValue>
                 </InfoItem>
 
                 {/* 현재는 화면용 담당자 값을 표시하고, 백엔드 연결 전 worker_id 추가 여부를 합의 */}
@@ -303,6 +326,33 @@ const DetailValue = styled.div`
   font-weight: 700;
   line-height: 1.5;
   overflow-wrap: anywhere;
+`;
+
+const ProgressValue = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2a3140;
+  font-size: 13px;
+  font-weight: 700;
+`;
+
+const ProgressTrack = styled.span`
+  width: 96px;
+  height: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #e3e8f0;
+`;
+
+const ProgressFill = styled.span`
+  display: block;
+  width: ${({ $rate }) => `${Math.max(0, Math.min(100, $rate))}%`};
+  height: 100%;
+  border-radius: inherit;
+  background: #0755d9;
 `;
 
 // 하단 버튼 영역
