@@ -18,6 +18,7 @@ const columns = [
   { key: "codeCell", label: "자재코드", width: 160 },
   { key: "name", label: "자재명", width: 100 },
   { key: "unit", label: "단위", width: 80 },
+  { key: "safetyStockCell", label: "안전재고", width: 100 },
   { key: "registeredAt", label: "등록일", width: 140 },
   { key: "management", label: "관리", width: 90 },
 ];
@@ -172,6 +173,7 @@ export default function MaterialList() {
     ...material,
     no: index + 1,
     codeCell: <Code>{material.code}</Code>,
+    safetyStockCell: Number(material.safetyStock ?? 0).toLocaleString("ko-KR"),
     management: canManage ? (
       <Management>
         <IconButton

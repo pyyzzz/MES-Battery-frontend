@@ -25,6 +25,7 @@ const masterApi = {
   getEquipmentById: (id) => axiosInstance.get(`/api/mes/equipment/${id}`),
   createEquipment: (data) => axiosInstance.post("/api/mes/equipment", data),
   updateEquipment: (id, data) => axiosInstance.put(`/api/mes/equipment/${id}`, data),
+  deleteEquipment: (id) => axiosInstance.delete(`/api/mes/equipment/${id}`),
 
   getWorkers: (params) => axiosInstance.get("/api/mes/workers", { params }),
   getWorker: (id) => axiosInstance.get(`/api/mes/workers/${id}`),

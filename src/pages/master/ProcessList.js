@@ -25,20 +25,26 @@ import AuthContext from "../../context/AuthContext";
 import NoPermissionText from "../../components/ui/NoPermissionText";
 import { hasMasterWritePermission } from "../../utils/masterPermissions";
 
-const toProcessRow = (process) => ({
-  id: process.id,
-  seq: process.sequenceNo ?? 0,
-  step_code: process.processCode ?? "",
-  step_name: process.processName ?? "",
-  is_active:
-    process.processStatus !== "INACTIVE" &&
-    process.processStatus !== "미사용",
-  machine: process.equipment?.equipmentCode ?? "설비 선택 (없음)",
-  description: process.description ?? "",
-  worker: process.managerEmployee?.employeeName ?? "",
-  managerEmployeeId: process.managerEmployee?.id,
-  processStatus: process.processStatus,
-});
+const toProcessRow = (process, equipmentList = []) => {
+  const assignedEquipment = equipmentList.find(
+    (equipment) => equipment.process?.id === process.id,
+  );
+
+  return {
+    id: process.id,
+    seq: process.sequenceNo ?? 0,
+    step_code: process.processCode ?? "",
+    step_name: process.processName ?? "",
+    is_active:
+      process.processStatus !== "INACTIVE" &&
+      process.processStatus !== "미사용",
+    machine: assignedEquipment?.equipmentCode ?? "설비 선택 (없음)",
+    description: process.description ?? "",
+    worker: process.managerEmployee?.employeeName ?? "",
+    managerEmployeeId: process.managerEmployee?.id,
+    processStatus: process.processStatus,
+  };
+};
 
 const toProcessPayload = (process, fallbackManagerEmployeeId) => ({
   processCode: process.step_code,
@@ -46,6 +52,10 @@ const toProcessPayload = (process, fallbackManagerEmployeeId) => ({
   sequenceNo: Number(process.seq),
   processStatus: process.processStatus,
   managerEmployeeId: process.managerEmployeeId ?? fallbackManagerEmployeeId,
+  equipmentCode:
+    process.machine && process.machine !== "설비 선택 (없음)"
+      ? process.machine
+      : null,
   description: process.description,
 });
 
@@ -262,6 +272,7 @@ export default function ProcessList() {
   const canManage = hasMasterWritePermission(user);
   const [processes, setProcesses] = useState([]);
   const [workers, setWorkers] = useState([]);
+  const [equipment, setEquipment] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [searchCode, setSearchCode] = useState("");
@@ -301,8 +312,18 @@ export default function ProcessList() {
   const loadProcesses = async () => {
     setIsLoading(true);
     try {
-      const response = await masterApi.getProcesses();
-      setProcesses(response.data.map(toProcessRow));
+      const [processResponse, equipmentResponse] = await Promise.all([
+        masterApi.getProcesses(),
+        masterApi.getEquipment(),
+      ]);
+      const equipmentData = equipmentResponse.data ?? [];
+
+      setEquipment(equipmentData);
+      setProcesses(
+        (processResponse.data ?? []).map((process) =>
+          toProcessRow(process, equipmentData),
+        ),
+      );
     } catch (error) {
       console.error("공정 목록 조회 실패:", error);
       window.alert("공정 목록을 불러오지 못했습니다.");
@@ -484,6 +505,11 @@ export default function ProcessList() {
     label: name,
   }));
 
+  const equipmentOptions = equipment.map((item) => ({
+    value: item.equipmentCode,
+    label: `${item.equipmentCode} - ${item.equipmentName}`,
+  }));
+
   const filterSchema = [
     {
       name: "step_name",
@@ -628,6 +654,7 @@ export default function ProcessList() {
         nextProcessCode={nextProcessCode}
         nextSequence={nextSequence}
         workers={workers}
+        equipmentOptions={equipmentOptions}
         defaultManagerEmployeeId={defaultManagerEmployeeId}
       />
 
@@ -652,6 +679,7 @@ export default function ProcessList() {
         processData={selectedProcess}
         onUpdate={handleUpdateProcess}
         workers={workers}
+        equipmentOptions={equipmentOptions}
       />
     </Container>
   );

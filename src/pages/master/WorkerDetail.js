@@ -1,34 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import styled from "styled-components";
 import { FiUser, FiX } from "react-icons/fi";
-import CommonPagination from "../../components/ui/Pagination";
 import Button from "../../components/ui/Button";
 
-const HISTORY_PAGE_SIZE = 8;
-
-// 작업 이력 API가 붙기 전까지 상세 화면 표를 확인하기 위한 임시 데이터
-const dummyHistory = [
-  ["Inspector #1", "2026/02/09 17:19", "-", "없음"],
-  ["Inspector #1", "2026/02/09 17:19", "-", "없음"],
-  ["Pack Line #1", "2026/02/09 17:19", "-", "없음"],
-  ["Pack Line #1", "2026/02/09 17:19", "-", "없음"],
-  ["Formation Sys #1", "2026/02/09 17:19", "-", "없음"],
-  ["Assembly Line #1", "2026/02/09 17:19", "-", "없음"],
-].map(([process, startedAt, endedAt, defect], id) => ({
-  id,
-  process,
-  startedAt,
-  endedAt,
-  defect,
-}));
-
 export default function WorkerDetail({ worker, onClose, onEdit, canEdit = true }) {
-  const [historyPage, setHistoryPage] = useState(1);
-
-  useEffect(() => {
-    setHistoryPage(1);
-  }, [worker?.id]);
-
   useEffect(() => {
     if (!worker) return undefined;
 
@@ -46,15 +21,7 @@ export default function WorkerDetail({ worker, onClose, onEdit, canEdit = true }
 
   if (!worker) return null;
 
-  // worker에 workHistory가 들어오면 실제 데이터, 없으면 임시 데이터 사용
-  const history = worker.workHistory || dummyHistory;
   const active = worker.isActive;
-  const historyColumns = [
-    { key: "process", label: "공정/설비", width: "32%" },
-    { key: "startedAt", label: "시작 시간", width: "34%" },
-    { key: "endedAt", label: "종료 시간", width: "18%" },
-    { key: "defect", label: "불량 이력", width: "16%" },
-  ];
 
   return (
     <>
@@ -108,20 +75,6 @@ export default function WorkerDetail({ worker, onClose, onEdit, canEdit = true }
               <Value>{worker.updatedAt || "-"}</Value>
             </Field>
           </DetailCard>
-
-          <History>
-            <SectionTitle>최근 작업 이력</SectionTitle>
-            <TableWrap>
-              <CommonPagination
-                columns={historyColumns}
-                rows={history}
-                currentPage={historyPage}
-                totalItems={history.length}
-                itemsPerPage={HISTORY_PAGE_SIZE}
-                onPageChange={setHistoryPage}
-              />
-            </TableWrap>
-          </History>
         </Body>
 
         <Footer>
@@ -276,59 +229,6 @@ const Status = styled(Value)`
   background: ${({ $active }) => ($active ? "#eff9ef" : "#f3f4f7")};
   color: ${({ $active }) => ($active ? "#27843b" : "#687080")};
   font-size: 12px;
-`;
-
-// 최근 작업 이력 영역과 기본 정보 사이 간격
-const History = styled.section`
-  margin-top: 24px;
-`;
-
-// 상세 화면 안의 작업 이력 표 스타일
-const TableWrap = styled.div`
-  overflow-x: auto;
-  border: 1px solid #d6dce8;
-  border-radius: 8px;
-  background: #fff;
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  th,
-  td {
-    color: #303748;
-    text-align: center;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-
-  th {
-    background: #f1f3f6;
-    color: #535b68;
-    font-weight: 600;
-  }
-
-  th:nth-child(1) {
-    width: 32%;
-  }
-
-  th:nth-child(2) {
-    width: 34%;
-  }
-
-  th:nth-child(3) {
-    width: 18%;
-  }
-
-  tr:last-child td {
-    border-bottom: 0;
-  }
-
-  tbody tr:hover {
-    background: #f6f9ff;
-  }
 `;
 
 // 하단 버튼 영역, 드로어 아래쪽에 고정된 느낌으로 배치

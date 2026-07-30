@@ -223,6 +223,7 @@ export default function ProcessEdit({
   processData,
   onUpdate,
   workers = [],
+  equipmentOptions = [],
 }) {
   const [formData, setFormData] = useState({
     id: "",
@@ -354,8 +355,11 @@ export default function ProcessEdit({
               onChange={handleChange}
             >
               <option value="설비 선택 (없음)">설비 선택 (없음)</option>
-              <option value="MCH-001">프레스 기기 A</option>
-              <option value="MCH-002">레이저 커터 B</option>
+              {equipmentOptions.map((equipment) => (
+                <option key={equipment.value} value={equipment.value}>
+                  {equipment.label}
+                </option>
+              ))}
             </Select>
           </FormGroup>
 

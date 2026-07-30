@@ -8,6 +8,7 @@ const EMPTY_FORM = {
   code: "",
   name: "",
   unit: "",
+  safetyStock: 0,
 };
 
 export default function MaterialNewEdit({
@@ -29,6 +30,7 @@ export default function MaterialNewEdit({
         code: material.code ?? "",
         name: material.name ?? "",
         unit: material.unit ?? "",
+        safetyStock: material.safetyStock ?? 0,
       });
       return;
     }
@@ -38,6 +40,7 @@ export default function MaterialNewEdit({
       code: previewCode,
       name: "",
       unit: "",
+      safetyStock: 0,
     });
   }, [isOpen, mode, material, previewCode]);
 
@@ -65,9 +68,16 @@ export default function MaterialNewEdit({
       return;
     }
 
+    const safetyStock = Number(form.safetyStock);
+    if (!Number.isFinite(safetyStock) || safetyStock < 0) {
+      window.alert("안전재고는 0 이상의 숫자로 입력해주세요.");
+      return;
+    }
+
     const savedMaterial = {
       ...material,
       ...form,
+      safetyStock,
 
       id: mode === "edit" ? material?.id : Date.now(),
 
@@ -153,6 +163,20 @@ export default function MaterialNewEdit({
                 <option value="M">M</option>
                 <option value="BOX">BOX</option>
               </Select>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>안전재고</Label>
+
+              <Input
+                type="number"
+                name="safetyStock"
+                value={form.safetyStock}
+                min="0"
+                step="0.001"
+                onChange={handleChange}
+                placeholder="안전재고 기준 수량을 입력하세요"
+              />
             </FormGroup>
           </DrawerBody>
 

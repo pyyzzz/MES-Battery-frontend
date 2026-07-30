@@ -4,7 +4,6 @@ import {
   FiActivity,
   FiCheckCircle,
   FiLayers,
-  FiPackage,
   FiTrendingUp,
   FiX,
   FiXCircle,
@@ -158,7 +157,7 @@ const PageDescription = styled.p`
 
 const SummaryGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--page-box-gap);
   margin-bottom: var(--page-section-gap);
 
@@ -749,7 +748,6 @@ function ProductionReport() {
     { key: "lotNo", label: "LOT 번호", width: 180, render: (lotNo) => <LotNumber>{lotNo}</LotNumber> },
     { key: "productName", label: "제품명", width: 135 },
     { key: "planQty", label: "계획", width: 80, render: (quantity) => <TableText>{formatNumber(quantity)}</TableText> },
-    { key: "actualQty", label: "실적", width: 80, render: (quantity) => <TableText>{formatNumber(quantity)}</TableText> },
     { key: "goodQty", label: "양품", width: 80, render: (quantity) => <TableText>{formatNumber(quantity)}</TableText> },
     {
       key: "defectQty",
@@ -782,7 +780,7 @@ function ProductionReport() {
             <PageTitle>생산 리포트</PageTitle>
 
             <PageDescription>
-              생산 실적을 조회하고 LOT별 생산·자재·공정 이력을
+              생산 현황을 조회하고 LOT별 생산·자재·공정 이력을
               추적합니다.
             </PageDescription>
           </TitleArea>
@@ -800,20 +798,6 @@ function ProductionReport() {
             title="계획 대비 달성률"
             titleFontSize={13}
             value={`${summary.achievementRate}%`}
-            valueFontSize={24}
-          />
-
-          <ReportSummaryCard
-            height={116}
-            gap={12}
-            icon={<FiPackage />}
-            iconBoxSize={48}
-            iconSize={24}
-            iconBackground="#e8f8ef"
-            iconColor="#17a964"
-            title="생산 실적"
-            titleFontSize={13}
-            value={formatNumber(summary.actualQty)}
             valueFontSize={24}
           />
 
@@ -862,7 +846,7 @@ function ProductionReport() {
 
         <ChartGrid>
           <Panel>
-            <PanelTitle>일자별 계획 vs 실적</PanelTitle>
+            <PanelTitle>일자별 계획/양품</PanelTitle>
 
             <ChartBox>
               <ResponsiveContainer width="100%" height="100%">
@@ -905,8 +889,8 @@ function ProductionReport() {
 
                   <Line
                     type="monotone"
-                    dataKey="actual"
-                    name="실적"
+                    dataKey="good"
+                    name="양품"
                     stroke="#0755d9"
                     strokeWidth={2}
                     dot={{ r: 3 }}
@@ -970,7 +954,7 @@ function ProductionReport() {
         </ChartGrid>
 
         <FilterPanel>
-          <PanelTitle>생산 실적 검색</PanelTitle>
+          <PanelTitle>생산 현황 검색</PanelTitle>
 
           <SearchFilterBar
             defaultValues={filters}
@@ -1015,12 +999,12 @@ function ProductionReport() {
 
         <TablePanel>
           <TableTop>
-            <TableTitle>LOT별 생산 실적</TableTitle>
+            <TableTitle>LOT별 생산 현황</TableTitle>
 
             <TableSummary>
-              조회 LOT <strong>{summary.lotCount}</strong>건 · 총 생산{" "}
+              조회 LOT <strong>{summary.lotCount}</strong>건 · 총 양품{" "}
               <strong>
-                {formatNumber(summary.actualQty)}
+                {formatNumber(summary.goodQty)}
               </strong>
               개
             </TableSummary>
@@ -1043,7 +1027,7 @@ function ProductionReport() {
               cellColor: "#23272e",
               emptyText: isLoading
                 ? "생산 리포트 데이터를 불러오는 중입니다."
-                : loadError || "조건에 맞는 생산 실적이 없습니다.",
+                : loadError || "조건에 맞는 생산 현황이 없습니다.",
             }}
           />
         </TablePanel>
@@ -1076,8 +1060,8 @@ function ProductionReport() {
 
                 <LotHeroGrid>
                   <LotHeroItem>
-                    <span>총 생산</span>
-                    <strong>{selectedLot.actualQty}</strong>
+                    <span>계획</span>
+                    <strong>{selectedLot.planQty}</strong>
                   </LotHeroItem>
 
                   <LotHeroItem>

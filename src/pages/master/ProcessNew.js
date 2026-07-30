@@ -223,6 +223,7 @@ export default function ProcessNew({
   nextProcessCode = "PROC-001",
   nextSequence = 1,
   workers = [],
+  equipmentOptions = [],
   defaultManagerEmployeeId,
 }) {
   // 컴포넌트 초기 상태 정의
@@ -350,8 +351,11 @@ export default function ProcessNew({
               onChange={handleChange}
             >
               <option value="설비 선택 (없음)">설비 선택 (없음)</option>
-              <option value="MCH-001">프레스 기기 A</option>
-              <option value="MCH-002">레이저 커터 B</option>
+              {equipmentOptions.map((equipment) => (
+                <option key={equipment.value} value={equipment.value}>
+                  {equipment.label}
+                </option>
+              ))}
             </Select>
           </FormGroup>
 

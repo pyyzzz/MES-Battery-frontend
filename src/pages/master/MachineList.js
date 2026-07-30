@@ -27,6 +27,8 @@ import AuthContext from "../../context/AuthContext";
 import NoPermissionText from "../../components/ui/NoPermissionText";
 import { hasMasterWritePermission } from "../../utils/masterPermissions";
 
+const PAGE_SIZE = 8;
+
 const toMachineRow = (machine) => {
   const active = machine.active !== false;
   const status = machine.equipmentStatus || (active ? "가동" : "비가동");
@@ -433,13 +435,23 @@ export default function MachineList() {
     }
   };
 
-  const handleDeleteMachine = (machine) => {
+  const handleDeleteMachine = async (machine) => {
     if (!canManage) return;
     if (!window.confirm(`${machine.machine_name} 설비를 삭제하시겠습니까?`)) {
       return;
     }
 
-    window.alert("설비 삭제 API가 아직 없어 삭제할 수 없습니다.");
+    try {
+      await masterApi.deleteEquipment(machine.machine_id);
+      await loadMachines();
+
+      if (filteredRows.length % PAGE_SIZE === 1 && page > 1) {
+        setPage((prev) => prev - 1);
+      }
+    } catch (error) {
+      console.error("설비 삭제 실패:", error);
+      window.alert(error.response?.data?.message || "설비 삭제에 실패했습니다.");
+    }
   };
 
   const columns = [
@@ -673,7 +685,7 @@ export default function MachineList() {
           rows={rows}
           currentPage={page}
           totalItems={rows.length}
-          itemsPerPage={8}
+          itemsPerPage={PAGE_SIZE}
           visiblePages={5}
           background="#ffffff"
           borderTop="1px solid #e2e6ed"
