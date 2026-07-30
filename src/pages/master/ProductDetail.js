@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiX } from "react-icons/fi";
 import Button from "../../components/ui/Button";
+import masterApi from "../../api/master";
 
 export default function ProductDetail({
   isOpen,
@@ -10,6 +11,46 @@ export default function ProductDetail({
   onEdit,
   canEdit = true,
 }) {
+  const [bomRows, setBomRows] = useState([]);
+  const [isBomLoading, setIsBomLoading] = useState(false);
+  const [bomError, setBomError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen || !product?.id) {
+      setBomRows([]);
+      setBomError("");
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    const loadBomRows = async () => {
+      setIsBomLoading(true);
+      setBomError("");
+
+      try {
+        const response = await masterApi.getBomItems(product.id);
+        if (!isMounted) return;
+        setBomRows(response.data ?? []);
+      } catch (error) {
+        console.error("제품 상세 BOM 조회 실패:", error);
+        if (!isMounted) return;
+        setBomRows([]);
+        setBomError("BOM 정보를 불러오지 못했습니다.");
+      } finally {
+        if (isMounted) {
+          setIsBomLoading(false);
+        }
+      }
+    };
+
+    loadBomRows();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, product?.id]);
+
   useEffect(() => {
     if (!isOpen || !product) return undefined;
 
@@ -85,15 +126,46 @@ export default function ProductDetail({
                     <th>자재명</th>
                     <th>소요량</th>
                     <th>단위</th>
+                    <th>투입 공정</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  <tr>
-                    <td colSpan="4" style={{ color: "#9ca3af" }}>
-                      등록된 BOM 정보가 없습니다.
-                    </td>
-                  </tr>
+                  {isBomLoading && (
+                    <tr>
+                      <td colSpan="5" style={{ color: "#6b7280" }}>
+                        BOM 정보를 불러오는 중입니다.
+                      </td>
+                    </tr>
+                  )}
+
+                  {!isBomLoading && bomError && (
+                    <tr>
+                      <td colSpan="5" style={{ color: "#dc2626" }}>
+                        {bomError}
+                      </td>
+                    </tr>
+                  )}
+
+                  {!isBomLoading && !bomError && bomRows.length === 0 && (
+                    <tr>
+                      <td colSpan="5" style={{ color: "#9ca3af" }}>
+                        등록된 BOM 정보가 없습니다.
+                      </td>
+                    </tr>
+                  )}
+
+                  {!isBomLoading &&
+                    !bomError &&
+                    bomRows.map((item) => (
+                      <tr key={item.id}>
+                        <CodeCell title={item.materialCode}>{item.materialCode}</CodeCell>
+                        <td>{item.materialName}</td>
+                        <td>{Number(item.requiredQuantity ?? 0).toLocaleString()}</td>
+                        <td>{item.unit}</td>
+                        <td>{item.inputProcessName}</td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </TableWrap>
@@ -255,6 +327,8 @@ const TableWrap = styled.div`
     text-align: center;
     vertical-align: middle;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   th {
@@ -265,6 +339,12 @@ const TableWrap = styled.div`
   tr:last-child td {
     border-bottom: 0;
   }
+`;
+
+const CodeCell = styled.td`
+  font-family: var(--font-family-mono);
+  color: #084693;
+  font-weight: 700;
 `;
 
 const Footer = styled.footer`

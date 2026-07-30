@@ -31,6 +31,7 @@ const masterApi = {
   getWorker: (id) => axiosInstance.get(`/api/mes/workers/${id}`),
   createWorker: (data) => axiosInstance.post("/api/mes/workers", data),
   updateWorker: (id, data) => axiosInstance.put(`/api/mes/workers/${id}`, data),
+  deleteWorker: (id) => axiosInstance.delete(`/api/mes/workers/${id}`),
 
   getBomItems: (productId) =>
     axiosInstance.get(`/api/mes/products/${productId}/bom-items`),

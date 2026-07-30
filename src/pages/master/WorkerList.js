@@ -159,9 +159,22 @@ export default function WorkerList() {
     }
   };
 
-  const removeWorker = (worker) => {
+  const removeWorker = async (worker) => {
     if (!canManage) return;
-    alert(`${worker.workerName} 작업자 삭제 API가 아직 없어 삭제할 수 없습니다.`);
+    if (!window.confirm(`${worker.workerName} 작업자를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      await masterApi.deleteWorker(worker.id);
+      await loadWorkers();
+      if (selectedWorker?.id === worker.id) {
+        setSelectedWorker(null);
+      }
+    } catch (error) {
+      console.error("작업자 삭제 실패", error);
+      alert("작업자 삭제에 실패했습니다. 백엔드 서버와 권한을 확인해 주세요.");
+    }
   };
 
   const columns = [
