@@ -4,7 +4,13 @@ import { FiX } from "react-icons/fi";
 import Button from "../../components/ui/Button";
 
 // 등록 폼의 기본값, 수정 모드에서는 선택한 작업자 값으로 덮어씀
-const emptyForm = { workerCode: "", workerName: "", hiredAt: "", role: "" };
+const emptyForm = {
+  workerCode: "",
+  workerName: "",
+  hiredAt: "",
+  role: "",
+  isActive: "true",
+};
 
 export default function WorkerNewEdit({
   open,
@@ -12,6 +18,7 @@ export default function WorkerNewEdit({
   previewWorkerCode = "",
   onClose,
   onSubmit,
+  canManage = false,
 }) {
   const [form, setForm] = useState(emptyForm);
 
@@ -29,6 +36,7 @@ export default function WorkerNewEdit({
             workerName: worker.workerName,
             hiredAt: worker.hiredAt,
             role: worker.role,
+            isActive: worker.isActive ? "true" : "false",
           }
         : {
             ...emptyForm,
@@ -68,6 +76,7 @@ export default function WorkerNewEdit({
     onSubmit({
       ...form,
       workerCode: editing ? worker.workerCode : previewWorkerCode,
+      isActive: form.isActive === "true",
     });
   };
   return (
@@ -130,6 +139,21 @@ export default function WorkerNewEdit({
                 <option value="작업자">작업자</option>
               </Select>
             </Field>
+
+            {editing && canManage && (
+              <Field>
+                <Label htmlFor="isActive">출퇴근 상태</Label>
+                <Select
+                  id="isActive"
+                  name="isActive"
+                  value={form.isActive}
+                  onChange={change}
+                >
+                  <option value="true">출근</option>
+                  <option value="false">퇴근</option>
+                </Select>
+              </Field>
+            )}
           </Body>
 
           <Footer>

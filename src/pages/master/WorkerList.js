@@ -46,17 +46,17 @@ const mapWorkerFromApi = (worker) => ({
   workerCode: worker.employeeNo ?? "",
   workerName: worker.employeeName ?? "",
   role: worker.role ?? "",
-  isActive: worker.active !== false,
+  isActive: worker.present !== false,
   hiredAt: formatDate(worker.hireDate),
   createdAt: formatDate(worker.hireDate),
   updatedAt: "",
 });
 
-const toWorkerPayload = (form, active = true) => ({
+const toWorkerPayload = (form) => ({
   employeeName: form.workerName,
   hireDate: form.hiredAt,
   role: form.role,
-  active,
+  present: form.isActive !== false,
 });
 
 const PAGE_SIZE = 8;
@@ -145,7 +145,7 @@ export default function WorkerList() {
       if (editingWorker) {
         await masterApi.updateWorker(
           editingWorker.id,
-          toWorkerPayload(form, editingWorker.isActive),
+          toWorkerPayload(form),
         );
       } else {
         await masterApi.createWorker(toWorkerPayload(form));
@@ -384,6 +384,7 @@ export default function WorkerList() {
         previewWorkerCode={createWorkerCode(workers)}
         onClose={closeForm}
         onSubmit={saveWorker}
+        canManage={canManage}
       />
     </Page>
   );
