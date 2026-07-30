@@ -14,11 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
-import {
-  FiSettings,
-  FiAlertTriangle,
-  FiArchive,
-} from "react-icons/fi";
+import { FiSettings, FiAlertTriangle, FiArchive } from "react-icons/fi";
 import { MdPrecisionManufacturing } from "react-icons/md";
 import dashboardApi from "../../api/dashboard";
 
@@ -53,7 +49,9 @@ const formatNumber = (value) => toNumber(value).toLocaleString();
 const formatRate = (value) => `${toNumber(value).toFixed(1)}%`;
 
 const formatMeasurement = (value, unit) =>
-  value === null || value === undefined ? "-" : `${toNumber(value).toFixed(1)}${unit}`;
+  value === null || value === undefined
+    ? "-"
+    : `${toNumber(value).toFixed(1)}${unit}`;
 
 const DASHBOARD_TABLE_PROPS = {
   tableLayout: "fixed",
@@ -227,8 +225,14 @@ const ProductionLegend = styled.div`
 
 const renderProductionLegend = () => (
   <ProductionLegend>
-    <span><i style={{ background: "#0755d9" }} />양품</span>
-    <span><i style={{ background: "#e34b55" }} />불량</span>
+    <span>
+      <i style={{ background: "#0755d9" }} />
+      양품
+    </span>
+    <span>
+      <i style={{ background: "#e34b55" }} />
+      불량
+    </span>
   </ProductionLegend>
 );
 
@@ -370,14 +374,14 @@ function DashBoard() {
 
   // 자재 현황
   const materialColumns = [
-    { key: "code", label: "자재 코드", width: 135 },
+    { key: "code", label: "자재 코드", width: 220 },
     { key: "name", label: "자재명", width: 110 },
     { key: "stock", label: "현재 재고" },
     { key: "unit", label: "단위", width: 80 },
   ];
 
   // 근무자 현황
-const workerColumns = [
+  const workerColumns = [
     { key: "workerName", label: "근무자", align: "center", width: "50%" },
     { key: "status", label: "출근 여부", align: "center", width: "50%" },
   ];
@@ -452,7 +456,7 @@ const workerColumns = [
         subType: "success",
       },
     ],
-    [dashboard]
+    [dashboard],
   );
 
   const machineRows = useMemo(
@@ -474,7 +478,7 @@ const workerColumns = [
           </StateBadge>
         ),
       })),
-    [dashboard.equipmentStatus]
+    [dashboard.equipmentStatus],
   );
 
   const materialRows = useMemo(
@@ -486,7 +490,7 @@ const workerColumns = [
         stock: <StockText>{formatNumber(material.stock)}</StockText>,
         unit: material.unit || "-",
       })),
-    [dashboard.materialStatus]
+    [dashboard.materialStatus],
   );
 
   const workerRows = useMemo(
@@ -500,7 +504,7 @@ const workerColumns = [
           </StateBadge>
         ),
       })),
-    [dashboard.workerStatus]
+    [dashboard.workerStatus],
   );
 
   return (
@@ -624,7 +628,9 @@ const workerColumns = [
               <TargetBadge>목표 97.0%</TargetBadge>
             </YieldOverview>
 
-            <YieldTrack aria-label={`현재 양품률 ${formatRate(dashboard.yield?.yieldRate)}`}>
+            <YieldTrack
+              aria-label={`현재 양품률 ${formatRate(dashboard.yield?.yieldRate)}`}
+            >
               <YieldFill $percent={toNumber(dashboard.yield?.yieldRate)} />
             </YieldTrack>
             <YieldScale>
